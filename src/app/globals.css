@@ -53,9 +53,31 @@ body {
 }
 
 .reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.reveal[data-anim="zoom"] {
+  transform: scale(0.96);
+}
+
+.reveal[data-anim="slide-left"] {
+  transform: translateX(24px);
+}
+
+.reveal[data-anim="slide-right"] {
+  transform: translateX(-24px);
+}
+
+.reveal.is-visible {
   opacity: 1;
   transform: none;
-  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.no-js .reveal {
+  opacity: 1;
+  transform: none;
 }
 
 .btn-primary {
