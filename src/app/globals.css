@@ -59,6 +59,11 @@ body {
   transition: opacity 0.8s ease, transform 0.8s ease;
 }
 
+.reveal.reveal-init,
+.auto-reveal.reveal-init {
+  transition: none;
+}
+
 .reveal.is-hidden,
 .auto-reveal.is-hidden {
   opacity: 0;

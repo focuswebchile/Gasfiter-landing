@@ -61,11 +61,13 @@ export default function ScrollReveal() {
         }
 
         if (inViewport(item)) {
+          item.classList.add("reveal-init");
           item.classList.add("is-hidden");
-          window.setTimeout(() => {
+          requestAnimationFrame(() => {
+            item.classList.remove("reveal-init");
             item.classList.add("is-visible");
             item.classList.remove("is-hidden");
-          }, 120);
+          });
         } else {
           item.classList.add("is-hidden");
         }
