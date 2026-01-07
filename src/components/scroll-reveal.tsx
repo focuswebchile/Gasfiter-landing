@@ -25,6 +25,7 @@ export default function ScrollReveal() {
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
             entry.target.classList.remove("is-hidden");
             observer.unobserve(entry.target);
           }
@@ -55,9 +56,16 @@ export default function ScrollReveal() {
           item.classList.add("auto-reveal");
         }
 
+        if (item.classList.contains("is-visible")) {
+          return;
+        }
+
         if (inViewport(item)) {
           item.classList.add("is-hidden");
-          window.setTimeout(() => item.classList.remove("is-hidden"), 120);
+          window.setTimeout(() => {
+            item.classList.add("is-visible");
+            item.classList.remove("is-hidden");
+          }, 120);
         } else {
           item.classList.add("is-hidden");
         }
