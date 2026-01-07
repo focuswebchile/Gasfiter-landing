@@ -515,6 +515,35 @@ const landingHtml = String.raw`
       </div>
     </section>
 
+    <!-- COMPONENTE: WHATSAPP FLOTANTE -->
+    <div class="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+      <div class="reveal max-w-xs rounded-3xl border border-slate-200 bg-white px-5 py-4 text-sm text-slate-700 shadow-soft" data-anim="slide-up">
+        <p class="font-semibold text-ink">¡Hola! 👋 Aquí no hay robots, solo personas listas para ayudarte.</p>
+        <p class="mt-1 text-xs text-slate-500">Asistente • Ahora</p>
+      </div>
+      <a
+        href="https://wa.me/56912345678"
+        class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-primary shadow-soft transition hover:-translate-y-0.5"
+      >
+        Tengo una pregunta sobre los servicios
+      </a>
+      <a
+        href="https://wa.me/56912345678"
+        class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-ink shadow-soft transition hover:-translate-y-0.5"
+      >
+        Soy cliente y necesito ayuda
+      </a>
+      <a
+        href="https://wa.me/56912345678"
+        class="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500 text-white shadow-soft transition hover:scale-105"
+        aria-label="Contactar por WhatsApp"
+      >
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M12 2a10 10 0 0 0-8.52 15.23L2 22l4.92-1.48A10 10 0 1 0 12 2Zm5.5 14.2c-.23.64-1.18 1.23-1.63 1.28-.44.05-.99.08-1.6-.1-.37-.12-.86-.28-1.48-.56-2.6-1.13-4.29-3.75-4.42-3.92-.13-.17-1.06-1.42-1.06-2.7 0-1.28.67-1.92.91-2.18.23-.26.51-.32.68-.32.17 0 .34 0 .5.01.16.01.37-.06.58.44.23.55.79 1.92.86 2.06.07.14.11.31.02.5-.09.19-.13.31-.26.48-.13.17-.27.38-.38.51-.13.15-.26.31-.11.59.15.29.68 1.12 1.46 1.81 1 .89 1.84 1.17 2.13 1.31.29.14.46.12.63-.07.17-.19.72-.84.91-1.13.19-.29.38-.24.64-.14.26.1 1.64.77 1.92.91.28.14.46.21.53.33.07.12.07.69-.16 1.33Z"/>
+        </svg>
+      </a>
+    </div>
+
     <!-- COMPONENTE: FOOTER -->
     <footer class="bg-blue-950 py-12 text-white">
       <div class="mx-auto max-w-6xl px-6">
