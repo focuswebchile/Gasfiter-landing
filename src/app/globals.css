@@ -58,34 +58,6 @@ body {
   transition: opacity 0.8s ease, transform 0.8s ease;
 }
 
-.js-reveal .reveal {
-  opacity: 0;
-  transform: translateY(20px);
-}
-
-.js-reveal .reveal.is-visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.js-reveal .reveal[data-anim="zoom"] {
-  transform: scale(0.96);
-}
-
-.js-reveal .reveal[data-anim="slide-left"] {
-  transform: translateX(24px);
-}
-
-.js-reveal .reveal[data-anim="slide-right"] {
-  transform: translateX(-24px);
-}
-
-.js-reveal .reveal.is-visible[data-anim="zoom"],
-.js-reveal .reveal.is-visible[data-anim="slide-left"],
-.js-reveal .reveal.is-visible[data-anim="slide-right"] {
-  transform: none;
-}
-
 .btn-primary {
   background: #f97316;
   color: #0f172a;
