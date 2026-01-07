@@ -8,34 +8,48 @@ const inViewport = (el: HTMLElement) => {
   return rect.bottom > offset && rect.top < window.innerHeight - offset;
 };
 
+const isValidTarget = (el: HTMLElement) =>
+  el.tagName !== "NAV" &&
+  el.tagName !== "HEADER" &&
+  el.tagName !== "SCRIPT" &&
+  el.offsetHeight > 0;
+
 export default function ScrollReveal() {
   useEffect(() => {
-    const items = Array.from(
-      document.querySelectorAll<HTMLElement>(".reveal")
-    );
-    if (!items.length) {
-      return;
-    }
-
     if (!("IntersectionObserver" in window)) {
       return;
     }
 
+    const revealItems = new Set<HTMLElement>();
+    document
+      .querySelectorAll<HTMLElement>(".reveal")
+      .forEach((el) => revealItems.add(el));
+    document
+      .querySelectorAll<HTMLElement>("section, article, footer")
+      .forEach((el) => revealItems.add(el));
+
+    const items = Array.from(revealItems).filter(isValidTarget);
+    if (!items.length) {
+      return;
+    }
+
     items.forEach((item) => {
-      const visible = inViewport(item);
-      if (visible) {
-        item.classList.add("is-visible");
-      } else {
-        item.classList.remove("is-visible");
+      if (!item.classList.contains("reveal")) {
+        item.classList.add("auto-reveal");
       }
-      item.classList.add("reveal-ready");
+
+      if (inViewport(item)) {
+        item.classList.remove("is-hidden");
+      } else {
+        item.classList.add("is-hidden");
+      }
     });
 
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            entry.target.classList.add("is-visible");
+            entry.target.classList.remove("is-hidden");
             observer.unobserve(entry.target);
           }
         });

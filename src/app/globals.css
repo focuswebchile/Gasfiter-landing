@@ -52,32 +52,32 @@ body {
   background-size: 32px 32px;
 }
 
-.reveal {
+.reveal,
+.auto-reveal {
   opacity: 1;
   transform: none;
   transition: opacity 0.8s ease, transform 0.8s ease;
 }
 
-.reveal.reveal-ready {
+.reveal.is-hidden,
+.auto-reveal.is-hidden {
   opacity: 0;
   transform: translateY(16px);
 }
 
-.reveal.reveal-ready[data-anim="zoom"] {
+.reveal[data-anim="zoom"].is-hidden,
+.auto-reveal[data-anim="zoom"].is-hidden {
   transform: scale(0.96);
 }
 
-.reveal.reveal-ready[data-anim="slide-left"] {
+.reveal[data-anim="slide-left"].is-hidden,
+.auto-reveal[data-anim="slide-left"].is-hidden {
   transform: translateX(24px);
 }
 
-.reveal.reveal-ready[data-anim="slide-right"] {
+.reveal[data-anim="slide-right"].is-hidden,
+.auto-reveal[data-anim="slide-right"].is-hidden {
   transform: translateX(-24px);
-}
-
-.reveal.reveal-ready.is-visible {
-  opacity: 1;
-  transform: none;
 }
 
 .btn-primary {
