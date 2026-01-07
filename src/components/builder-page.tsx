@@ -6,6 +6,9 @@ import LandingFallback from "./landing-fallback";
 
 type BuilderContent = {
   id?: string;
+  data?: {
+    blocks?: unknown[];
+  };
 };
 
 const apiKey = process.env.NEXT_PUBLIC_BUILDER_API_KEY || "";
@@ -40,7 +43,12 @@ export default function BuilderPage() {
     return <LandingFallback showNotice />;
   }
 
-  if (!content) {
+  const hasBlocks =
+    !!content &&
+    Array.isArray(content.data?.blocks) &&
+    content.data?.blocks.length > 0;
+
+  if (!hasBlocks) {
     return <LandingFallback />;
   }
 
