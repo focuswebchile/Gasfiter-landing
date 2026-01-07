@@ -99,10 +99,10 @@ const landingHtml = String.raw`
         </p>
       </div>
       <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <article class="reveal bento-card group overflow-hidden rounded-3xl shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-2xl lg:min-h-[420px]" data-anim="slide-right">
+        <article class="reveal bento-card group overflow-hidden rounded-3xl shadow-soft transition duration-500 ease-out hover:-translate-y-0.5 hover:shadow-2xl lg:min-h-[420px]" data-anim="slide-right">
           <div class="h-44 w-full">
             <img
-              class="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+              class="h-full w-full object-cover transition duration-500 ease-out group-hover:scale-[1.03]"
               src="/images/gasfiter-fugas.webp"
               alt="<!-- CAMBIO FACIL: IMAGEN SERVICIO -->Reparación de fugas"
             />
@@ -112,10 +112,10 @@ const landingHtml = String.raw`
             <p class="mt-3 text-base text-slate-500"><!-- CAMBIO FACIL: DESCRIPCIÓN DEL SERVICIO -->Tecnología termográfica para ubicar la fuga sin romper más de lo necesario.</p>
           </div>
         </article>
-        <article class="reveal bento-card group overflow-hidden rounded-3xl shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-2xl lg:min-h-[400px]" data-anim="slide-left">
+        <article class="reveal bento-card group overflow-hidden rounded-3xl shadow-soft transition duration-500 ease-out hover:-translate-y-0.5 hover:shadow-2xl lg:min-h-[400px]" data-anim="slide-left">
           <div class="h-44 w-full">
             <img
-              class="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+              class="h-full w-full object-cover transition duration-500 ease-out group-hover:scale-[1.03]"
               src="/images/gasfiter-destape.webp"
               alt="<!-- CAMBIO FACIL: IMAGEN SERVICIO -->Destape de cañerías"
             />
@@ -125,10 +125,10 @@ const landingHtml = String.raw`
             <p class="mt-3 text-base text-slate-500"><!-- CAMBIO FACIL: DESCRIPCIÓN DEL SERVICIO -->Equipos de presión y cámaras endoscópicas.</p>
           </div>
         </article>
-        <article class="reveal bento-card group overflow-hidden rounded-3xl shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-2xl lg:min-h-[420px]" data-anim="slide-left">
+        <article class="reveal bento-card group overflow-hidden rounded-3xl shadow-soft transition duration-500 ease-out hover:-translate-y-0.5 hover:shadow-2xl lg:min-h-[420px]" data-anim="slide-left">
           <div class="h-44 w-full">
             <img
-              class="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+              class="h-full w-full object-cover transition duration-500 ease-out group-hover:scale-[1.03]"
               src="/images/gasfiter-griferia.webp"
               alt="<!-- CAMBIO FACIL: IMAGEN SERVICIO -->Instalación de grifería"
             />
@@ -138,10 +138,10 @@ const landingHtml = String.raw`
             <p class="mt-3 text-base text-slate-500"><!-- CAMBIO FACIL: DESCRIPCIÓN DEL SERVICIO -->Cambio completo con prueba de sellado.</p>
           </div>
         </article>
-        <article class="reveal bento-card group overflow-hidden rounded-3xl shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-2xl lg:min-h-[400px]" data-anim="slide-right">
+        <article class="reveal bento-card group overflow-hidden rounded-3xl shadow-soft transition duration-500 ease-out hover:-translate-y-0.5 hover:shadow-2xl lg:min-h-[400px]" data-anim="slide-right">
           <div class="h-44 w-full">
             <img
-              class="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+              class="h-full w-full object-cover transition duration-500 ease-out group-hover:scale-[1.03]"
               src="/images/gasfiter-mantencion.webp"
               alt="<!-- CAMBIO FACIL: IMAGEN SERVICIO -->Mantención preventiva"
             />
@@ -151,10 +151,10 @@ const landingHtml = String.raw`
             <p class="mt-3 text-base text-slate-500"><!-- CAMBIO FACIL: DESCRIPCIÓN DEL SERVICIO -->Planes para condominios y locales.</p>
           </div>
         </article>
-        <article class="reveal bento-card group overflow-hidden rounded-3xl shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-2xl lg:min-h-[420px]" data-anim="slide-right">
+        <article class="reveal bento-card group overflow-hidden rounded-3xl shadow-soft transition duration-500 ease-out hover:-translate-y-0.5 hover:shadow-2xl lg:min-h-[420px]" data-anim="slide-right">
           <div class="h-44 w-full">
             <img
-              class="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+              class="h-full w-full object-cover transition duration-500 ease-out group-hover:scale-[1.03]"
               src="/images/gasfiter-calefont.webp"
               alt="<!-- CAMBIO FACIL: IMAGEN SERVICIO -->Instalación de calefont"
             />
@@ -164,10 +164,10 @@ const landingHtml = String.raw`
             <p class="mt-3 text-base text-slate-500"><!-- CAMBIO FACIL: DESCRIPCIÓN DEL SERVICIO -->Con certificación y puesta en marcha segura.</p>
           </div>
         </article>
-        <article class="reveal bento-card group overflow-hidden rounded-3xl shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-2xl lg:min-h-[400px]" data-anim="slide-right">
+        <article class="reveal bento-card group overflow-hidden rounded-3xl shadow-soft transition duration-500 ease-out hover:-translate-y-0.5 hover:shadow-2xl lg:min-h-[400px]" data-anim="slide-right">
           <div class="h-44 w-full">
             <img
-              class="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+              class="h-full w-full object-cover transition duration-500 ease-out group-hover:scale-[1.03]"
               src="/images/gasfiter-emergencias.webp"
               alt="<!-- CAMBIO FACIL: IMAGEN SERVICIO -->Emergencias"
             />
