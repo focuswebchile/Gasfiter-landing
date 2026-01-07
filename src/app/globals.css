@@ -55,63 +55,29 @@ body {
 .reveal {
   opacity: 1;
   transform: none;
-  animation: fade-up 0.8s ease both;
+  transition: opacity 0.8s ease, transform 0.8s ease;
 }
 
-.reveal[data-anim="zoom"] {
-  animation-name: zoom-in;
+.reveal.reveal-ready {
+  opacity: 0;
+  transform: translateY(16px);
 }
 
-.reveal[data-anim="slide-left"] {
-  animation-name: slide-left;
+.reveal.reveal-ready[data-anim="zoom"] {
+  transform: scale(0.96);
 }
 
-.reveal[data-anim="slide-right"] {
-  animation-name: slide-right;
+.reveal.reveal-ready[data-anim="slide-left"] {
+  transform: translateX(24px);
 }
 
-@keyframes fade-up {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
+.reveal.reveal-ready[data-anim="slide-right"] {
+  transform: translateX(-24px);
 }
 
-@keyframes zoom-in {
-  from {
-    opacity: 0;
-    transform: scale(0.96);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@keyframes slide-left {
-  from {
-    opacity: 0;
-    transform: translateX(24px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@keyframes slide-right {
-  from {
-    opacity: 0;
-    transform: translateX(-24px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
+.reveal.reveal-ready.is-visible {
+  opacity: 1;
+  transform: none;
 }
 
 .btn-primary {
