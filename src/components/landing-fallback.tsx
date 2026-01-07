@@ -71,7 +71,7 @@ const landingHtml = String.raw`
           <div class="reveal rounded-3xl bg-white/70 p-4 shadow-soft backdrop-blur" data-anim="zoom">
             <img
               class="h-80 w-full rounded-2xl object-cover"
-              src="https://placehold.co/600x500/png"
+              src="/images/gasfiter-hero.webp"
               alt="<!-- CAMBIO FACIL: IMAGEN HERO -->Gasfiter revisando una instalación"
             />
             <div class="mt-4 flex items-center justify-between rounded-2xl bg-white px-4 py-3 shadow-sm">
@@ -103,7 +103,7 @@ const landingHtml = String.raw`
           <div class="h-44 w-full">
             <img
               class="h-full w-full object-cover"
-              src="https://placehold.co/600x360/png?text=Fugas"
+              src="/images/gasfiter-fugas.webp"
               alt="<!-- CAMBIO FACIL: IMAGEN SERVICIO -->Reparación de fugas"
             />
           </div>
@@ -123,7 +123,7 @@ const landingHtml = String.raw`
           <div class="h-44 w-full">
             <img
               class="h-full w-full object-cover"
-              src="https://placehold.co/600x360/png?text=Destape"
+              src="/images/gasfiter-destape.webp"
               alt="<!-- CAMBIO FACIL: IMAGEN SERVICIO -->Destape de cañerías"
             />
           </div>
@@ -142,7 +142,7 @@ const landingHtml = String.raw`
           <div class="h-44 w-full">
             <img
               class="h-full w-full object-cover"
-              src="https://placehold.co/600x360/png?text=Griferias"
+              src="/images/gasfiter-griferia.webp"
               alt="<!-- CAMBIO FACIL: IMAGEN SERVICIO -->Instalación de grifería"
             />
           </div>
@@ -161,7 +161,7 @@ const landingHtml = String.raw`
           <div class="h-44 w-full">
             <img
               class="h-full w-full object-cover"
-              src="https://placehold.co/600x360/png?text=Mantencion"
+              src="/images/gasfiter-mantencion.webp"
               alt="<!-- CAMBIO FACIL: IMAGEN SERVICIO -->Mantención preventiva"
             />
           </div>
@@ -181,7 +181,7 @@ const landingHtml = String.raw`
           <div class="h-44 w-full">
             <img
               class="h-full w-full object-cover"
-              src="https://placehold.co/600x360/png?text=Calefont"
+              src="/images/gasfiter-calefont.webp"
               alt="<!-- CAMBIO FACIL: IMAGEN SERVICIO -->Instalación de calefont"
             />
           </div>
@@ -201,7 +201,7 @@ const landingHtml = String.raw`
           <div class="h-44 w-full">
             <img
               class="h-full w-full object-cover"
-              src="https://placehold.co/600x360/png?text=Emergencias"
+              src="/images/gasfiter-emergencias.webp"
               alt="<!-- CAMBIO FACIL: IMAGEN SERVICIO -->Emergencias"
             />
           </div>
@@ -227,7 +227,7 @@ const landingHtml = String.raw`
         <div class="reveal order-2 lg:order-1" data-anim="slide-right">
           <img
             class="w-full rounded-3xl shadow-soft"
-            src="https://images.unsplash.com/photo-1676210133055-eab6ef033ce3"
+            src="/images/gasfiter-why.webp"
             alt="<!-- CAMBIO FACIL: IMAGEN POR QUE ELEGIRNOS -->Gasfiter profesional trabajando"
           />
         </div>
@@ -320,7 +320,7 @@ const landingHtml = String.raw`
           <div class="mt-6 flex flex-col items-center gap-3">
             <img
               class="h-16 w-16 rounded-full object-cover shadow-soft"
-              src="https://placehold.co/120x120/png?text=Cliente"
+              src="/images/gasfiter-testimonial.webp"
               alt="<!-- CAMBIO FACIL: FOTO CLIENTE -->Cliente satisfecho"
             />
             <p class="text-center text-lg font-semibold text-blue-900">- <!-- CAMBIO FACIL: NOMBRE TESTIMONIO -->María González</p>
