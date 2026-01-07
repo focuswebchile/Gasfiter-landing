@@ -99,116 +99,80 @@ const landingHtml = String.raw`
         </p>
       </div>
       <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <article class="reveal bento-card overflow-hidden rounded-3xl shadow-soft lg:min-h-[420px]" data-anim="slide-right">
+        <article class="reveal bento-card group overflow-hidden rounded-3xl shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-2xl lg:min-h-[420px]" data-anim="slide-right">
           <div class="h-44 w-full">
             <img
-              class="h-full w-full object-cover"
+              class="h-full w-full object-cover transition duration-300 group-hover:scale-105"
               src="/images/gasfiter-fugas.webp"
               alt="<!-- CAMBIO FACIL: IMAGEN SERVICIO -->Reparación de fugas"
             />
           </div>
           <div class="relative p-8">
-            <span class="absolute -top-6 left-8 rounded-2xl bg-white p-4 text-primary shadow-soft">
-              <!-- CAMBIO FACIL: ICONO DEL SERVICIO -->
-              <svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M4 10h7V8a4 4 0 1 1 8 0v2h2v2h-2v2a2 2 0 0 1-2 2h-3v4a2 2 0 0 1-4 0v-4H4v-2h7v-2H4v-2Z" />
-              </svg>
-            </span>
             <h3 class="mt-6 text-2xl font-semibold text-ink"><!-- CAMBIO FACIL: TÍTULO DEL SERVICIO -->Detección y reparación de fugas</h3>
             <p class="mt-3 text-base text-slate-500"><!-- CAMBIO FACIL: DESCRIPCIÓN DEL SERVICIO -->Tecnología termográfica para ubicar la fuga sin romper más de lo necesario.</p>
           </div>
         </article>
-        <article class="reveal bento-card overflow-hidden rounded-3xl shadow-soft lg:min-h-[400px]" data-anim="slide-left">
+        <article class="reveal bento-card group overflow-hidden rounded-3xl shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-2xl lg:min-h-[400px]" data-anim="slide-left">
           <div class="h-44 w-full">
             <img
-              class="h-full w-full object-cover"
+              class="h-full w-full object-cover transition duration-300 group-hover:scale-105"
               src="/images/gasfiter-destape.webp"
               alt="<!-- CAMBIO FACIL: IMAGEN SERVICIO -->Destape de cañerías"
             />
           </div>
           <div class="relative p-8">
-            <span class="absolute -top-6 left-8 rounded-2xl bg-white p-4 text-accent shadow-soft">
-              <!-- CAMBIO FACIL: ICONO DEL SERVICIO -->
-              <svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M3 6h18v2H3V6Zm2 4h14v4a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4v-4Zm6 2v4h2v-4h-2Z" />
-              </svg>
-            </span>
             <h3 class="mt-6 text-2xl font-semibold text-ink"><!-- CAMBIO FACIL: TÍTULO DEL SERVICIO -->Destape de cañerías</h3>
             <p class="mt-3 text-base text-slate-500"><!-- CAMBIO FACIL: DESCRIPCIÓN DEL SERVICIO -->Equipos de presión y cámaras endoscópicas.</p>
           </div>
         </article>
-        <article class="reveal bento-card overflow-hidden rounded-3xl shadow-soft lg:min-h-[420px]" data-anim="slide-left">
+        <article class="reveal bento-card group overflow-hidden rounded-3xl shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-2xl lg:min-h-[420px]" data-anim="slide-left">
           <div class="h-44 w-full">
             <img
-              class="h-full w-full object-cover"
+              class="h-full w-full object-cover transition duration-300 group-hover:scale-105"
               src="/images/gasfiter-griferia.webp"
               alt="<!-- CAMBIO FACIL: IMAGEN SERVICIO -->Instalación de grifería"
             />
           </div>
           <div class="relative p-8">
-            <span class="absolute -top-6 left-8 rounded-2xl bg-white p-4 text-primary shadow-soft">
-              <!-- CAMBIO FACIL: ICONO DEL SERVICIO -->
-              <svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M21 7l-4.5 4.5-2-2L19 5l2 2ZM3 11a4 4 0 0 1 4-4h3v2H7a2 2 0 0 0-2 2v8h10v2H7a4 4 0 0 1-4-4v-8Z" />
-              </svg>
-            </span>
             <h3 class="mt-6 text-2xl font-semibold text-ink"><!-- CAMBIO FACIL: TÍTULO DEL SERVICIO -->Instalación de griferías</h3>
             <p class="mt-3 text-base text-slate-500"><!-- CAMBIO FACIL: DESCRIPCIÓN DEL SERVICIO -->Cambio completo con prueba de sellado.</p>
           </div>
         </article>
-        <article class="reveal bento-card overflow-hidden rounded-3xl shadow-soft lg:min-h-[400px]" data-anim="slide-right">
+        <article class="reveal bento-card group overflow-hidden rounded-3xl shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-2xl lg:min-h-[400px]" data-anim="slide-right">
           <div class="h-44 w-full">
             <img
-              class="h-full w-full object-cover"
+              class="h-full w-full object-cover transition duration-300 group-hover:scale-105"
               src="/images/gasfiter-mantencion.webp"
               alt="<!-- CAMBIO FACIL: IMAGEN SERVICIO -->Mantención preventiva"
             />
           </div>
           <div class="relative p-8">
-            <span class="absolute -top-6 left-8 rounded-2xl bg-white p-4 text-accent shadow-soft">
-              <!-- CAMBIO FACIL: ICONO DEL SERVICIO -->
-              <svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 2a6 6 0 0 1 6 6c0 2.5-1.4 4.7-3.5 5.7V20a2.5 2.5 0 1 1-5 0v-6.3A6.5 6.5 0 0 1 6 8a6 6 0 0 1 6-6Zm0 2a4 4 0 0 0-4 4c0 1.8 1.1 3.3 2.6 3.8l.9.3V20a.5.5 0 0 0 1 0v-7.9l.9-.3A4 4 0 0 0 16 8a4 4 0 0 0-4-4Z" />
-              </svg>
-            </span>
             <h3 class="mt-6 text-2xl font-semibold text-ink"><!-- CAMBIO FACIL: TÍTULO DEL SERVICIO -->Mantención preventiva</h3>
             <p class="mt-3 text-base text-slate-500"><!-- CAMBIO FACIL: DESCRIPCIÓN DEL SERVICIO -->Planes para condominios y locales.</p>
           </div>
         </article>
-        <article class="reveal bento-card overflow-hidden rounded-3xl shadow-soft lg:min-h-[420px]" data-anim="slide-right">
+        <article class="reveal bento-card group overflow-hidden rounded-3xl shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-2xl lg:min-h-[420px]" data-anim="slide-right">
           <div class="h-44 w-full">
             <img
-              class="h-full w-full object-cover"
+              class="h-full w-full object-cover transition duration-300 group-hover:scale-105"
               src="/images/gasfiter-calefont.webp"
               alt="<!-- CAMBIO FACIL: IMAGEN SERVICIO -->Instalación de calefont"
             />
           </div>
           <div class="relative p-8">
-            <span class="absolute -top-6 left-8 rounded-2xl bg-white p-4 text-primary shadow-soft">
-              <!-- CAMBIO FACIL: ICONO DEL SERVICIO -->
-              <svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 2a6 6 0 0 1 6 6c0 3-2 4.4-3.6 5.8-1.2 1-1.4 2-1.4 3.2h-2c0-1.5.3-3 1.8-4.3C14.2 11.3 16 10.3 16 8a4 4 0 0 0-8 0c0 1.5 1 2.7 2.4 3.5l-1 1.7C7.4 12.1 6 10.2 6 8a6 6 0 0 1 6-6Zm-1 18a1 1 0 1 0 2 0 1 1 0 0 0-2 0Z" />
-              </svg>
-            </span>
             <h3 class="mt-6 text-2xl font-semibold text-ink"><!-- CAMBIO FACIL: TÍTULO DEL SERVICIO -->Instalación de calefont</h3>
             <p class="mt-3 text-base text-slate-500"><!-- CAMBIO FACIL: DESCRIPCIÓN DEL SERVICIO -->Con certificación y puesta en marcha segura.</p>
           </div>
         </article>
-        <article class="reveal bento-card overflow-hidden rounded-3xl shadow-soft lg:min-h-[400px]" data-anim="slide-right">
+        <article class="reveal bento-card group overflow-hidden rounded-3xl shadow-soft transition duration-300 hover:-translate-y-1 hover:shadow-2xl lg:min-h-[400px]" data-anim="slide-right">
           <div class="h-44 w-full">
             <img
-              class="h-full w-full object-cover"
+              class="h-full w-full object-cover transition duration-300 group-hover:scale-105"
               src="/images/gasfiter-emergencias.webp"
               alt="<!-- CAMBIO FACIL: IMAGEN SERVICIO -->Emergencias"
             />
           </div>
           <div class="relative p-8">
-            <span class="absolute -top-6 left-8 rounded-2xl bg-white p-4 text-accent shadow-soft">
-              <!-- CAMBIO FACIL: ICONO DEL SERVICIO -->
-              <svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 2 2 20h20L12 2Zm0 6a1 1 0 0 1 1 1v5a1 1 0 1 1-2 0V9a1 1 0 0 1 1-1Zm0 10a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5Z" />
-              </svg>
-            </span>
             <h3 class="mt-6 text-2xl font-semibold text-ink"><!-- CAMBIO FACIL: TÍTULO DEL SERVICIO -->Emergencias 24/7</h3>
             <p class="mt-3 text-base text-slate-500"><!-- CAMBIO FACIL: DESCRIPCIÓN DEL SERVICIO -->Atención urgente en menos de 60 minutos.</p>
           </div>
