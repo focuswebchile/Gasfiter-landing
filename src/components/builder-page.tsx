@@ -1,16 +1,10 @@
 "use client";
 
 import { BuilderComponent, builder } from "@builder.io/react";
+import type { BuilderContent } from "@builder.io/sdk";
 import { useEffect, useState } from "react";
 import LandingFallback from "./landing-fallback";
 import ScrollReveal from "./scroll-reveal";
-
-type BuilderContent = {
-  id?: string;
-  data?: {
-    blocks?: unknown[];
-  };
-};
 
 type BuilderBlock = {
   component?: {
@@ -61,9 +55,7 @@ const hasRenderableBlocks = (blocks: BuilderBlock[]): boolean => {
 };
 
 export default function BuilderPage() {
-  const [content, setContent] = useState<BuilderContent | null | undefined>(
-    undefined
-  );
+  const [content, setContent] = useState<BuilderContent | null | undefined>(undefined);
 
   useEffect(() => {
     if (!apiKey) {
@@ -91,11 +83,12 @@ export default function BuilderPage() {
     );
   }
 
+  const blocks = content?.data?.blocks as BuilderBlock[] | undefined;
   const hasBlocks =
     !!content &&
-    Array.isArray(content.data?.blocks) &&
-    content.data?.blocks.length > 0 &&
-    hasRenderableBlocks(content.data?.blocks as BuilderBlock[]);
+    Array.isArray(blocks) &&
+    blocks.length > 0 &&
+    hasRenderableBlocks(blocks);
 
   if (!hasBlocks) {
     return (
