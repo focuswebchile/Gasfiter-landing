@@ -581,7 +581,7 @@ const landingHtml = String.raw`
           </div>
         </div>
         <p class="mt-10 border-t border-blue-800 pt-6 text-center text-xs text-blue-200">
-          © 2025 Gasfiter. Todos los derechos reservados.
+          © 2025 Gasfiter. Todos los derechos reservados. <span class="text-blue-100">Web diseñada por Focus Web Chile.</span>
         </p>
       </div>
     </footer>
