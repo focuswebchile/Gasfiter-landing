@@ -1,0 +1,119 @@
+@import "tailwindcss";
+@source "../../index.static.html";
+
+:root {
+  color-scheme: light;
+  --background: #ffffff;
+  --foreground: #0f172a;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: #1e40af;
+  --color-accent: #f97316;
+  --color-ink: #0f172a;
+  --font-body: var(--font-body);
+  --font-display: var(--font-display);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body), system-ui, sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-display), system-ui, sans-serif;
+}
+
+.bg-atmosphere {
+  background:
+    radial-gradient(600px 400px at 10% 10%, rgba(30, 64, 175, 0.15), transparent 70%),
+    radial-gradient(700px 500px at 90% 15%, rgba(249, 115, 22, 0.18), transparent 70%),
+    linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+}
+
+.grid-pattern {
+  background-image:
+    linear-gradient(to right, rgba(15, 23, 42, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal[data-anim="zoom"] {
+  transform: scale(0.96);
+}
+
+.reveal[data-anim="slide-left"] {
+  transform: translateX(24px);
+}
+
+.reveal[data-anim="slide-right"] {
+  transform: translateX(-24px);
+}
+
+.reveal.is-visible[data-anim="zoom"],
+.reveal.is-visible[data-anim="slide-left"],
+.reveal.is-visible[data-anim="slide-right"] {
+  transform: none;
+}
+
+.btn-primary {
+  background: #f97316;
+  color: #0f172a;
+}
+
+.btn-primary:hover {
+  filter: brightness(0.95);
+}
+
+.btn-secondary {
+  border: 1px solid rgba(30, 64, 175, 0.25);
+  color: #1e40af;
+}
+
+.badge {
+  border: 1px solid rgba(30, 64, 175, 0.18);
+  background: rgba(30, 64, 175, 0.08);
+  color: #1e40af;
+}
+
+.bento-card {
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.testimonial-track {
+  scroll-snap-type: x mandatory;
+}
+
+.testimonial-item {
+  scroll-snap-align: center;
+}
+
+.shadow-soft {
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.12);
+}
