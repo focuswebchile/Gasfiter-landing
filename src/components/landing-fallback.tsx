@@ -31,7 +31,7 @@ const landingHtml = String.raw`
     </nav>
 
     <!-- COMPONENTE: HERO -->
-    <section id="inicio" class="relative overflow-hidden">
+    <section id="inicio" class="reveal relative overflow-hidden" data-anim="fade">
       <div class="absolute inset-0 grid-pattern opacity-50"></div>
       <div class="relative mx-auto max-w-6xl px-6 py-20 lg:py-24">
         <div class="grid gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
