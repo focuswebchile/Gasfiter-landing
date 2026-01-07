@@ -109,53 +109,6 @@ body {
   scroll-snap-type: x mandatory;
 }
 
-.testimonial-stack {
-  position: relative;
-  min-height: 320px;
-}
-
-.testimonial-card {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  transform: translateY(12px) scale(0.98);
-  transition: opacity 0.5s ease, transform 0.5s ease;
-}
-
-.testimonial-controls {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 20px;
-}
-
-.testimonial-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 9999px;
-  background: rgba(15, 23, 42, 0.2);
-  cursor: pointer;
-  transition: transform 0.2s ease, background 0.2s ease;
-}
-
-.testimonial-dot:hover {
-  transform: scale(1.2);
-}
-
-#testimonial-1:checked ~ .testimonial-stack .testimonial-card[data-card="1"],
-#testimonial-2:checked ~ .testimonial-stack .testimonial-card[data-card="2"],
-#testimonial-3:checked ~ .testimonial-stack .testimonial-card[data-card="3"] {
-  opacity: 1;
-  transform: translateY(0) scale(1);
-  z-index: 2;
-}
-
-#testimonial-1:checked ~ .testimonial-controls label[for="testimonial-1"],
-#testimonial-2:checked ~ .testimonial-controls label[for="testimonial-2"],
-#testimonial-3:checked ~ .testimonial-controls label[for="testimonial-3"] {
-  background: #f97316;
-}
-
 .testimonial-item {
   scroll-snap-align: center;
 }
