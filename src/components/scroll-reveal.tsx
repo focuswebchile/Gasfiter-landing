@@ -39,7 +39,9 @@ export default function ScrollReveal() {
         .querySelectorAll<HTMLElement>(".reveal")
         .forEach((el) => revealItems.add(el));
       document
-        .querySelectorAll<HTMLElement>("section, article, footer")
+        .querySelectorAll<HTMLElement>(
+          "section, article, footer, header, [data-builder-block], main > *"
+        )
         .forEach((el) => revealItems.add(el));
 
       const items = Array.from(revealItems).filter(isValidTarget);
