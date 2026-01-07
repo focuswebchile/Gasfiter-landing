@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gasfiter | Gasfitería Profesional 24/7</title>
+    <meta
+      name="description"
+      content="Gasfitería profesional 24/7. Instalaciones, reparaciones y mantenciones rápidas en tu zona. Llama ahora o solicita una cotización gratis."
+    />
+    <meta
+      name="keywords"
+      content="gasfiter, gasfiteria, gasfiter 24/7, reparacion de fugas, destape de cañerias, instalacion de griferia"
+    />
+    <meta name="author" content="Gasfiter" />
+    <meta property="og:title" content="Gasfiter | Gasfitería Profesional 24/7" />
+    <meta
+      property="og:description"
+      content="Servicio rápido y confiable de gasfitería en tu zona. Técnicos certificados y 5 estrellas en Google Reviews."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://placehold.co/1200x630/png" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- Tipografías expresivas -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;600;700;800&family=Space+Grotesk:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Tailwind CSS (CDN para demo). En Next.js usar Tailwind v4 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              display: ["Space Grotesk", "system-ui", "sans-serif"],
+              body: ["Manrope", "system-ui", "sans-serif"],
+            },
+            colors: {
+              primary: "#1e40af",
+              accent: "#f97316",
+              ink: "#0f172a",
+            },
+            boxShadow: {
+              soft: "0 12px 40px rgba(15, 23, 42, 0.12)",
+            },
+          },
+        },
+      };
+    </script>
+
+    <style>
+      :root {
+        color-scheme: light;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        font-family: "Manrope", system-ui, sans-serif;
+      }
+      .bg-atmosphere {
+        background:
+          radial-gradient(600px 400px at 10% 10%, rgba(30, 64, 175, 0.15), transparent 70%),
+          radial-gradient(700px 500px at 90% 15%, rgba(249, 115, 22, 0.18), transparent 70%),
+          linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+      }
+      .grid-pattern {
+        background-image:
+          linear-gradient(to right, rgba(15, 23, 42, 0.04) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(15, 23, 42, 0.04) 1px, transparent 1px);
+        background-size: 32px 32px;
+      }
+      .reveal {
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 0.8s ease, transform 0.8s ease;
+      }
+      .reveal.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      .reveal[data-anim="zoom"] {
+        transform: scale(0.96);
+      }
+      .reveal[data-anim="slide-left"] {
+        transform: translateX(24px);
+      }
+      .reveal[data-anim="slide-right"] {
+        transform: translateX(-24px);
+      }
+      .reveal.is-visible[data-anim="zoom"],
+      .reveal.is-visible[data-anim="slide-left"],
+      .reveal.is-visible[data-anim="slide-right"] {
+        transform: none;
+      }
+      .btn-primary {
+        background: #f97316;
+        color: #0f172a;
+      }
+      .btn-primary:hover {
+        filter: brightness(0.95);
+      }
+      .btn-secondary {
+        border: 1px solid rgba(30, 64, 175, 0.25);
+        color: #1e40af;
+      }
+      .badge {
+        border: 1px solid rgba(30, 64, 175, 0.18);
+        background: rgba(30, 64, 175, 0.08);
+        color: #1e40af;
+      }
+      .bento-card {
+        background: #ffffff;
+        border: 1px solid rgba(15, 23, 42, 0.08);
+      }
+      .testimonial-track {
+        scroll-snap-type: x mandatory;
+      }
+      .testimonial-item {
+        scroll-snap-align: center;
+      }
+    </style>
+  </head>
+
+  <body class="bg-atmosphere text-ink">
+    <!-- COMPONENTE: NAV -->
+    <nav class="sticky top-0 z-50 border-b border-slate-100 bg-white/90 backdrop-blur">
+      <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+        <a href="#inicio" class="flex items-center gap-2">
+          <span class="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white">
+            <!-- CAMBIO FACIL: LOGO -->
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+            </svg>
+          </span>
+          <span class="font-display text-lg font-bold text-ink">Gasfiter</span>
+        </a>
+        <div class="hidden items-center gap-6 text-sm font-semibold text-slate-600 md:flex">
+          <a class="transition hover:text-primary" href="#servicios">Servicios</a>
+          <a class="transition hover:text-primary" href="#proceso">Proceso</a>
+          <a class="transition hover:text-primary" href="#testimonios">Testimonios</a>
+          <a class="transition hover:text-primary" href="#faq">FAQ</a>
+        </div>
+        <a
+          href="#contacto"
+          class="hidden rounded-full bg-accent px-4 py-2 text-sm font-semibold text-ink shadow-soft transition hover:scale-[1.02] md:inline-flex"
+        >
+          Solicitar Cotización
+        </a>
+      </div>
+    </nav>
+
+    <!-- COMPONENTE: HERO -->
+    <section id="inicio" class="relative overflow-hidden">
+      <div class="absolute inset-0 grid-pattern opacity-50"></div>
+      <div class="relative mx-auto max-w-6xl px-6 py-20 lg:py-24">
+        <div class="grid gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
+          <div class="space-y-6">
+            <div class="reveal inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm badge" data-anim="slide-right">
+              <span class="font-semibold">5 Estrellas</span>
+              <span class="text-xs text-slate-600"><!-- CAMBIO FACIL: BADGE HERO -->+120 reseñas verificadas</span>
+            </div>
+            <h1 class="reveal font-display text-4xl font-bold leading-tight text-ink md:text-5xl lg:text-6xl" data-anim="fade">
+              <!-- CAMBIO FACIL: TITULO HERO -->
+              Gasfitería profesional 24/7 para tu hogar y negocio
+            </h1>
+            <p class="reveal max-w-xl text-lg text-slate-600" data-anim="fade">
+              <!-- CAMBIO FACIL: SUBTITULO HERO -->
+              Resolvemos fugas, destapes e instalaciones con rapidez, limpieza y garantía. Llega un técnico certificado en menos de 60 minutos.
+            </p>
+            <div class="reveal flex flex-col gap-3 sm:flex-row" data-anim="slide-right">
+              <a
+                href="#contacto"
+                class="btn-primary inline-flex items-center justify-center rounded-full px-6 py-3 text-base font-semibold shadow-soft transition"
+              >
+                Llamar Ahora
+              </a>
+              <a
+                href="#whatsapp"
+                class="btn-secondary inline-flex items-center justify-center rounded-full px-6 py-3 text-base font-semibold transition"
+              >
+                Contactar por WhatsApp
+              </a>
+            </div>
+            <div class="reveal flex flex-wrap items-center gap-6 text-sm text-slate-500" data-anim="fade">
+              <span><!-- <Replace with Phone> -->Teléfono: +56 9 1234 5678</span>
+              <span><!-- <Replace with Email> -->Email: contacto@gasfiter.cl</span>
+              <span><!-- <Replace with Hours> -->Horario: 24/7</span>
+            </div>
+          </div>
+          <div class="reveal rounded-3xl bg-white/70 p-4 shadow-soft backdrop-blur" data-anim="zoom">
+            <img
+              class="h-80 w-full rounded-2xl object-cover"
+              src="https://placehold.co/600x500/png"
+              alt="<!-- CAMBIO FACIL: IMAGEN HERO -->Gasfiter revisando una instalación"
+            />
+            <div class="mt-4 flex items-center justify-between rounded-2xl bg-white px-4 py-3 shadow-sm">
+              <div>
+                <p class="text-sm font-semibold text-ink">Respuesta inmediata</p>
+                <p class="text-xs text-slate-500">En tu domicilio en menos de 60 minutos</p>
+              </div>
+              <span class="rounded-full bg-primary px-3 py-1 text-xs font-semibold text-white">24/7</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COMPONENTE: SERVICIOS (BENTO GRID 3x3) -->
+    <section id="servicios" class="mx-auto max-w-6xl px-6 py-20">
+      <div class="mb-12 max-w-2xl space-y-4">
+        <h2 class="reveal font-display text-3xl font-bold text-ink md:text-4xl" data-anim="fade">
+          <!-- CAMBIO FACIL: TITULO SERVICIOS -->
+          Servicios de gasfitería 24/7 en tu comuna
+        </h2>
+        <p class="reveal text-base text-slate-600" data-anim="fade">
+          <!-- CAMBIO FACIL: SUBTITULO SERVICIOS -->
+          Soluciones rápidas para hogares y negocios. Diagnóstico claro, precio transparente y garantía escrita.
+        </p>
+      </div>
+      <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <article class="reveal bento-card overflow-hidden rounded-3xl shadow-soft lg:min-h-[420px]" data-anim="slide-right">
+          <div class="h-44 w-full">
+            <img
+              class="h-full w-full object-cover"
+              src="https://placehold.co/600x360/png?text=Fugas"
+              alt="<!-- CAMBIO FACIL: IMAGEN SERVICIO -->Reparación de fugas"
+            />
+          </div>
+          <div class="relative p-8">
+            <span class="absolute -top-6 left-8 rounded-2xl bg-white p-4 text-primary shadow-soft">
+              <!-- CAMBIO FACIL: ICONO DEL SERVICIO -->
+              <svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 2a7 7 0 0 0-7 7v3a5 5 0 0 0 5 5h2a5 5 0 0 0 5-5V9a7 7 0 0 0-7-7Zm-3 7a3 3 0 0 1 6 0v3a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1V9Z" />
+                <path d="M8 21a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2H9a1 1 0 0 1-1-1Z" />
+              </svg>
+            </span>
+            <h3 class="mt-6 text-2xl font-semibold text-ink"><!-- CAMBIO FACIL: TÍTULO DEL SERVICIO -->Detección y reparación de fugas</h3>
+            <p class="mt-3 text-base text-slate-500"><!-- CAMBIO FACIL: DESCRIPCIÓN DEL SERVICIO -->Tecnología termográfica para ubicar la fuga sin romper más de lo necesario.</p>
+          </div>
+        </article>
+        <article class="reveal bento-card overflow-hidden rounded-3xl shadow-soft lg:min-h-[400px]" data-anim="slide-left">
+          <div class="h-44 w-full">
+            <img
+              class="h-full w-full object-cover"
+              src="https://placehold.co/600x360/png?text=Destape"
+              alt="<!-- CAMBIO FACIL: IMAGEN SERVICIO -->Destape de cañerías"
+            />
+          </div>
+          <div class="relative p-8">
+            <span class="absolute -top-6 left-8 rounded-2xl bg-white p-4 text-accent shadow-soft">
+              <!-- CAMBIO FACIL: ICONO DEL SERVICIO -->
+              <svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 3a1 1 0 0 1 1 1v9.59l3.3 3.3a1 1 0 1 1-1.42 1.42l-3.59-3.59A1 1 0 0 1 11 14V4a1 1 0 0 1 1-1Z" />
+              </svg>
+            </span>
+            <h3 class="mt-6 text-2xl font-semibold text-ink"><!-- CAMBIO FACIL: TÍTULO DEL SERVICIO -->Destape de cañerías</h3>
+            <p class="mt-3 text-base text-slate-500"><!-- CAMBIO FACIL: DESCRIPCIÓN DEL SERVICIO -->Equipos de presión y cámaras endoscópicas.</p>
+          </div>
+        </article>
+        <article class="reveal bento-card overflow-hidden rounded-3xl shadow-soft lg:min-h-[420px]" data-anim="slide-left">
+          <div class="h-44 w-full">
+            <img
+              class="h-full w-full object-cover"
+              src="https://placehold.co/600x360/png?text=Griferias"
+              alt="<!-- CAMBIO FACIL: IMAGEN SERVICIO -->Instalación de grifería"
+            />
+          </div>
+          <div class="relative p-8">
+            <span class="absolute -top-6 left-8 rounded-2xl bg-white p-4 text-primary shadow-soft">
+              <!-- CAMBIO FACIL: ICONO DEL SERVICIO -->
+              <svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 2a7 7 0 0 0-7 7v3a5 5 0 0 0 5 5h2a5 5 0 0 0 5-5V9a7 7 0 0 0-7-7Zm-4 7a4 4 0 0 1 8 0v3a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2V9Z" />
+              </svg>
+            </span>
+            <h3 class="mt-6 text-2xl font-semibold text-ink"><!-- CAMBIO FACIL: TÍTULO DEL SERVICIO -->Instalación de griferías</h3>
+            <p class="mt-3 text-base text-slate-500"><!-- CAMBIO FACIL: DESCRIPCIÓN DEL SERVICIO -->Cambio completo con prueba de sellado.</p>
+          </div>
+        </article>
+        <article class="reveal bento-card overflow-hidden rounded-3xl shadow-soft lg:min-h-[400px]" data-anim="slide-right">
+          <div class="h-44 w-full">
+            <img
+              class="h-full w-full object-cover"
+              src="https://placehold.co/600x360/png?text=Mantencion"
+              alt="<!-- CAMBIO FACIL: IMAGEN SERVICIO -->Mantención preventiva"
+            />
+          </div>
+          <div class="relative p-8">
+            <span class="absolute -top-6 left-8 rounded-2xl bg-white p-4 text-accent shadow-soft">
+              <!-- CAMBIO FACIL: ICONO DEL SERVICIO -->
+              <svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 5a1 1 0 0 1 1-1h4a1 1 0 1 1 0 2H6v12h3a1 1 0 1 1 0 2H5a1 1 0 0 1-1-1V5Z" />
+                <path d="M14 7a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1h-4a1 1 0 1 1 0-2h3V8h-3a1 1 0 0 1-1-1Z" />
+              </svg>
+            </span>
+            <h3 class="mt-6 text-2xl font-semibold text-ink"><!-- CAMBIO FACIL: TÍTULO DEL SERVICIO -->Mantención preventiva</h3>
+            <p class="mt-3 text-base text-slate-500"><!-- CAMBIO FACIL: DESCRIPCIÓN DEL SERVICIO -->Planes para condominios y locales.</p>
+          </div>
+        </article>
+        <article class="reveal bento-card overflow-hidden rounded-3xl shadow-soft lg:min-h-[420px]" data-anim="slide-right">
+          <div class="h-44 w-full">
+            <img
+              class="h-full w-full object-cover"
+              src="https://placehold.co/600x360/png?text=Calefont"
+              alt="<!-- CAMBIO FACIL: IMAGEN SERVICIO -->Instalación de calefont"
+            />
+          </div>
+          <div class="relative p-8">
+            <span class="absolute -top-6 left-8 rounded-2xl bg-white p-4 text-primary shadow-soft">
+              <!-- CAMBIO FACIL: ICONO DEL SERVICIO -->
+              <svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M5 4a1 1 0 0 1 1-1h3a1 1 0 1 1 0 2H7v14h2a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1V4Z" />
+                <path d="M13 7a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-4a1 1 0 1 1 0-2h3V8h-3a1 1 0 0 1-1-1Z" />
+              </svg>
+            </span>
+            <h3 class="mt-6 text-2xl font-semibold text-ink"><!-- CAMBIO FACIL: TÍTULO DEL SERVICIO -->Instalación de calefont</h3>
+            <p class="mt-3 text-base text-slate-500"><!-- CAMBIO FACIL: DESCRIPCIÓN DEL SERVICIO -->Con certificación y puesta en marcha segura.</p>
+          </div>
+        </article>
+        <article class="reveal bento-card overflow-hidden rounded-3xl shadow-soft lg:min-h-[400px]" data-anim="slide-right">
+          <div class="h-44 w-full">
+            <img
+              class="h-full w-full object-cover"
+              src="https://placehold.co/600x360/png?text=Emergencias"
+              alt="<!-- CAMBIO FACIL: IMAGEN SERVICIO -->Emergencias"
+            />
+          </div>
+          <div class="relative p-8">
+            <span class="absolute -top-6 left-8 rounded-2xl bg-white p-4 text-accent shadow-soft">
+              <!-- CAMBIO FACIL: ICONO DEL SERVICIO -->
+              <svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M7 2a1 1 0 0 1 1 1v4a1 1 0 0 1-2 0V3a1 1 0 0 1 1-1Z" />
+                <path d="M17 2a1 1 0 0 1 1 1v4a1 1 0 0 1-2 0V3a1 1 0 0 1 1-1Z" />
+                <path d="M5 9a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v9a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V9Z" />
+              </svg>
+            </span>
+            <h3 class="mt-6 text-2xl font-semibold text-ink"><!-- CAMBIO FACIL: TÍTULO DEL SERVICIO -->Emergencias 24/7</h3>
+            <p class="mt-3 text-base text-slate-500"><!-- CAMBIO FACIL: DESCRIPCIÓN DEL SERVICIO -->Atención urgente en menos de 60 minutos.</p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- COMPONENTE: POR QUE ELEGIRNOS -->
+    <section class="bg-blue-50 py-20">
+      <div class="mx-auto grid max-w-6xl gap-12 px-6 lg:grid-cols-2 lg:items-center">
+        <div class="reveal order-2 lg:order-1" data-anim="slide-right">
+          <img
+            class="w-full rounded-3xl shadow-soft"
+            src="https://images.unsplash.com/photo-1676210133055-eab6ef033ce3"
+            alt="<!-- CAMBIO FACIL: IMAGEN POR QUE ELEGIRNOS -->Gasfiter profesional trabajando"
+          />
+        </div>
+        <div class="order-1 lg:order-2">
+          <h2 class="reveal font-display text-3xl font-bold text-blue-900 md:text-5xl" data-anim="fade">
+            ¿Por Qué Elegirnos?
+          </h2>
+          <div class="mt-8 space-y-6">
+            <div class="reveal flex items-start gap-4" data-anim="slide-left">
+              <span class="flex h-12 w-12 items-center justify-center rounded-full bg-accent text-white">
+                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M21.801 10A10 10 0 1 1 17 3.335"></path>
+                  <path d="m9 11 3 3L22 4"></path>
+                </svg>
+              </span>
+              <div>
+                <h3 class="text-xl font-semibold text-blue-900"><!-- CAMBIO FACIL: TITULO BENEFICIO -->Experiencia Comprobada</h3>
+                <p class="text-base text-slate-600"><!-- CAMBIO FACIL: TEXTO BENEFICIO -->Más de 10 años atendiendo clientes en toda la región.</p>
+              </div>
+            </div>
+            <div class="reveal flex items-start gap-4" data-anim="slide-left">
+              <span class="flex h-12 w-12 items-center justify-center rounded-full bg-accent text-white">
+                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M21.801 10A10 10 0 1 1 17 3.335"></path>
+                  <path d="m9 11 3 3L22 4"></path>
+                </svg>
+              </span>
+              <div>
+                <h3 class="text-xl font-semibold text-blue-900"><!-- CAMBIO FACIL: TITULO BENEFICIO -->Certificación Profesional</h3>
+                <p class="text-base text-slate-600"><!-- CAMBIO FACIL: TEXTO BENEFICIO -->Certificación SEC vigente y cumplimiento de normativas.</p>
+              </div>
+            </div>
+            <div class="reveal flex items-start gap-4" data-anim="slide-left">
+              <span class="flex h-12 w-12 items-center justify-center rounded-full bg-accent text-white">
+                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M21.801 10A10 10 0 1 1 17 3.335"></path>
+                  <path d="m9 11 3 3L22 4"></path>
+                </svg>
+              </span>
+              <div>
+                <h3 class="text-xl font-semibold text-blue-900"><!-- CAMBIO FACIL: TITULO BENEFICIO -->Precio Justo y Transparente</h3>
+                <p class="text-base text-slate-600"><!-- CAMBIO FACIL: TEXTO BENEFICIO -->Cotización detallada antes de iniciar cualquier trabajo.</p>
+              </div>
+            </div>
+            <div class="reveal flex items-start gap-4" data-anim="slide-left">
+              <span class="flex h-12 w-12 items-center justify-center rounded-full bg-accent text-white">
+                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M21.801 10A10 10 0 1 1 17 3.335"></path>
+                  <path d="m9 11 3 3L22 4"></path>
+                </svg>
+              </span>
+              <div>
+                <h3 class="text-xl font-semibold text-blue-900"><!-- CAMBIO FACIL: TITULO BENEFICIO -->Garantía en Todos los Trabajos</h3>
+                <p class="text-base text-slate-600"><!-- CAMBIO FACIL: TEXTO BENEFICIO -->6 meses de garantía en mano de obra y materiales.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COMPONENTE: TESTIMONIOS -->
+    <section id="testimonios" class="py-20">
+      <div class="mx-auto max-w-5xl px-6">
+        <div class="reveal text-center" data-anim="fade">
+          <h2 class="font-display text-3xl font-bold text-blue-900 md:text-5xl">Lo Que Dicen Nuestros Clientes</h2>
+          <p class="mt-4 text-lg text-slate-600">Más de 200 clientes satisfechos respaldan nuestro trabajo.</p>
+        </div>
+        <div class="reveal mt-12 rounded-3xl border border-blue-200 bg-white p-8 shadow-soft md:p-12" data-anim="zoom">
+          <div class="flex justify-center gap-2">
+            <svg width="24" height="24" fill="currentColor" class="text-accent" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path>
+            </svg>
+            <svg width="24" height="24" fill="currentColor" class="text-accent" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path>
+            </svg>
+            <svg width="24" height="24" fill="currentColor" class="text-accent" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path>
+            </svg>
+            <svg width="24" height="24" fill="currentColor" class="text-accent" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path>
+            </svg>
+            <svg width="24" height="24" fill="currentColor" class="text-accent" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path>
+            </svg>
+          </div>
+          <p class="mt-6 text-center text-xl italic text-slate-700">
+            “<!-- CAMBIO FACIL: TEXTO TESTIMONIO -->Excelente servicio, llegaron rápido y solucionaron la fuga en menos de 2 horas.”
+          </p>
+          <div class="mt-6 flex flex-col items-center gap-3">
+            <img
+              class="h-16 w-16 rounded-full object-cover shadow-soft"
+              src="https://placehold.co/120x120/png?text=Cliente"
+              alt="<!-- CAMBIO FACIL: FOTO CLIENTE -->Cliente satisfecho"
+            />
+            <p class="text-center text-lg font-semibold text-blue-900">- <!-- CAMBIO FACIL: NOMBRE TESTIMONIO -->María González</p>
+            <p class="text-xs text-slate-500"><!-- CAMBIO FACIL: COMUNA CLIENTE -->Las Condes</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COMPONENTE: PROCESO DE TRABAJO -->
+    <section id="proceso" class="bg-slate-50 py-20">
+      <div class="mx-auto max-w-6xl px-6">
+        <div class="reveal text-center" data-anim="fade">
+          <h2 class="font-display text-3xl font-bold text-ink md:text-5xl">
+            <!-- CAMBIO FACIL: TITULO PROCESO -->Nuestro Proceso de Trabajo
+          </h2>
+          <p class="mt-4 text-base text-slate-600 md:text-lg">
+            <!-- CAMBIO FACIL: SUBTITULO PROCESO -->Simple, rápido y efectivo. Así resolvemos tus problemas.
+          </p>
+        </div>
+        <div class="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+          <article class="reveal space-y-3 rounded-3xl bg-white p-6 shadow-soft" data-anim="slide-right">
+            <div class="text-4xl font-semibold text-blue-200">01</div>
+            <h3 class="text-lg font-semibold text-ink"><!-- CAMBIO FACIL: TITULO PASO -->Contacto</h3>
+            <p class="text-sm text-slate-500">
+              <!-- CAMBIO FACIL: DESCRIPCION PASO -->Llámanos o escríbenos por WhatsApp. Te atendemos 24/7.
+            </p>
+          </article>
+          <article class="reveal space-y-3 rounded-3xl bg-white p-6 shadow-soft" data-anim="slide-right">
+            <div class="text-4xl font-semibold text-blue-200">02</div>
+            <h3 class="text-lg font-semibold text-ink"><!-- CAMBIO FACIL: TITULO PASO -->Diagnóstico</h3>
+            <p class="text-sm text-slate-500">
+              <!-- CAMBIO FACIL: DESCRIPCION PASO -->Evaluamos tu problema y entregamos una cotización transparente.
+            </p>
+          </article>
+          <article class="reveal space-y-3 rounded-3xl bg-white p-6 shadow-soft" data-anim="slide-right">
+            <div class="text-4xl font-semibold text-blue-200">03</div>
+            <h3 class="text-lg font-semibold text-ink"><!-- CAMBIO FACIL: TITULO PASO -->Ejecución</h3>
+            <p class="text-sm text-slate-500">
+              <!-- CAMBIO FACIL: DESCRIPCION PASO -->Realizamos el trabajo con profesionalismo y eficiencia.
+            </p>
+          </article>
+          <article class="reveal space-y-3 rounded-3xl bg-white p-6 shadow-soft" data-anim="slide-right">
+            <div class="text-4xl font-semibold text-blue-200">04</div>
+            <h3 class="text-lg font-semibold text-ink"><!-- CAMBIO FACIL: TITULO PASO -->Garantía</h3>
+            <p class="text-sm text-slate-500">
+              <!-- CAMBIO FACIL: DESCRIPCION PASO -->Te entregamos garantía por escrito en todos los trabajos.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- COMPONENTE: CTA PRINCIPAL -->
+    <section id="contacto" class="bg-gradient-to-r from-orange-600 to-orange-700 py-20 text-white">
+      <div class="mx-auto max-w-5xl px-6 text-center">
+        <h2 class="reveal font-display text-3xl font-bold md:text-5xl" data-anim="fade">
+          ¿Necesitas un Gasfiter Ahora?
+        </h2>
+        <p class="reveal mt-4 text-lg text-white/90" data-anim="fade">
+          Atención de emergencias 24/7. Llámanos y resolvemos tu problema hoy mismo.
+        </p>
+        <div class="reveal mt-8 flex flex-col justify-center gap-4 sm:flex-row" data-anim="zoom">
+          <a
+            href="tel:+56912345678"
+            class="inline-flex items-center justify-center rounded-full bg-white px-8 py-3 text-lg font-semibold text-orange-600 shadow-soft transition hover:scale-[1.02]"
+          >
+            Llamar Ahora: +56 9 1234 5678
+          </a>
+          <a
+            id="whatsapp"
+            href="https://wa.me/56912345678"
+            class="inline-flex items-center justify-center rounded-full border-2 border-white px-8 py-3 text-lg font-semibold text-white shadow-soft transition hover:bg-white hover:text-orange-600"
+          >
+            Escribir por WhatsApp
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- COMPONENTE: FAQ -->
+    <section id="faq" class="py-20">
+      <div class="mx-auto max-w-4xl px-6">
+        <div class="reveal text-center" data-anim="fade">
+          <h2 class="font-display text-3xl font-bold text-blue-900 md:text-5xl">Preguntas Frecuentes</h2>
+          <p class="mt-4 text-lg text-slate-600">Resolvemos tus dudas sobre nuestros servicios.</p>
+        </div>
+        <div class="mt-10 space-y-4">
+          <details class="reveal rounded-2xl border border-slate-200 bg-white p-6 shadow-soft" data-anim="slide-right">
+            <summary class="cursor-pointer text-lg font-semibold text-blue-900">¿Cuánto tiempo demoran en llegar?</summary>
+            <p class="mt-3 text-base text-slate-600"><!-- CAMBIO FACIL: RESPUESTA FAQ -->En promedio 60 minutos dentro del área metropolitana.</p>
+          </details>
+          <details class="reveal rounded-2xl border border-slate-200 bg-white p-6 shadow-soft" data-anim="slide-right">
+            <summary class="cursor-pointer text-lg font-semibold text-blue-900">¿Tienen certificación para trabajos de gas?</summary>
+            <p class="mt-3 text-base text-slate-600">Contamos con certificación SEC vigente y técnicos acreditados.</p>
+          </details>
+          <details class="reveal rounded-2xl border border-slate-200 bg-white p-6 shadow-soft" data-anim="slide-right">
+            <summary class="cursor-pointer text-lg font-semibold text-blue-900">¿Hacen cotizaciones sin costo?</summary>
+            <p class="mt-3 text-base text-slate-600">Sí, la cotización es gratuita y sin compromiso.</p>
+          </details>
+          <details class="reveal rounded-2xl border border-slate-200 bg-white p-6 shadow-soft" data-anim="slide-right">
+            <summary class="cursor-pointer text-lg font-semibold text-blue-900">¿Qué formas de pago aceptan?</summary>
+            <p class="mt-3 text-base text-slate-600">Aceptamos transferencia, tarjeta y efectivo.</p>
+          </details>
+          <details class="reveal rounded-2xl border border-slate-200 bg-white p-6 shadow-soft" data-anim="slide-right">
+            <summary class="cursor-pointer text-lg font-semibold text-blue-900">¿Los trabajos tienen garantía?</summary>
+            <p class="mt-3 text-base text-slate-600">Garantía de 6 meses en mano de obra y materiales.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- COMPONENTE: FOOTER -->
+    <footer class="bg-blue-950 py-12 text-white">
+      <div class="mx-auto max-w-6xl px-6">
+        <div class="grid gap-12 md:grid-cols-3">
+          <div class="reveal" data-anim="fade">
+            <div class="flex items-center gap-2">
+              <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-accent" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+              </svg>
+              <span class="text-2xl font-bold">Gasfiter</span>
+            </div>
+            <p class="mt-4 text-sm text-blue-200">
+              <!-- CAMBIO FACIL: DESCRIPCION FOOTER -->
+              Servicios profesionales de gasfitería con certificación SEC y garantía en todos nuestros trabajos.
+            </p>
+          </div>
+          <div class="reveal" data-anim="fade">
+            <h3 class="text-xl font-semibold text-accent">Contacto</h3>
+            <div class="mt-4 space-y-3 text-sm text-blue-100">
+              <p><!-- <Replace with Phone> -->+56 9 1234 5678</p>
+              <p><!-- <Replace with WhatsApp> -->WhatsApp: +56 9 1234 5678</p>
+              <p><!-- <Replace with Hours> -->Lun-Vie: 8:00-20:00, Sáb: 9:00-18:00</p>
+            </div>
+          </div>
+          <div class="reveal" data-anim="fade">
+            <h3 class="text-xl font-semibold text-accent">Enlaces Rápidos</h3>
+            <div class="mt-4 space-y-2 text-sm text-blue-100">
+              <a class="block transition hover:text-accent" href="#servicios">Servicios</a>
+              <a class="block transition hover:text-accent" href="#testimonios">Testimonios</a>
+              <a class="block transition hover:text-accent" href="#faq">Preguntas Frecuentes</a>
+              <a class="block transition hover:text-accent" href="#contacto">Solicitar Cotización</a>
+            </div>
+          </div>
+        </div>
+        <p class="mt-10 border-t border-blue-800 pt-6 text-center text-xs text-blue-200">
+          © 2025 Gasfiter. Todos los derechos reservados.
+        </p>
+      </div>
+    </footer>
+
+    <script>
+      const revealItems = document.querySelectorAll(".reveal");
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("is-visible");
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.2 }
+      );
+      revealItems.forEach((item) => observer.observe(item));
+    </script>
+  </body>
+</html>
