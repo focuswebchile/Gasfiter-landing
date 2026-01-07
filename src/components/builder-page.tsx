@@ -11,11 +11,53 @@ type BuilderContent = {
   };
 };
 
+type BuilderBlock = {
+  component?: {
+    name?: string;
+    options?: {
+      text?: string;
+      src?: string;
+      href?: string;
+      url?: string;
+    };
+  };
+  text?: string;
+  children?: BuilderBlock[];
+};
+
 const apiKey = process.env.NEXT_PUBLIC_BUILDER_API_KEY || "";
 
 if (apiKey) {
   builder.init(apiKey);
 }
+
+const hasRenderableBlocks = (blocks: BuilderBlock[]): boolean => {
+  for (const block of blocks) {
+    const text =
+      typeof block.component?.options?.text === "string"
+        ? block.component?.options?.text
+        : typeof block.text === "string"
+        ? block.text
+        : "";
+    if (text.trim().length > 0) {
+      return true;
+    }
+
+    if (
+      block.component?.options?.src ||
+      block.component?.options?.href ||
+      block.component?.options?.url
+    ) {
+      return true;
+    }
+
+    if (block.children && hasRenderableBlocks(block.children)) {
+      return true;
+    }
+  }
+
+  return false;
+};
 
 export default function BuilderPage() {
   const [content, setContent] = useState<BuilderContent | null | undefined>(
@@ -46,7 +88,8 @@ export default function BuilderPage() {
   const hasBlocks =
     !!content &&
     Array.isArray(content.data?.blocks) &&
-    content.data?.blocks.length > 0;
+    content.data?.blocks.length > 0 &&
+    hasRenderableBlocks(content.data?.blocks as BuilderBlock[]);
 
   if (!hasBlocks) {
     return <LandingFallback />;
