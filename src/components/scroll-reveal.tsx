@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+
 const inViewport = (el: HTMLElement) => {
   const rect = el.getBoundingClientRect();
   const offset = window.innerHeight * 0.1;
