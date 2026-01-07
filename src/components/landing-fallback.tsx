@@ -453,7 +453,7 @@ const landingHtml = String.raw`
               id="nombre"
               name="nombre"
               type="text"
-              placeholder="<!-- CAMBIO FACIL: NOMBRE -->Tu nombre"
+              placeholder="Tu nombre"
               class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-base text-slate-700 focus:border-primary focus:outline-none"
             />
           </div>
@@ -463,7 +463,7 @@ const landingHtml = String.raw`
               id="telefono"
               name="telefono"
               type="tel"
-              placeholder="<!-- CAMBIO FACIL: TELEFONO -->+56 9 1234 5678"
+              placeholder="+56 9 1234 5678"
               class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-base text-slate-700 focus:border-primary focus:outline-none"
             />
           </div>
@@ -473,7 +473,7 @@ const landingHtml = String.raw`
               id="problema"
               name="problema"
               rows="4"
-              placeholder="<!-- CAMBIO FACIL: PROBLEMA -->Describe brevemente tu problema"
+              placeholder="Describe brevemente tu problema"
               class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-base text-slate-700 focus:border-primary focus:outline-none"
             ></textarea>
           </div>
