@@ -9,8 +9,8 @@ const inViewport = (el: HTMLElement) => {
 };
 
 const isValidTarget = (el: HTMLElement) =>
+  !el.hasAttribute("data-no-reveal") &&
   el.tagName !== "NAV" &&
-  el.tagName !== "HEADER" &&
   el.tagName !== "SCRIPT" &&
   el.offsetHeight > 0;
 
