@@ -53,31 +53,36 @@ body {
 }
 
 .reveal {
-  opacity: 0;
-  transform: translateY(20px);
+  opacity: 1;
+  transform: none;
   transition: opacity 0.8s ease, transform 0.8s ease;
 }
 
-.reveal.is-visible {
+.js-reveal .reveal {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.js-reveal .reveal.is-visible {
   opacity: 1;
   transform: translateY(0);
 }
 
-.reveal[data-anim="zoom"] {
+.js-reveal .reveal[data-anim="zoom"] {
   transform: scale(0.96);
 }
 
-.reveal[data-anim="slide-left"] {
+.js-reveal .reveal[data-anim="slide-left"] {
   transform: translateX(24px);
 }
 
-.reveal[data-anim="slide-right"] {
+.js-reveal .reveal[data-anim="slide-right"] {
   transform: translateX(-24px);
 }
 
-.reveal.is-visible[data-anim="zoom"],
-.reveal.is-visible[data-anim="slide-left"],
-.reveal.is-visible[data-anim="slide-right"] {
+.js-reveal .reveal.is-visible[data-anim="zoom"],
+.js-reveal .reveal.is-visible[data-anim="slide-left"],
+.js-reveal .reveal.is-visible[data-anim="slide-right"] {
   transform: none;
 }
 

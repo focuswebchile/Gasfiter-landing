@@ -1,5 +1,3 @@
-import ScrollReveal from "./scroll-reveal";
-
 type LandingFallbackProps = {
   showNotice?: boolean;
 };
@@ -486,7 +484,6 @@ export default function LandingFallback({ showNotice }: LandingFallbackProps) {
         </div>
       ) : null}
       <div dangerouslySetInnerHTML={{ __html: landingHtml }} />
-      <ScrollReveal />
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import { BuilderComponent, builder } from "@builder.io/react";
 import { useEffect, useState } from "react";
 import LandingFallback from "./landing-fallback";
+import ScrollReveal from "./scroll-reveal";
 
 type BuilderContent = {
   id?: string;
@@ -82,7 +83,12 @@ export default function BuilderPage() {
   }, []);
 
   if (!apiKey) {
-    return <LandingFallback showNotice />;
+    return (
+      <>
+        <LandingFallback showNotice />
+        <ScrollReveal />
+      </>
+    );
   }
 
   const hasBlocks =
@@ -92,8 +98,18 @@ export default function BuilderPage() {
     hasRenderableBlocks(content.data?.blocks as BuilderBlock[]);
 
   if (!hasBlocks) {
-    return <LandingFallback />;
+    return (
+      <>
+        <LandingFallback />
+        <ScrollReveal />
+      </>
+    );
   }
 
-  return <BuilderComponent model="page" content={content} />;
+  return (
+    <>
+      <BuilderComponent model="page" content={content} />
+      <ScrollReveal />
+    </>
+  );
 }

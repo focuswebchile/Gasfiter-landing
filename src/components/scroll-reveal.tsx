@@ -4,6 +4,7 @@ import { useEffect } from "react";
 
 export default function ScrollReveal() {
   useEffect(() => {
+    document.body.classList.add("js-reveal");
     const items = document.querySelectorAll<HTMLElement>(".reveal");
     if (!items.length) {
       return;
@@ -23,7 +24,10 @@ export default function ScrollReveal() {
 
     items.forEach((item) => observer.observe(item));
 
-    return () => observer.disconnect();
+    return () => {
+      document.body.classList.remove("js-reveal");
+      observer.disconnect();
+    };
   }, []);
 
   return null;
