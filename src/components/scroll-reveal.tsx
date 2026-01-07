@@ -54,7 +54,10 @@ export default function ScrollReveal() {
         }
 
         if (inViewport(item)) {
-          item.classList.remove("is-hidden");
+          item.classList.add("is-hidden");
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => item.classList.remove("is-hidden"));
+          });
         } else {
           item.classList.add("is-hidden");
         }
