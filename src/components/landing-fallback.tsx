@@ -433,6 +433,66 @@ const landingHtml = String.raw`
       </div>
     </section>
 
+    <!-- COMPONENTE: CONTACTO RAPIDO -->
+    <section id="contacto-rapido" class="py-20">
+      <div class="mx-auto max-w-4xl px-6">
+        <div class="reveal text-center" data-anim="fade">
+          <h2 class="font-display text-3xl font-bold text-blue-900 md:text-5xl">
+            <!-- CAMBIO FACIL: TITULO CONTACTO -->
+            ¿En qué te podemos ayudar?
+          </h2>
+          <p class="mt-4 text-lg text-slate-600">
+            <!-- CAMBIO FACIL: SUBTITULO CONTACTO -->
+            Cuéntanos tu problema y te contactamos en minutos.
+          </p>
+        </div>
+        <form class="reveal mt-10 grid gap-4 rounded-3xl border border-slate-200 bg-white p-8 shadow-soft md:grid-cols-2" data-anim="slide-up">
+          <div class="space-y-2">
+            <label class="text-sm font-semibold text-blue-900" for="nombre">Nombre</label>
+            <input
+              id="nombre"
+              name="nombre"
+              type="text"
+              placeholder="<!-- CAMBIO FACIL: NOMBRE -->Tu nombre"
+              class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-base text-slate-700 focus:border-primary focus:outline-none"
+            />
+          </div>
+          <div class="space-y-2">
+            <label class="text-sm font-semibold text-blue-900" for="telefono">Número de contacto</label>
+            <input
+              id="telefono"
+              name="telefono"
+              type="tel"
+              placeholder="<!-- CAMBIO FACIL: TELEFONO -->+56 9 1234 5678"
+              class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-base text-slate-700 focus:border-primary focus:outline-none"
+            />
+          </div>
+          <div class="space-y-2 md:col-span-2">
+            <label class="text-sm font-semibold text-blue-900" for="problema">¿Cuál es tu problema?</label>
+            <textarea
+              id="problema"
+              name="problema"
+              rows="4"
+              placeholder="<!-- CAMBIO FACIL: PROBLEMA -->Describe brevemente tu problema"
+              class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-base text-slate-700 focus:border-primary focus:outline-none"
+            ></textarea>
+          </div>
+          <div class="md:col-span-2">
+            <button
+              type="submit"
+              class="inline-flex w-full items-center justify-center rounded-full bg-accent px-6 py-3 text-base font-semibold text-ink shadow-soft transition hover:brightness-95"
+            >
+              Solicitar Cotización
+            </button>
+          </div>
+          <p class="md:col-span-2 text-center text-xs text-slate-500">
+            <!-- CAMBIO FACIL: TEXTO NOTA -->
+            Respuesta rápida en horario laboral. Emergencias 24/7 por teléfono o WhatsApp.
+          </p>
+        </form>
+      </div>
+    </section>
+
     <!-- COMPONENTE: FOOTER -->
     <footer class="bg-blue-950 py-12 text-white">
       <div class="mx-auto max-w-6xl px-6">
