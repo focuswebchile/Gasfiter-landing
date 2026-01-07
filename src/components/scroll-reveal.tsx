@@ -20,31 +20,7 @@ export default function ScrollReveal() {
       return;
     }
 
-    const revealItems = new Set<HTMLElement>();
-    document
-      .querySelectorAll<HTMLElement>(".reveal")
-      .forEach((el) => revealItems.add(el));
-    document
-      .querySelectorAll<HTMLElement>("section, article, footer")
-      .forEach((el) => revealItems.add(el));
-
-    const items = Array.from(revealItems).filter(isValidTarget);
-    if (!items.length) {
-      return;
-    }
-
-    items.forEach((item) => {
-      if (!item.classList.contains("reveal")) {
-        item.classList.add("auto-reveal");
-      }
-
-      if (inViewport(item)) {
-        item.classList.remove("is-hidden");
-      } else {
-        item.classList.add("is-hidden");
-      }
-    });
-
+    const seen = new WeakSet<HTMLElement>();
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -57,9 +33,47 @@ export default function ScrollReveal() {
       { threshold: 0.2 }
     );
 
-    items.forEach((item) => observer.observe(item));
+    const register = () => {
+      const revealItems = new Set<HTMLElement>();
+      document
+        .querySelectorAll<HTMLElement>(".reveal")
+        .forEach((el) => revealItems.add(el));
+      document
+        .querySelectorAll<HTMLElement>("section, article, footer")
+        .forEach((el) => revealItems.add(el));
 
-    return () => observer.disconnect();
+      const items = Array.from(revealItems).filter(isValidTarget);
+      items.forEach((item) => {
+        if (seen.has(item)) {
+          return;
+        }
+        seen.add(item);
+
+        if (!item.classList.contains("reveal")) {
+          item.classList.add("auto-reveal");
+        }
+
+        if (inViewport(item)) {
+          item.classList.remove("is-hidden");
+        } else {
+          item.classList.add("is-hidden");
+        }
+
+        observer.observe(item);
+      });
+    };
+
+    register();
+    const timer = window.setTimeout(register, 1000);
+
+    const mutation = new MutationObserver(() => register());
+    mutation.observe(document.body, { childList: true, subtree: true });
+
+    return () => {
+      window.clearTimeout(timer);
+      mutation.disconnect();
+      observer.disconnect();
+    };
   }, []);
 
   return null;
