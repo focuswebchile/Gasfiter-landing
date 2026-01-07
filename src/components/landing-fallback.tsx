@@ -517,19 +517,21 @@ const landingHtml = String.raw`
 
     <!-- COMPONENTE: WHATSAPP FLOTANTE -->
     <div class="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
-      <div class="reveal max-w-xs rounded-3xl border border-slate-200 bg-white px-5 py-4 text-sm text-slate-700 shadow-soft" data-anim="slide-up">
-        <p class="font-semibold text-ink">¡Hola! 👋 Aquí no hay robots, solo personas listas para ayudarte.</p>
-        <p class="mt-1 text-xs text-slate-500">Asistente • Ahora</p>
+      <div class="hidden md:block">
+        <div class="reveal max-w-xs rounded-3xl border border-slate-200 bg-white px-5 py-4 text-sm text-slate-700 shadow-soft" data-anim="slide-up">
+          <p class="font-semibold text-ink">¡Hola! 👋 Aquí no hay robots, solo personas listas para ayudarte.</p>
+          <p class="mt-1 text-xs text-slate-500">Asistente • Ahora</p>
+        </div>
       </div>
       <a
         href="https://wa.me/56912345678"
-        class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-primary shadow-soft transition hover:-translate-y-0.5"
+        class="hidden rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-primary shadow-soft transition hover:-translate-y-0.5 md:inline-flex"
       >
         Tengo una pregunta sobre los servicios
       </a>
       <a
         href="https://wa.me/56912345678"
-        class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-ink shadow-soft transition hover:-translate-y-0.5"
+        class="hidden rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-ink shadow-soft transition hover:-translate-y-0.5 md:inline-flex"
       >
         Soy cliente y necesito ayuda
       </a>
