@@ -53,31 +53,65 @@ body {
 }
 
 .reveal {
-  opacity: 0;
-  transform: translateY(16px);
-  transition: opacity 0.8s ease, transform 0.8s ease;
+  opacity: 1;
+  transform: none;
+  animation: fade-up 0.8s ease both;
 }
 
 .reveal[data-anim="zoom"] {
-  transform: scale(0.96);
+  animation-name: zoom-in;
 }
 
 .reveal[data-anim="slide-left"] {
-  transform: translateX(24px);
+  animation-name: slide-left;
 }
 
 .reveal[data-anim="slide-right"] {
-  transform: translateX(-24px);
+  animation-name: slide-right;
 }
 
-.reveal.is-visible {
-  opacity: 1;
-  transform: none;
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
-.no-js .reveal {
-  opacity: 1;
-  transform: none;
+@keyframes zoom-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes slide-left {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes slide-right {
+  from {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .btn-primary {

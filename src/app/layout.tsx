@@ -45,7 +45,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className="no-js">
+    <html lang="es">
       <body
         className={`${manrope.variable} ${spaceGrotesk.variable} antialiased`}
       >
