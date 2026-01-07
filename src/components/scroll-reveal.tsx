@@ -10,6 +10,15 @@ export default function ScrollReveal() {
       return;
     }
 
+    const revealAll = () => {
+      items.forEach((item) => item.classList.add("is-visible"));
+    };
+
+    if (!("IntersectionObserver" in window)) {
+      revealAll();
+      return;
+    }
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -24,8 +33,11 @@ export default function ScrollReveal() {
 
     items.forEach((item) => observer.observe(item));
 
+    const fallbackTimer = window.setTimeout(revealAll, 1500);
+
     return () => {
       document.body.classList.remove("js-reveal");
+      window.clearTimeout(fallbackTimer);
       observer.disconnect();
     };
   }, []);
