@@ -5,13 +5,17 @@ import { useEffect } from "react";
 export default function ScrollReveal() {
   useEffect(() => {
     const items = document.querySelectorAll<HTMLElement>(".reveal");
-    document.documentElement.classList.remove("no-js");
     if (!items.length) {
       return;
     }
 
-    if (!("IntersectionObserver" in window)) {
+    const revealAll = () => {
       items.forEach((item) => item.classList.add("is-visible"));
+      document.documentElement.classList.remove("no-js");
+    };
+
+    if (!("IntersectionObserver" in window)) {
+      revealAll();
       return;
     }
 
@@ -29,7 +33,10 @@ export default function ScrollReveal() {
 
     items.forEach((item) => observer.observe(item));
 
+    const fallbackTimer = window.setTimeout(revealAll, 1200);
+
     return () => {
+      window.clearTimeout(fallbackTimer);
       observer.disconnect();
     };
   }, []);
