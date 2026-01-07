@@ -111,8 +111,7 @@ const landingHtml = String.raw`
             <span class="absolute -top-6 left-8 rounded-2xl bg-white p-4 text-primary shadow-soft">
               <!-- CAMBIO FACIL: ICONO DEL SERVICIO -->
               <svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 2a7 7 0 0 0-7 7v3a5 5 0 0 0 5 5h2a5 5 0 0 0 5-5V9a7 7 0 0 0-7-7Zm-3 7a3 3 0 0 1 6 0v3a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1V9Z" />
-                <path d="M8 21a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2H9a1 1 0 0 1-1-1Z" />
+                <path d="M4 10h7V8a4 4 0 1 1 8 0v2h2v2h-2v2a2 2 0 0 1-2 2h-3v4a2 2 0 0 1-4 0v-4H4v-2h7v-2H4v-2Z" />
               </svg>
             </span>
             <h3 class="mt-6 text-2xl font-semibold text-ink"><!-- CAMBIO FACIL: TÍTULO DEL SERVICIO -->Detección y reparación de fugas</h3>
@@ -131,7 +130,7 @@ const landingHtml = String.raw`
             <span class="absolute -top-6 left-8 rounded-2xl bg-white p-4 text-accent shadow-soft">
               <!-- CAMBIO FACIL: ICONO DEL SERVICIO -->
               <svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 3a1 1 0 0 1 1 1v9.59l3.3 3.3a1 1 0 1 1-1.42 1.42l-3.59-3.59A1 1 0 0 1 11 14V4a1 1 0 0 1 1-1Z" />
+                <path d="M3 6h18v2H3V6Zm2 4h14v4a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4v-4Zm6 2v4h2v-4h-2Z" />
               </svg>
             </span>
             <h3 class="mt-6 text-2xl font-semibold text-ink"><!-- CAMBIO FACIL: TÍTULO DEL SERVICIO -->Destape de cañerías</h3>
@@ -150,7 +149,7 @@ const landingHtml = String.raw`
             <span class="absolute -top-6 left-8 rounded-2xl bg-white p-4 text-primary shadow-soft">
               <!-- CAMBIO FACIL: ICONO DEL SERVICIO -->
               <svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 2a7 7 0 0 0-7 7v3a5 5 0 0 0 5 5h2a5 5 0 0 0 5-5V9a7 7 0 0 0-7-7Zm-4 7a4 4 0 0 1 8 0v3a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2V9Z" />
+                <path d="M21 7l-4.5 4.5-2-2L19 5l2 2ZM3 11a4 4 0 0 1 4-4h3v2H7a2 2 0 0 0-2 2v8h10v2H7a4 4 0 0 1-4-4v-8Z" />
               </svg>
             </span>
             <h3 class="mt-6 text-2xl font-semibold text-ink"><!-- CAMBIO FACIL: TÍTULO DEL SERVICIO -->Instalación de griferías</h3>
@@ -169,8 +168,7 @@ const landingHtml = String.raw`
             <span class="absolute -top-6 left-8 rounded-2xl bg-white p-4 text-accent shadow-soft">
               <!-- CAMBIO FACIL: ICONO DEL SERVICIO -->
               <svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M4 5a1 1 0 0 1 1-1h4a1 1 0 1 1 0 2H6v12h3a1 1 0 1 1 0 2H5a1 1 0 0 1-1-1V5Z" />
-                <path d="M14 7a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1h-4a1 1 0 1 1 0-2h3V8h-3a1 1 0 0 1-1-1Z" />
+                <path d="M12 2a6 6 0 0 1 6 6c0 2.5-1.4 4.7-3.5 5.7V20a2.5 2.5 0 1 1-5 0v-6.3A6.5 6.5 0 0 1 6 8a6 6 0 0 1 6-6Zm0 2a4 4 0 0 0-4 4c0 1.8 1.1 3.3 2.6 3.8l.9.3V20a.5.5 0 0 0 1 0v-7.9l.9-.3A4 4 0 0 0 16 8a4 4 0 0 0-4-4Z" />
               </svg>
             </span>
             <h3 class="mt-6 text-2xl font-semibold text-ink"><!-- CAMBIO FACIL: TÍTULO DEL SERVICIO -->Mantención preventiva</h3>
@@ -189,8 +187,7 @@ const landingHtml = String.raw`
             <span class="absolute -top-6 left-8 rounded-2xl bg-white p-4 text-primary shadow-soft">
               <!-- CAMBIO FACIL: ICONO DEL SERVICIO -->
               <svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M5 4a1 1 0 0 1 1-1h3a1 1 0 1 1 0 2H7v14h2a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1V4Z" />
-                <path d="M13 7a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-4a1 1 0 1 1 0-2h3V8h-3a1 1 0 0 1-1-1Z" />
+                <path d="M12 2a6 6 0 0 1 6 6c0 3-2 4.4-3.6 5.8-1.2 1-1.4 2-1.4 3.2h-2c0-1.5.3-3 1.8-4.3C14.2 11.3 16 10.3 16 8a4 4 0 0 0-8 0c0 1.5 1 2.7 2.4 3.5l-1 1.7C7.4 12.1 6 10.2 6 8a6 6 0 0 1 6-6Zm-1 18a1 1 0 1 0 2 0 1 1 0 0 0-2 0Z" />
               </svg>
             </span>
             <h3 class="mt-6 text-2xl font-semibold text-ink"><!-- CAMBIO FACIL: TÍTULO DEL SERVICIO -->Instalación de calefont</h3>
@@ -209,9 +206,7 @@ const landingHtml = String.raw`
             <span class="absolute -top-6 left-8 rounded-2xl bg-white p-4 text-accent shadow-soft">
               <!-- CAMBIO FACIL: ICONO DEL SERVICIO -->
               <svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M7 2a1 1 0 0 1 1 1v4a1 1 0 0 1-2 0V3a1 1 0 0 1 1-1Z" />
-                <path d="M17 2a1 1 0 0 1 1 1v4a1 1 0 0 1-2 0V3a1 1 0 0 1 1-1Z" />
-                <path d="M5 9a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v9a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V9Z" />
+                <path d="M12 2 2 20h20L12 2Zm0 6a1 1 0 0 1 1 1v5a1 1 0 1 1-2 0V9a1 1 0 0 1 1-1Zm0 10a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5Z" />
               </svg>
             </span>
             <h3 class="mt-6 text-2xl font-semibold text-ink"><!-- CAMBIO FACIL: TÍTULO DEL SERVICIO -->Emergencias 24/7</h3>
