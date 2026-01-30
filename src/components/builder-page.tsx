@@ -59,6 +59,7 @@ const hasRenderableBlocks = (blocks: BuilderBlock[]): boolean => {
 export default function BuilderPage() {
   const [content, setContent] = useState<BuilderContent | null | undefined>(undefined);
   const [settings, setSettings] = useState<Record<string, any> | null>(null);
+  const [settingsReady, setSettingsReady] = useState(false);
 
   useEffect(() => {
     if (!apiKey) {
@@ -80,6 +81,7 @@ export default function BuilderPage() {
   useEffect(() => {
     if (!backendUrl || !siteSlug) {
       setSettings(null);
+      setSettingsReady(true);
       return;
     }
     const cacheBust = Date.now()
@@ -89,8 +91,13 @@ export default function BuilderPage() {
     })
       .then((res) => (res.ok ? res.json() : null))
       .then((payload) => setSettings(payload?.settings ?? null))
-      .catch(() => setSettings(null));
+      .catch(() => setSettings(null))
+      .finally(() => setSettingsReady(true));
   }, []);
+
+  if (!settingsReady && backendUrl && siteSlug) {
+    return <div className="min-h-screen bg-white" />
+  }
 
   if (!apiKey) {
     return (
