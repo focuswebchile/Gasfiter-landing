@@ -631,6 +631,7 @@ export default function LandingFallback({ showNotice, settings }: LandingFallbac
     ["--primary" as never]: toCssVar(settings?.colors?.primary),
     ["--accent" as never]: toCssVar(settings?.colors?.secondary),
     ["--text" as never]: toCssVar(settings?.colors?.text),
+    ["--font-family" as never]: fontStack ? `${fontStack}, system-ui, sans-serif` : undefined,
   };
 
   const html = applyTokens(landingHtml, tokens);
@@ -647,6 +648,7 @@ export default function LandingFallback({ showNotice, settings }: LandingFallbac
         .hover\\:text-primary:hover { color: var(--primary) !important; }
         .hover\\:text-accent:hover { color: var(--accent) !important; }
         .text-ink { color: var(--text) !important; }
+        .font-display { font-family: var(--font-family) !important; }
       `}</style>
       {showNotice ? (
         <div className="border-b border-amber-200 bg-amber-50 px-6 py-3 text-sm text-amber-800">
