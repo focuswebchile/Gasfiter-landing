@@ -129,7 +129,7 @@ const landingHtml = String.raw`
     </section>
 
     <!-- COMPONENTE: SERVICIOS (BENTO GRID 3x3) -->
-    <section id="servicios" class="mx-auto max-w-6xl px-6 py-20">
+    <section id="servicios" class="mx-auto max-w-6xl px-6 py-20 {{SERVICES_SECTION_HIDDEN}}">
       <div class="mb-12 max-w-2xl space-y-4">
         <h2 class="reveal font-display text-3xl font-bold text-ink md:text-4xl" data-anim="fade">
           <!-- CAMBIO FACIL: TITULO SERVICIOS -->
@@ -141,84 +141,7 @@ const landingHtml = String.raw`
         </p>
       </div>
       <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <article class="reveal bento-card group overflow-hidden rounded-3xl shadow-soft transition duration-500 ease-out hover:-translate-y-0.5 hover:shadow-2xl lg:min-h-[420px]" data-anim="slide-right">
-          <div class="h-44 w-full">
-            <img
-              class="h-full w-full object-cover transition duration-500 ease-out group-hover:scale-[1.03]"
-              src="/images/gasfiter-fugas.webp"
-              alt="<!-- CAMBIO FACIL: IMAGEN SERVICIO -->Reparación de fugas"
-            />
-          </div>
-          <div class="relative p-8">
-            <h3 class="mt-6 text-2xl font-semibold text-ink"><!-- CAMBIO FACIL: TÍTULO DEL SERVICIO -->{{SERVICE_1_TITLE}}</h3>
-            <p class="mt-3 text-base text-slate-500"><!-- CAMBIO FACIL: DESCRIPCIÓN DEL SERVICIO -->{{SERVICE_1_DESC}}</p>
-          </div>
-        </article>
-        <article class="reveal bento-card group overflow-hidden rounded-3xl shadow-soft transition duration-500 ease-out hover:-translate-y-0.5 hover:shadow-2xl lg:min-h-[400px]" data-anim="slide-left">
-          <div class="h-44 w-full">
-            <img
-              class="h-full w-full object-cover transition duration-500 ease-out group-hover:scale-[1.03]"
-              src="/images/gasfiter-destape.webp"
-              alt="<!-- CAMBIO FACIL: IMAGEN SERVICIO -->Destape de cañerías"
-            />
-          </div>
-          <div class="relative p-8">
-            <h3 class="mt-6 text-2xl font-semibold text-ink"><!-- CAMBIO FACIL: TÍTULO DEL SERVICIO -->{{SERVICE_2_TITLE}}</h3>
-            <p class="mt-3 text-base text-slate-500"><!-- CAMBIO FACIL: DESCRIPCIÓN DEL SERVICIO -->{{SERVICE_2_DESC}}</p>
-          </div>
-        </article>
-        <article class="reveal bento-card group overflow-hidden rounded-3xl shadow-soft transition duration-500 ease-out hover:-translate-y-0.5 hover:shadow-2xl lg:min-h-[420px]" data-anim="slide-left">
-          <div class="h-44 w-full">
-            <img
-              class="h-full w-full object-cover transition duration-500 ease-out group-hover:scale-[1.03]"
-              src="/images/gasfiter-griferia.webp"
-              alt="<!-- CAMBIO FACIL: IMAGEN SERVICIO -->Instalación de grifería"
-            />
-          </div>
-          <div class="relative p-8">
-            <h3 class="mt-6 text-2xl font-semibold text-ink"><!-- CAMBIO FACIL: TÍTULO DEL SERVICIO -->{{SERVICE_3_TITLE}}</h3>
-            <p class="mt-3 text-base text-slate-500"><!-- CAMBIO FACIL: DESCRIPCIÓN DEL SERVICIO -->{{SERVICE_3_DESC}}</p>
-          </div>
-        </article>
-        <article class="reveal bento-card group overflow-hidden rounded-3xl shadow-soft transition duration-500 ease-out hover:-translate-y-0.5 hover:shadow-2xl lg:min-h-[400px]" data-anim="slide-right">
-          <div class="h-44 w-full">
-            <img
-              class="h-full w-full object-cover transition duration-500 ease-out group-hover:scale-[1.03]"
-              src="/images/gasfiter-mantencion.webp"
-              alt="<!-- CAMBIO FACIL: IMAGEN SERVICIO -->Mantención preventiva"
-            />
-          </div>
-          <div class="relative p-8">
-            <h3 class="mt-6 text-2xl font-semibold text-ink"><!-- CAMBIO FACIL: TÍTULO DEL SERVICIO -->Mantención preventiva</h3>
-            <p class="mt-3 text-base text-slate-500"><!-- CAMBIO FACIL: DESCRIPCIÓN DEL SERVICIO -->Planes para condominios y locales.</p>
-          </div>
-        </article>
-        <article class="reveal bento-card group overflow-hidden rounded-3xl shadow-soft transition duration-500 ease-out hover:-translate-y-0.5 hover:shadow-2xl lg:min-h-[420px]" data-anim="slide-right">
-          <div class="h-44 w-full">
-            <img
-              class="h-full w-full object-cover transition duration-500 ease-out group-hover:scale-[1.03]"
-              src="/images/gasfiter-calefont.webp"
-              alt="<!-- CAMBIO FACIL: IMAGEN SERVICIO -->Instalación de calefont"
-            />
-          </div>
-          <div class="relative p-8">
-            <h3 class="mt-6 text-2xl font-semibold text-ink"><!-- CAMBIO FACIL: TÍTULO DEL SERVICIO -->Instalación de calefont</h3>
-            <p class="mt-3 text-base text-slate-500"><!-- CAMBIO FACIL: DESCRIPCIÓN DEL SERVICIO -->Con certificación y puesta en marcha segura.</p>
-          </div>
-        </article>
-        <article class="reveal bento-card group overflow-hidden rounded-3xl shadow-soft transition duration-500 ease-out hover:-translate-y-0.5 hover:shadow-2xl lg:min-h-[400px]" data-anim="slide-right">
-          <div class="h-44 w-full">
-            <img
-              class="h-full w-full object-cover transition duration-500 ease-out group-hover:scale-[1.03]"
-              src="/images/gasfiter-emergencias.webp"
-              alt="<!-- CAMBIO FACIL: IMAGEN SERVICIO -->Emergencias"
-            />
-          </div>
-          <div class="relative p-8">
-            <h3 class="mt-6 text-2xl font-semibold text-ink"><!-- CAMBIO FACIL: TÍTULO DEL SERVICIO -->Emergencias 24/7</h3>
-            <p class="mt-3 text-base text-slate-500"><!-- CAMBIO FACIL: DESCRIPCIÓN DEL SERVICIO -->Atención urgente en menos de 60 minutos.</p>
-          </div>
-        </article>
+        {{SERVICES_ITEMS}}
       </div>
     </section>
 
@@ -425,33 +348,14 @@ const landingHtml = String.raw`
     </section>
 
     <!-- COMPONENTE: FAQ -->
-    <section id="faq" class="py-20">
+    <section id="faq" class="py-20 {{FAQ_SECTION_HIDDEN}}">
       <div class="mx-auto max-w-4xl px-6">
         <div class="reveal text-center" data-anim="fade">
           <h2 class="font-display text-3xl font-bold text-blue-900 md:text-5xl">Preguntas Frecuentes</h2>
           <p class="mt-4 text-lg text-slate-600">Resolvemos tus dudas sobre nuestros servicios.</p>
         </div>
         <div class="mt-10 space-y-4">
-          <details class="reveal rounded-2xl border border-slate-200 bg-white p-6 shadow-soft" data-anim="slide-right">
-            <summary class="cursor-pointer text-lg font-semibold text-blue-900">¿Cuánto tiempo demoran en llegar?</summary>
-            <p class="mt-3 text-base text-slate-600"><!-- CAMBIO FACIL: RESPUESTA FAQ -->En promedio 60 minutos dentro del área metropolitana.</p>
-          </details>
-          <details class="reveal rounded-2xl border border-slate-200 bg-white p-6 shadow-soft" data-anim="slide-right">
-            <summary class="cursor-pointer text-lg font-semibold text-blue-900">¿Tienen certificación para trabajos de gas?</summary>
-            <p class="mt-3 text-base text-slate-600">Contamos con certificación SEC vigente y técnicos acreditados.</p>
-          </details>
-          <details class="reveal rounded-2xl border border-slate-200 bg-white p-6 shadow-soft" data-anim="slide-right">
-            <summary class="cursor-pointer text-lg font-semibold text-blue-900">¿Hacen cotizaciones sin costo?</summary>
-            <p class="mt-3 text-base text-slate-600">Sí, la cotización es gratuita y sin compromiso.</p>
-          </details>
-          <details class="reveal rounded-2xl border border-slate-200 bg-white p-6 shadow-soft" data-anim="slide-right">
-            <summary class="cursor-pointer text-lg font-semibold text-blue-900">¿Qué formas de pago aceptan?</summary>
-            <p class="mt-3 text-base text-slate-600">Aceptamos transferencia, tarjeta y efectivo.</p>
-          </details>
-          <details class="reveal rounded-2xl border border-slate-200 bg-white p-6 shadow-soft" data-anim="slide-right">
-            <summary class="cursor-pointer text-lg font-semibold text-blue-900">¿Los trabajos tienen garantía?</summary>
-            <p class="mt-3 text-base text-slate-600">Garantía de 6 meses en mano de obra y materiales.</p>
-          </details>
+          {{FAQ_ITEMS}}
         </div>
       </div>
     </section>
@@ -598,15 +502,90 @@ export default function LandingFallback({ showNotice, settings }: LandingFallbac
     servicesTitle: "Servicios de gasfitería 24/7 en tu comuna",
     servicesSubtitle:
       "Soluciones rápidas para hogares y negocios. Diagnóstico claro, precio transparente y garantía escrita.",
-    service1Title: "Detección y reparación de fugas",
-    service1Desc: "Tecnología termográfica para ubicar la fuga sin romper más de lo necesario.",
-    service2Title: "Destape de cañerías",
-    service2Desc: "Equipos de presión y cámaras endoscópicas.",
-    service3Title: "Instalación de griferías",
-    service3Desc: "Cambio completo con prueba de sellado.",
+    servicesItems: [
+      {
+        title: "Detección y reparación de fugas",
+        description: "Tecnología termográfica para ubicar la fuga sin romper más de lo necesario.",
+      },
+      { title: "Destape de cañerías", description: "Equipos de presión y cámaras endoscópicas." },
+      { title: "Instalación de griferías", description: "Cambio completo con prueba de sellado." },
+      { title: "Mantención preventiva", description: "Planes para condominios y locales." },
+      { title: "Instalación de calefont", description: "Con certificación y puesta en marcha segura." },
+      { title: "Emergencias 24/7", description: "Atención urgente en menos de 60 minutos." },
+    ],
+    faqsItems: [
+      {
+        question: "¿Cuánto tiempo demoran en llegar?",
+        answer: "En promedio 60 minutos dentro del área metropolitana.",
+      },
+      {
+        question: "¿Tienen certificación para trabajos de gas?",
+        answer: "Contamos con certificación SEC vigente y técnicos acreditados.",
+      },
+      {
+        question: "¿Hacen cotizaciones sin costo?",
+        answer: "Sí, la cotización es gratuita y sin compromiso.",
+      },
+      {
+        question: "¿Qué formas de pago aceptan?",
+        answer: "Aceptamos transferencia, tarjeta y efectivo.",
+      },
+      {
+        question: "¿Los trabajos tienen garantía?",
+        answer: "Garantía de 6 meses en mano de obra y materiales.",
+      },
+    ],
     contactTitle: "¿En qué te podemos ayudar?",
     contactSubtitle: "Cuéntanos tu problema y te contactamos en minutos.",
   };
+
+  const servicesFromSettings = settings?.content?.services;
+  const servicesItems = Array.isArray(servicesFromSettings)
+    ? servicesFromSettings
+    : Array.isArray(servicesFromSettings?.items)
+    ? servicesFromSettings?.items
+    : defaults.servicesItems;
+
+  const faqsItems = Array.isArray(settings?.content?.faqs)
+    ? settings?.content?.faqs
+    : defaults.faqsItems;
+
+  const serviceImages = [
+    "/images/gasfiter-fugas.webp",
+    "/images/gasfiter-destape.webp",
+    "/images/gasfiter-griferia.webp",
+    "/images/gasfiter-mantencion.webp",
+    "/images/gasfiter-calefont.webp",
+    "/images/gasfiter-emergencias.webp",
+  ];
+
+  const servicesHtml = servicesItems
+    .map((item, index) => {
+      const image = serviceImages[index % serviceImages.length];
+      return `
+        <article class="reveal bento-card group overflow-hidden rounded-3xl shadow-soft transition duration-500 ease-out hover:-translate-y-0.5 hover:shadow-2xl" data-anim="slide-up">
+          <div class="h-44 w-full">
+            <img class="h-full w-full object-cover transition duration-500 ease-out group-hover:scale-[1.03]" src="${image}" alt="${item.title ?? "Servicio"}" />
+          </div>
+          <div class="relative p-8">
+            <h3 class="mt-6 text-2xl font-semibold text-ink">${item.title ?? ""}</h3>
+            <p class="mt-3 text-base text-slate-500">${item.description ?? ""}</p>
+          </div>
+        </article>
+      `;
+    })
+    .join("");
+
+  const faqsHtml = faqsItems
+    .map(
+      (item) => `
+        <details class="reveal rounded-2xl border border-slate-200 bg-white p-6 shadow-soft" data-anim="slide-right">
+          <summary class="cursor-pointer text-lg font-semibold text-blue-900">${item.question ?? ""}</summary>
+          <p class="mt-3 text-base text-slate-600">${item.answer ?? ""}</p>
+        </details>
+      `,
+    )
+    .join("");
 
   const tokens = {
     "{{HERO_TITLE}}": settings?.content?.hero?.title ?? defaults.heroTitle,
@@ -615,23 +594,14 @@ export default function LandingFallback({ showNotice, settings }: LandingFallbac
       settings?.content?.hero?.cta?.primary_text ?? defaults.heroCtaText,
     "{{HERO_CTA_URL}}": settings?.content?.hero?.cta?.primary_url ?? defaults.heroCtaUrl,
     "{{SERVICES_TITLE}}": settings?.content?.services?.title ?? defaults.servicesTitle,
-    "{{SERVICES_SUBTITLE}}":
-      settings?.content?.services?.subtitle ?? defaults.servicesSubtitle,
-    "{{SERVICE_1_TITLE}}":
-      settings?.content?.services?.items?.service_1?.title ?? defaults.service1Title,
-    "{{SERVICE_1_DESC}}":
-      settings?.content?.services?.items?.service_1?.description ?? defaults.service1Desc,
-    "{{SERVICE_2_TITLE}}":
-      settings?.content?.services?.items?.service_2?.title ?? defaults.service2Title,
-    "{{SERVICE_2_DESC}}":
-      settings?.content?.services?.items?.service_2?.description ?? defaults.service2Desc,
-    "{{SERVICE_3_TITLE}}":
-      settings?.content?.services?.items?.service_3?.title ?? defaults.service3Title,
-    "{{SERVICE_3_DESC}}":
-      settings?.content?.services?.items?.service_3?.description ?? defaults.service3Desc,
+    "{{SERVICES_SUBTITLE}}": settings?.content?.services?.subtitle ?? defaults.servicesSubtitle,
+    "{{SERVICES_ITEMS}}": servicesHtml,
+    "{{SERVICES_SECTION_HIDDEN}}": servicesItems.length ? "" : "hidden",
     "{{CONTACT_TITLE}}": settings?.content?.contact?.title ?? defaults.contactTitle,
     "{{CONTACT_SUBTITLE}}":
       settings?.content?.contact?.subtitle ?? defaults.contactSubtitle,
+    "{{FAQ_ITEMS}}": faqsHtml,
+    "{{FAQ_SECTION_HIDDEN}}": faqsItems.length ? "" : "hidden",
   };
 
   const themedStyle = {
