@@ -82,7 +82,10 @@ export default function BuilderPage() {
       setSettings(null);
       return;
     }
-    fetch(`${backendUrl}/api/sites/${siteSlug}/settings`, { cache: "no-store" })
+    fetch(`${backendUrl}/api/sites/${siteSlug}/settings`, {
+      cache: "no-store",
+      headers: { "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0" },
+    })
       .then((res) => (res.ok ? res.json() : null))
       .then((payload) => setSettings(payload?.settings ?? null))
       .catch(() => setSettings(null));
