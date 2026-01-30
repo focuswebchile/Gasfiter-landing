@@ -21,6 +21,8 @@ type BuilderBlock = {
 };
 
 const apiKey = process.env.NEXT_PUBLIC_BUILDER_API_KEY || "";
+const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "";
+const siteSlug = process.env.NEXT_PUBLIC_SITE_SLUG || "";
 
 if (apiKey) {
   builder.init(apiKey);
@@ -56,6 +58,7 @@ const hasRenderableBlocks = (blocks: BuilderBlock[]): boolean => {
 
 export default function BuilderPage() {
   const [content, setContent] = useState<BuilderContent | null | undefined>(undefined);
+  const [settings, setSettings] = useState<Record<string, any> | null>(null);
 
   useEffect(() => {
     if (!apiKey) {
@@ -74,10 +77,21 @@ export default function BuilderPage() {
       .catch(() => setContent(null));
   }, []);
 
+  useEffect(() => {
+    if (!backendUrl || !siteSlug) {
+      setSettings(null);
+      return;
+    }
+    fetch(`${backendUrl}/api/sites/${siteSlug}/settings`, { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((payload) => setSettings(payload?.settings ?? null))
+      .catch(() => setSettings(null));
+  }, []);
+
   if (!apiKey) {
     return (
       <>
-        <LandingFallback showNotice />
+        <LandingFallback showNotice settings={settings ?? undefined} />
         <ScrollReveal />
       </>
     );
@@ -93,7 +107,7 @@ export default function BuilderPage() {
   if (!hasBlocks) {
     return (
       <>
-        <LandingFallback />
+        <LandingFallback settings={settings ?? undefined} />
         <ScrollReveal />
       </>
     );

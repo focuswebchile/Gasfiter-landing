@@ -1,6 +1,48 @@
+type SiteSettings = {
+  colors?: {
+    primary?: string;
+    secondary?: string;
+    background?: string;
+    text?: string;
+  };
+  typography?: {
+    fontFamily?: string;
+    baseSize?: string;
+    lineHeight?: string;
+  };
+  content?: {
+    hero?: {
+      title?: string;
+      subtitle?: string;
+      cta?: {
+        primary_text?: string;
+        primary_url?: string;
+      };
+    };
+    services?: {
+      title?: string;
+      subtitle?: string;
+      items?: {
+        service_1?: { title?: string; description?: string };
+        service_2?: { title?: string; description?: string };
+        service_3?: { title?: string; description?: string };
+      };
+    };
+    contact?: {
+      title?: string;
+      subtitle?: string;
+      link?: string;
+    };
+  };
+};
+
 type LandingFallbackProps = {
   showNotice?: boolean;
+  settings?: SiteSettings;
 };
+
+const applyTokens = (html: string, tokens: Record<string, string>) =>
+  Object.entries(tokens).reduce((acc, [key, value]) => acc.replaceAll(key, value), html);
 
 const landingHtml = String.raw`
     <!-- COMPONENTE: NAV -->
@@ -42,18 +84,18 @@ const landingHtml = String.raw`
             </div>
             <h1 class="reveal font-display text-4xl font-bold leading-tight text-ink md:text-5xl lg:text-6xl" data-anim="fade">
               <!-- CAMBIO FACIL: TITULO HERO -->
-              Gasfitería profesional 24/7 para tu hogar y negocio
+              {{HERO_TITLE}}
             </h1>
             <p class="reveal max-w-xl text-lg text-slate-600" data-anim="fade">
               <!-- CAMBIO FACIL: SUBTITULO HERO -->
-              Resolvemos fugas, destapes e instalaciones con rapidez, limpieza y garantía. Llega un técnico certificado en menos de 60 minutos.
+              {{HERO_SUBTITLE}}
             </p>
             <div class="reveal flex flex-col gap-3 sm:flex-row" data-anim="slide-right">
               <a
-                href="#contacto"
+                href="{{HERO_CTA_URL}}"
                 class="btn-primary inline-flex items-center justify-center rounded-full px-6 py-3 text-base font-semibold shadow-soft transition"
               >
-                Llamar Ahora
+                {{HERO_CTA_TEXT}}
               </a>
               <a
                 href="#whatsapp"
@@ -91,11 +133,11 @@ const landingHtml = String.raw`
       <div class="mb-12 max-w-2xl space-y-4">
         <h2 class="reveal font-display text-3xl font-bold text-ink md:text-4xl" data-anim="fade">
           <!-- CAMBIO FACIL: TITULO SERVICIOS -->
-          Servicios de gasfitería 24/7 en tu comuna
+          {{SERVICES_TITLE}}
         </h2>
         <p class="reveal text-base text-slate-600" data-anim="fade">
           <!-- CAMBIO FACIL: SUBTITULO SERVICIOS -->
-          Soluciones rápidas para hogares y negocios. Diagnóstico claro, precio transparente y garantía escrita.
+          {{SERVICES_SUBTITLE}}
         </p>
       </div>
       <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -108,8 +150,8 @@ const landingHtml = String.raw`
             />
           </div>
           <div class="relative p-8">
-            <h3 class="mt-6 text-2xl font-semibold text-ink"><!-- CAMBIO FACIL: TÍTULO DEL SERVICIO -->Detección y reparación de fugas</h3>
-            <p class="mt-3 text-base text-slate-500"><!-- CAMBIO FACIL: DESCRIPCIÓN DEL SERVICIO -->Tecnología termográfica para ubicar la fuga sin romper más de lo necesario.</p>
+            <h3 class="mt-6 text-2xl font-semibold text-ink"><!-- CAMBIO FACIL: TÍTULO DEL SERVICIO -->{{SERVICE_1_TITLE}}</h3>
+            <p class="mt-3 text-base text-slate-500"><!-- CAMBIO FACIL: DESCRIPCIÓN DEL SERVICIO -->{{SERVICE_1_DESC}}</p>
           </div>
         </article>
         <article class="reveal bento-card group overflow-hidden rounded-3xl shadow-soft transition duration-500 ease-out hover:-translate-y-0.5 hover:shadow-2xl lg:min-h-[400px]" data-anim="slide-left">
@@ -121,8 +163,8 @@ const landingHtml = String.raw`
             />
           </div>
           <div class="relative p-8">
-            <h3 class="mt-6 text-2xl font-semibold text-ink"><!-- CAMBIO FACIL: TÍTULO DEL SERVICIO -->Destape de cañerías</h3>
-            <p class="mt-3 text-base text-slate-500"><!-- CAMBIO FACIL: DESCRIPCIÓN DEL SERVICIO -->Equipos de presión y cámaras endoscópicas.</p>
+            <h3 class="mt-6 text-2xl font-semibold text-ink"><!-- CAMBIO FACIL: TÍTULO DEL SERVICIO -->{{SERVICE_2_TITLE}}</h3>
+            <p class="mt-3 text-base text-slate-500"><!-- CAMBIO FACIL: DESCRIPCIÓN DEL SERVICIO -->{{SERVICE_2_DESC}}</p>
           </div>
         </article>
         <article class="reveal bento-card group overflow-hidden rounded-3xl shadow-soft transition duration-500 ease-out hover:-translate-y-0.5 hover:shadow-2xl lg:min-h-[420px]" data-anim="slide-left">
@@ -134,8 +176,8 @@ const landingHtml = String.raw`
             />
           </div>
           <div class="relative p-8">
-            <h3 class="mt-6 text-2xl font-semibold text-ink"><!-- CAMBIO FACIL: TÍTULO DEL SERVICIO -->Instalación de griferías</h3>
-            <p class="mt-3 text-base text-slate-500"><!-- CAMBIO FACIL: DESCRIPCIÓN DEL SERVICIO -->Cambio completo con prueba de sellado.</p>
+            <h3 class="mt-6 text-2xl font-semibold text-ink"><!-- CAMBIO FACIL: TÍTULO DEL SERVICIO -->{{SERVICE_3_TITLE}}</h3>
+            <p class="mt-3 text-base text-slate-500"><!-- CAMBIO FACIL: DESCRIPCIÓN DEL SERVICIO -->{{SERVICE_3_DESC}}</p>
           </div>
         </article>
         <article class="reveal bento-card group overflow-hidden rounded-3xl shadow-soft transition duration-500 ease-out hover:-translate-y-0.5 hover:shadow-2xl lg:min-h-[400px]" data-anim="slide-right">
@@ -420,11 +462,11 @@ const landingHtml = String.raw`
         <div class="reveal text-center" data-anim="fade">
           <h2 class="font-display text-3xl font-bold text-blue-900 md:text-5xl">
             <!-- CAMBIO FACIL: TITULO CONTACTO -->
-            ¿En qué te podemos ayudar?
+            {{CONTACT_TITLE}}
           </h2>
           <p class="mt-4 text-lg text-slate-600">
             <!-- CAMBIO FACIL: SUBTITULO CONTACTO -->
-            Cuéntanos tu problema y te contactamos en minutos.
+            {{CONTACT_SUBTITLE}}
           </p>
         </div>
         <form class="reveal mt-10 grid gap-4 rounded-3xl border border-slate-200 bg-white p-8 shadow-soft md:grid-cols-2" data-anim="slide-up">
@@ -546,16 +588,75 @@ const landingHtml = String.raw`
     </footer>
 `;
 
-export default function LandingFallback({ showNotice }: LandingFallbackProps) {
+export default function LandingFallback({ showNotice, settings }: LandingFallbackProps) {
+  const defaults = {
+    heroTitle: "Gasfitería profesional 24/7 para tu hogar y negocio",
+    heroSubtitle:
+      "Resolvemos fugas, destapes e instalaciones con rapidez, limpieza y garantía. Llega un técnico certificado en menos de 60 minutos.",
+    heroCtaText: "Llamar Ahora",
+    heroCtaUrl: "#contacto",
+    servicesTitle: "Servicios de gasfitería 24/7 en tu comuna",
+    servicesSubtitle:
+      "Soluciones rápidas para hogares y negocios. Diagnóstico claro, precio transparente y garantía escrita.",
+    service1Title: "Detección y reparación de fugas",
+    service1Desc: "Tecnología termográfica para ubicar la fuga sin romper más de lo necesario.",
+    service2Title: "Destape de cañerías",
+    service2Desc: "Equipos de presión y cámaras endoscópicas.",
+    service3Title: "Instalación de griferías",
+    service3Desc: "Cambio completo con prueba de sellado.",
+    contactTitle: "¿En qué te podemos ayudar?",
+    contactSubtitle: "Cuéntanos tu problema y te contactamos en minutos.",
+  };
+
+  const tokens = {
+    "{{HERO_TITLE}}": settings?.content?.hero?.title ?? defaults.heroTitle,
+    "{{HERO_SUBTITLE}}": settings?.content?.hero?.subtitle ?? defaults.heroSubtitle,
+    "{{HERO_CTA_TEXT}}":
+      settings?.content?.hero?.cta?.primary_text ?? defaults.heroCtaText,
+    "{{HERO_CTA_URL}}": settings?.content?.hero?.cta?.primary_url ?? defaults.heroCtaUrl,
+    "{{SERVICES_TITLE}}": settings?.content?.services?.title ?? defaults.servicesTitle,
+    "{{SERVICES_SUBTITLE}}":
+      settings?.content?.services?.subtitle ?? defaults.servicesSubtitle,
+    "{{SERVICE_1_TITLE}}":
+      settings?.content?.services?.items?.service_1?.title ?? defaults.service1Title,
+    "{{SERVICE_1_DESC}}":
+      settings?.content?.services?.items?.service_1?.description ?? defaults.service1Desc,
+    "{{SERVICE_2_TITLE}}":
+      settings?.content?.services?.items?.service_2?.title ?? defaults.service2Title,
+    "{{SERVICE_2_DESC}}":
+      settings?.content?.services?.items?.service_2?.description ?? defaults.service2Desc,
+    "{{SERVICE_3_TITLE}}":
+      settings?.content?.services?.items?.service_3?.title ?? defaults.service3Title,
+    "{{SERVICE_3_DESC}}":
+      settings?.content?.services?.items?.service_3?.description ?? defaults.service3Desc,
+    "{{CONTACT_TITLE}}": settings?.content?.contact?.title ?? defaults.contactTitle,
+    "{{CONTACT_SUBTITLE}}":
+      settings?.content?.contact?.subtitle ?? defaults.contactSubtitle,
+  };
+
+  const themedStyle = {
+    backgroundColor: settings?.colors?.background,
+    color: settings?.colors?.text,
+    fontFamily: settings?.typography?.fontFamily
+      ? `${settings.typography.fontFamily}, system-ui, sans-serif`
+      : undefined,
+    fontSize: settings?.typography?.baseSize,
+    lineHeight: settings?.typography?.lineHeight,
+    ["--primary" as never]: settings?.colors?.primary,
+    ["--accent" as never]: settings?.colors?.secondary,
+  };
+
+  const html = applyTokens(landingHtml, tokens);
+
   return (
-    <div className="bg-atmosphere text-ink">
+    <div className="bg-atmosphere text-ink" style={themedStyle}>
       {showNotice ? (
         <div className="border-b border-amber-200 bg-amber-50 px-6 py-3 text-sm text-amber-800">
           Agrega <span className="font-semibold">NEXT_PUBLIC_BUILDER_API_KEY</span> en tu entorno
           para habilitar la edición en Builder.io.
         </div>
       ) : null}
-      <div dangerouslySetInnerHTML={{ __html: landingHtml }} />
+      <div dangerouslySetInnerHTML={{ __html: html }} />
     </div>
   );
 }
