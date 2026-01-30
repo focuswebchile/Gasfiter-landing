@@ -596,14 +596,19 @@ export default function LandingFallback({ showNotice, settings }: LandingFallbac
     )
     .join("");
 
+  const servicesMeta =
+    servicesFromSettings && !Array.isArray(servicesFromSettings)
+      ? servicesFromSettings
+      : undefined
+
   const tokens = {
     "{{HERO_TITLE}}": settings?.content?.hero?.title ?? defaults.heroTitle,
     "{{HERO_SUBTITLE}}": settings?.content?.hero?.subtitle ?? defaults.heroSubtitle,
     "{{HERO_CTA_TEXT}}":
       settings?.content?.hero?.cta?.primary_text ?? defaults.heroCtaText,
     "{{HERO_CTA_URL}}": settings?.content?.hero?.cta?.primary_url ?? defaults.heroCtaUrl,
-    "{{SERVICES_TITLE}}": settings?.content?.services?.title ?? defaults.servicesTitle,
-    "{{SERVICES_SUBTITLE}}": settings?.content?.services?.subtitle ?? defaults.servicesSubtitle,
+    "{{SERVICES_TITLE}}": servicesMeta?.title ?? defaults.servicesTitle,
+    "{{SERVICES_SUBTITLE}}": servicesMeta?.subtitle ?? defaults.servicesSubtitle,
     "{{SERVICES_ITEMS}}": servicesHtml,
     "{{SERVICES_SECTION_HIDDEN}}": servicesItems.length ? "" : "hidden",
     "{{CONTACT_TITLE}}": settings?.content?.contact?.title ?? defaults.contactTitle,
