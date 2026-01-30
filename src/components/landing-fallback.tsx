@@ -568,6 +568,8 @@ export default function LandingFallback({ showNotice, settings }: LandingFallbac
     "/images/gasfiter-calefont.webp",
     "/images/gasfiter-emergencias.webp",
   ];
+  const serviceCtaUrl = settings?.content?.hero?.cta?.primary_url ?? defaults.heroCtaUrl;
+  const serviceCtaText = settings?.content?.hero?.cta?.primary_text ?? defaults.heroCtaText;
 
   const servicesHtml = servicesItems
     .map((item, index) => {
@@ -580,6 +582,12 @@ export default function LandingFallback({ showNotice, settings }: LandingFallbac
           <div class="relative p-8">
             <h3 class="mt-6 text-2xl font-semibold text-ink">${item.title ?? ""}</h3>
             <p class="mt-3 text-base text-slate-500">${item.description ?? ""}</p>
+            <a
+              href="${serviceCtaUrl}"
+              class="mt-6 inline-flex w-full items-center justify-center rounded-full bg-accent px-4 py-2 text-sm font-semibold text-ink shadow-soft transition hover:brightness-95"
+            >
+              ${serviceCtaText || "Contactar por WhatsApp"}
+            </a>
           </div>
         </article>
       `;
