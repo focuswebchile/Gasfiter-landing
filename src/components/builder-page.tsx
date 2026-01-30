@@ -82,7 +82,8 @@ export default function BuilderPage() {
       setSettings(null);
       return;
     }
-    fetch(`${backendUrl}/api/sites/${siteSlug}/settings`, {
+    const cacheBust = Date.now()
+    fetch(`${backendUrl}/api/sites/${siteSlug}/settings?t=${cacheBust}`, {
       cache: "no-store",
       headers: { "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0" },
     })
