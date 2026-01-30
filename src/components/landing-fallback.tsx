@@ -19,20 +19,29 @@ type SiteSettings = {
         primary_url?: string;
       };
     };
-    services?: {
-      title?: string;
-      subtitle?: string;
-      items?: {
-        service_1?: { title?: string; description?: string };
-        service_2?: { title?: string; description?: string };
-        service_3?: { title?: string; description?: string };
-      };
-    };
+    services?:
+      | Array<{
+          title?: string;
+          description?: string;
+        }>
+      | {
+          title?: string;
+          subtitle?: string;
+          items?: {
+            service_1?: { title?: string; description?: string };
+            service_2?: { title?: string; description?: string };
+            service_3?: { title?: string; description?: string };
+          } | Array<{ title?: string; description?: string }>;
+        };
     contact?: {
       title?: string;
       subtitle?: string;
       link?: string;
     };
+    faqs?: Array<{
+      question?: string;
+      answer?: string;
+    }>;
   };
 };
 
