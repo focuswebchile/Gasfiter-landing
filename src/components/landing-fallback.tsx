@@ -6,6 +6,7 @@ type SiteSettings = {
     text?: string;
   };
   typography?: {
+    font?: string;
     fontFamily?: string;
     baseSize?: string;
     lineHeight?: string;
@@ -618,22 +619,35 @@ export default function LandingFallback({ showNotice, settings }: LandingFallbac
     "{{FAQ_SECTION_HIDDEN}}": faqsItems.length ? "" : "hidden",
   };
 
+  const toCssVar = (value?: string) => (value ? value : undefined);
+  const fontStack = settings?.typography?.font ?? settings?.typography?.fontFamily;
+
   const themedStyle = {
     backgroundColor: settings?.colors?.background,
     color: settings?.colors?.text,
-    fontFamily: settings?.typography?.fontFamily
-      ? `${settings.typography.fontFamily}, system-ui, sans-serif`
-      : undefined,
+    fontFamily: fontStack ? `${fontStack}, system-ui, sans-serif` : undefined,
     fontSize: settings?.typography?.baseSize,
     lineHeight: settings?.typography?.lineHeight,
-    ["--primary" as never]: settings?.colors?.primary,
-    ["--accent" as never]: settings?.colors?.secondary,
+    ["--primary" as never]: toCssVar(settings?.colors?.primary),
+    ["--accent" as never]: toCssVar(settings?.colors?.secondary),
+    ["--text" as never]: toCssVar(settings?.colors?.text),
   };
 
   const html = applyTokens(landingHtml, tokens);
 
   return (
     <div className="bg-atmosphere text-ink" style={themedStyle}>
+      <style>{`
+        .bg-primary { background-color: var(--primary) !important; }
+        .text-primary { color: var(--primary) !important; }
+        .border-primary { border-color: var(--primary) !important; }
+        .focus\\:border-primary:focus { border-color: var(--primary) !important; }
+        .bg-accent { background-color: var(--accent) !important; }
+        .text-accent { color: var(--accent) !important; }
+        .hover\\:text-primary:hover { color: var(--primary) !important; }
+        .hover\\:text-accent:hover { color: var(--accent) !important; }
+        .text-ink { color: var(--text) !important; }
+      `}</style>
       {showNotice ? (
         <div className="border-b border-amber-200 bg-amber-50 px-6 py-3 text-sm text-amber-800">
           Agrega <span className="font-semibold">NEXT_PUBLIC_BUILDER_API_KEY</span> en tu entorno
