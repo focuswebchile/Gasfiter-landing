@@ -12,6 +12,11 @@ const landingStyles = String.raw`
         --bg: #f6f9ff;
         --surface: #f2f4f7;
         --wa: #25d366;
+        --btn-shadow: 0 12px 26px rgba(15, 23, 42, 0.16);
+        --font-body: "Inter", sans-serif;
+        --font-hero: "Barlow Condensed", sans-serif;
+        --font-size-base: 16px;
+        --line-height-base: 1.5;
       }
 
       * {
@@ -27,10 +32,11 @@ const landingStyles = String.raw`
       }
 
       body {
-        font-family: "Inter", sans-serif;
+        font-family: var(--font-body);
+        font-size: var(--font-size-base);
+        line-height: var(--line-height-base);
         color: var(--text);
         background: var(--surface);
-        line-height: 1.5;
       }
 
       h1,
@@ -39,7 +45,7 @@ const landingStyles = String.raw`
         margin: 0;
         line-height: 1.05;
         letter-spacing: 0.2px;
-        font-family: "Barlow Condensed", sans-serif;
+        font-family: var(--font-hero);
       }
 
       p {
@@ -91,7 +97,7 @@ const landingStyles = String.raw`
       }
 
       .brand {
-        font-family: "Barlow Condensed", sans-serif;
+        font-family: var(--font-hero);
         font-size: 1.65rem;
         font-weight: 700;
         color: var(--navy);
@@ -128,6 +134,7 @@ const landingStyles = String.raw`
         justify-content: center;
         gap: 10px;
         transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+        box-shadow: var(--btn-shadow);
       }
 
       .btn:hover {
@@ -137,7 +144,6 @@ const landingStyles = String.raw`
       .btn-primary {
         background: var(--orange);
         color: #111827;
-        box-shadow: 0 14px 30px rgba(255, 111, 0, 0.24);
       }
 
       .btn-ghost {
@@ -206,10 +212,11 @@ const landingStyles = String.raw`
       .hero h1 {
         margin-top: 12px;
         font-size: clamp(2.2rem, 8.5vw, 4.8rem);
-        color: #1f2937;
+        color: var(--text);
         max-width: none;
         letter-spacing: -0.4px;
         line-height: 0.94;
+        visibility: hidden;
       }
 
       .hero-line {
@@ -219,7 +226,7 @@ const landingStyles = String.raw`
       .hero-lead {
         margin-top: 14px;
         font-size: clamp(1rem, 2.4vw, 1.22rem);
-        color: #6b7280;
+        color: var(--muted);
         max-width: 54ch;
       }
 
@@ -283,7 +290,7 @@ const landingStyles = String.raw`
 
       .hero-stat strong {
         display: block;
-        font-family: "Barlow Condensed", sans-serif;
+        font-family: var(--font-hero);
         font-size: 2.25rem;
         line-height: 1;
         color: var(--navy);
@@ -318,7 +325,7 @@ const landingStyles = String.raw`
 
       .band-dark {
         background: var(--surface);
-        color: #1e293b;
+        color: var(--text);
       }
 
       .audience-wrap {
@@ -357,7 +364,7 @@ const landingStyles = String.raw`
         font-size: clamp(1rem, 2.1vw, 1.2rem);
         font-weight: 500;
         line-height: 1.6;
-        color: #475569;
+        color: var(--muted);
         max-width: 62ch;
       }
 
@@ -371,7 +378,7 @@ const landingStyles = String.raw`
 
       .audience-list li {
         font-size: 1rem;
-        color: #334155;
+        color: var(--text);
       }
 
       .audience-list i {
@@ -429,12 +436,12 @@ const landingStyles = String.raw`
 
       .pain-copy p {
         margin-top: 12px;
-        color: #475569;
+        color: var(--muted);
         font-size: 1.05rem;
       }
 
       .clients-section {
-        background: #f2f4f6;
+        background: var(--surface);
       }
 
       .clients-section .container {
@@ -457,7 +464,7 @@ const landingStyles = String.raw`
       .clients-title {
         margin-top: 10px;
         font-size: clamp(2rem, 5.2vw, 4rem);
-        color: #1f2933;
+        color: var(--text);
         line-height: 0.96;
       }
 
@@ -517,7 +524,7 @@ const landingStyles = String.raw`
       }
 
       .client-text {
-        color: #2f3b46;
+        color: var(--text);
         font-size: 1.03rem;
         line-height: 1.6;
         max-width: 42ch;
@@ -539,7 +546,7 @@ const landingStyles = String.raw`
 
       .client-person strong {
         display: block;
-        color: #232c36;
+        color: var(--text);
         font-size: 1.05rem;
       }
 
@@ -603,7 +610,7 @@ const landingStyles = String.raw`
         z-index: 1;
         color: #2b3440;
         font-size: 2rem;
-        font-family: "Barlow Condensed", sans-serif;
+        font-family: var(--font-hero);
         font-weight: 700;
       }
 
@@ -681,7 +688,7 @@ const landingStyles = String.raw`
       }
 
       .projects-section {
-        background: #f3f6fb;
+        background: var(--bg);
       }
 
       .projects-head {
@@ -692,12 +699,12 @@ const landingStyles = String.raw`
 
       .projects-head h2 {
         font-size: clamp(2.4rem, 6vw, 4.1rem);
-        color: #0f1d34;
+        color: var(--text);
         line-height: 0.95;
       }
 
       .projects-desc {
-        color: #5a6e8d;
+        color: var(--muted);
         font-size: 1.05rem;
         max-width: 60ch;
       }
@@ -902,14 +909,14 @@ const landingStyles = String.raw`
         font-weight: 800;
         letter-spacing: 2px;
         text-transform: uppercase;
-        color: #475569;
+        color: var(--muted);
       }
 
       .contact-title {
         margin-top: 10px;
         font-size: clamp(2rem, 4.5vw, 4rem);
         line-height: 0.95;
-        color: #1f2937;
+        color: var(--text);
       }
 
       .contact-form {
@@ -927,7 +934,7 @@ const landingStyles = String.raw`
         border-radius: 0;
         padding: 10px 2px;
         font: inherit;
-        color: #1f2937;
+        color: var(--text);
       }
 
       .contact-field::placeholder {
@@ -1086,7 +1093,7 @@ const landingStyles = String.raw`
 
       .phone-big {
         color: var(--orange);
-        font-family: "Barlow Condensed", sans-serif;
+        font-family: var(--font-hero);
         font-weight: 800;
         font-size: 2rem;
       }
@@ -1844,6 +1851,21 @@ type Settings = {
 
 export default function DynamicLanding() {
   useEffect(() => {
+    const heroTitleEl = document.querySelector<HTMLElement>("[data-hero-title]");
+    if (heroTitleEl) {
+      heroTitleEl.style.visibility = "hidden";
+    }
+
+    const waitForFonts = async () => {
+      const fontApi = (document as Document & { fonts?: FontFaceSet }).fonts;
+      if (!fontApi) return;
+      try {
+        await fontApi.ready;
+      } catch {
+        // Ignore font API errors and keep rendering flow.
+      }
+    };
+
     if ("scrollRestoration" in history) {
       history.scrollRestoration = "manual";
     }
@@ -1922,6 +1944,40 @@ export default function DynamicLanding() {
       return [];
     };
 
+    const ensureSwapFontLink = (fontUrl: string) => {
+      const trimmed = fontUrl.trim();
+      if (!trimmed) return;
+      let href = trimmed;
+      if (!href.includes("display=")) {
+        href += href.includes("?") ? "&display=swap" : "?display=swap";
+      }
+
+      const id = "dynamic-font-link";
+      const existing = document.getElementById(id) as HTMLLinkElement | null;
+      if (existing) {
+        if (existing.href !== href) existing.href = href;
+        return;
+      }
+      const link = document.createElement("link");
+      link.id = id;
+      link.rel = "stylesheet";
+      link.href = href;
+      document.head.appendChild(link);
+    };
+
+    const parseGoogleFamilyFromUrl = (fontUrl: string) => {
+      try {
+        const url = new URL(fontUrl);
+        const familyParam = url.searchParams.get("family");
+        if (!familyParam) return "";
+        const firstFamily = familyParam.split("&")[0]?.split(":")[0]?.trim();
+        if (!firstFamily) return "";
+        return firstFamily.replace(/\+/g, " ");
+      } catch {
+        return "";
+      }
+    };
+
     const applySettings = (settings: Settings | null) => {
       if (!settings || typeof settings !== "object") return;
       const content = settings.content || {};
@@ -1930,20 +1986,26 @@ export default function DynamicLanding() {
       if (typeof hero.title === "string" && hero.title.trim()) {
         const titleEl = document.querySelector("[data-hero-title]");
         if (titleEl) {
+          const normalize = (value: string) => value.replace(/\s+/g, " ").trim();
           const lines = hero.title
             .split("\n")
             .map((line) => line.trim())
             .filter(Boolean)
             .slice(0, 2);
-          if (lines.length === 2) {
-            titleEl.innerHTML = '<span class="hero-line"></span><span class="hero-line"></span>';
-            const spans = titleEl.querySelectorAll(".hero-line");
-            if (spans[0]) spans[0].textContent = lines[0];
-            if (spans[1]) spans[1].textContent = lines[1];
-          } else {
-            titleEl.innerHTML = '<span class="hero-line"></span>';
-            const span = titleEl.querySelector(".hero-line");
-            if (span) span.textContent = hero.title.trim();
+          const currentCombined = normalize(titleEl.textContent || "");
+          const nextCombined = normalize(hero.title);
+          const sameText = currentCombined === nextCombined;
+          if (!sameText) {
+            if (lines.length === 2) {
+              titleEl.innerHTML = '<span class="hero-line"></span><span class="hero-line"></span>';
+              const spans = titleEl.querySelectorAll(".hero-line");
+              if (spans[0]) spans[0].textContent = lines[0];
+              if (spans[1]) spans[1].textContent = lines[1];
+            } else {
+              titleEl.innerHTML = '<span class="hero-line"></span>';
+              const span = titleEl.querySelector(".hero-line");
+              if (span) span.textContent = hero.title.trim();
+            }
           }
         }
       }
@@ -2034,17 +2096,40 @@ export default function DynamicLanding() {
       if (settings.colors) {
         if (settings.colors.primary) root.style.setProperty("--blue", settings.colors.primary);
         if (settings.colors.secondary) root.style.setProperty("--orange", settings.colors.secondary);
-        if (settings.colors.text) root.style.setProperty("--text", settings.colors.text);
-        if (settings.colors.background) document.body.style.backgroundColor = settings.colors.background;
+        if (settings.colors.text) {
+          root.style.setProperty("--text", settings.colors.text);
+          root.style.setProperty("--navy", settings.colors.text);
+          root.style.setProperty("--muted", settings.colors.text);
+        }
+        if (settings.colors.background) {
+          root.style.setProperty("--bg", settings.colors.background);
+          root.style.setProperty("--surface", settings.colors.background);
+          document.body.style.backgroundColor = settings.colors.background;
+        }
         if (settings.colors.text) document.body.style.color = settings.colors.text;
       }
 
-      const body = document.body;
       if (settings.typography) {
-        if (settings.typography.baseSize) body.style.fontSize = settings.typography.baseSize;
-        if (settings.typography.lineHeight) body.style.lineHeight = settings.typography.lineHeight;
+        if (settings.typography.baseSize) root.style.setProperty("--font-size-base", settings.typography.baseSize);
+        if (settings.typography.lineHeight) root.style.setProperty("--line-height-base", settings.typography.lineHeight);
+
         const fontStack = settings.typography.font || settings.typography.fontFamily;
-        if (fontStack) body.style.fontFamily = `${fontStack}, Inter, sans-serif`;
+        if (fontStack) {
+          const value = fontStack.trim();
+          const isExternalFont = /^https?:\/\//i.test(value);
+
+          if (isExternalFont) {
+            ensureSwapFontLink(value);
+            const parsedFamily = parseGoogleFamilyFromUrl(value);
+            if (parsedFamily) {
+              root.style.setProperty("--font-body", `"${parsedFamily}", Inter, sans-serif`);
+              root.style.setProperty("--font-hero", `"${parsedFamily}", "Barlow Condensed", sans-serif`);
+            }
+          } else {
+            root.style.setProperty("--font-body", `${value}, Inter, sans-serif`);
+            root.style.setProperty("--font-hero", `${value}, "Barlow Condensed", sans-serif`);
+          }
+        }
       }
     };
 
@@ -2070,7 +2155,17 @@ export default function DynamicLanding() {
       }
     };
 
-    hydrateFromBackend();
+    const initDynamicContent = async () => {
+      try {
+        await hydrateFromBackend();
+        await waitForFonts();
+      } finally {
+        if (heroTitleEl) {
+          heroTitleEl.style.visibility = "visible";
+        }
+      }
+    };
+    void initDynamicContent();
 
     const projectsTrack = document.querySelector<HTMLElement>("[data-projects-track]");
     const prevBtn = document.querySelector<HTMLElement>("[data-projects-prev]");
