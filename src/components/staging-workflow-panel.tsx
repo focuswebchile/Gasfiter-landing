@@ -51,6 +51,8 @@ type MembershipInfo = {
   };
 };
 
+const STORAGE_KEY = "gasfiter_panel_v2_state";
+
 const panelStyles = String.raw`
   :root{color-scheme:light}
   .wf-shell{max-width:1320px;margin:20px auto;padding:0 20px 24px;font-family:Inter,sans-serif;color:#0f172a}
@@ -95,6 +97,9 @@ const panelStyles = String.raw`
   .wf-preview{display:grid;gap:12px}
   .wf-preview-box{border:1px solid #dbe3f0;border-radius:10px;background:#f8fafc;padding:12px}
   .wf-kv{display:grid;gap:6px;font-size:13px}
+  .wf-steps{display:grid;gap:8px;margin-bottom:12px}
+  .wf-step{display:flex;gap:8px;align-items:flex-start;padding:8px 10px;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0}
+  .wf-step-num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:999px;background:#dbeafe;color:#1d4ed8;font-size:12px;font-weight:800}
 `;
 
 function detectEnvBadge(slug: string): "DEV" | "STAGING" | "PROD" {
@@ -194,6 +199,7 @@ export default function StagingWorkflowPanel() {
   const [autosaveHint, setAutosaveHint] = useState("Sin cambios pendientes");
   const [draggingSectionId, setDraggingSectionId] = useState<string | null>(null);
   const [draggingItemOrder, setDraggingItemOrder] = useState<number | null>(null);
+  const [panelReady, setPanelReady] = useState(false);
 
   const endpointBase = useMemo(
     () => `${baseUrl.replace(/\/$/, "")}/api/sites/${encodeURIComponent(siteSlug)}`,
@@ -212,6 +218,25 @@ export default function StagingWorkflowPanel() {
     }, 1200);
     return () => window.clearTimeout(timer);
   }, [dirty]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+    if (!stored) return;
+    try {
+      const parsed = JSON.parse(stored) as { siteSlug?: string; userId?: string; mode?: Mode };
+      if (parsed.siteSlug) setSiteSlug(parsed.siteSlug);
+      if (parsed.userId) setUserId(parsed.userId);
+      if (parsed.mode === "draft" || parsed.mode === "published") setMode(parsed.mode);
+    } catch {
+      // ignore invalid storage
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ siteSlug, userId, mode }));
+  }, [siteSlug, userId, mode]);
 
   const setError = (text: string) => setMessage({ type: "err", text });
   const setOk = (text: string) => setMessage({ type: "ok", text });
@@ -233,40 +258,41 @@ export default function StagingWorkflowPanel() {
     });
   };
 
-  const fetchSettings = async (nextMode = mode) => {
-    setBusy(true);
-    setMessage(null);
-    try {
-      const response = await fetch(`${endpointBase}/settings?mode=${nextMode}&t=${Date.now()}`, { cache: "no-store" });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload?.error || "Unable to fetch settings");
+  const fetchSettings = async (nextMode = mode, silent = false) => {
+    const response = await fetch(`${endpointBase}/settings?mode=${nextMode}&t=${Date.now()}`, { cache: "no-store" });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload?.error || "Unable to fetch settings");
 
-      setSettings(normalizeSettings((payload?.settings ?? {}) as SettingsPayload));
-      setMode(nextMode);
-      setDirty(false);
-      setOk(`Settings cargados en modo ${nextMode}`);
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "Error cargando settings");
-    } finally {
-      setBusy(false);
-    }
+    setSettings(normalizeSettings((payload?.settings ?? {}) as SettingsPayload));
+    setMode(nextMode);
+    setDirty(false);
+    if (!silent) setOk(`Settings cargados en modo ${nextMode}`);
   };
 
-  const fetchVersions = async () => {
-    if (!userId.trim()) return setError("Ingresa userId para listar versiones");
+  const fetchVersions = async (silent = false) => {
+    const response = await fetch(`${endpointBase}/versions?userId=${encodeURIComponent(userId.trim())}&t=${Date.now()}`, {
+      cache: "no-store",
+    });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload?.error || "Unable to fetch versions");
+    setVersions(Array.isArray(payload?.versions) ? payload.versions : []);
+    setMembership((payload?.membership ?? null) as MembershipInfo | null);
+    if (!silent) setOk("Versiones cargadas");
+  };
+
+  const loadPanel = async () => {
+    if (!siteSlug.trim()) return setError("Ingresa site slug");
+    if (!userId.trim()) return setError("Ingresa userId para cargar panel");
+
     setBusy(true);
     setMessage(null);
     try {
-      const response = await fetch(`${endpointBase}/versions?userId=${encodeURIComponent(userId.trim())}&t=${Date.now()}`, {
-        cache: "no-store",
-      });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload?.error || "Unable to fetch versions");
-      setVersions(Array.isArray(payload?.versions) ? payload.versions : []);
-      setMembership((payload?.membership ?? null) as MembershipInfo | null);
-      setOk("Versiones cargadas");
+      await Promise.all([fetchSettings(mode, true), fetchVersions(true)]);
+      setPanelReady(true);
+      setOk(`Panel cargado (${mode})`);
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Error cargando versiones");
+      setPanelReady(false);
+      setError(error instanceof Error ? error.message : "Error cargando panel");
     } finally {
       setBusy(false);
     }
@@ -274,7 +300,8 @@ export default function StagingWorkflowPanel() {
 
   const saveDraft = async () => {
     if (!userId.trim()) return setError("Ingresa userId para guardar draft");
-    if (!settings) return setError("Primero carga settings");
+    if (!settings) return setError("Primero usa Cargar panel");
+    if (!panelReady) return setError("Primero usa Cargar panel");
     if (!canSaveDraft) return setError("Tu rol no puede guardar draft");
 
     setBusy(true);
@@ -288,7 +315,7 @@ export default function StagingWorkflowPanel() {
         },
         body: JSON.stringify({
           userId: userId.trim(),
-          notes: "Saved from v1 UX panel",
+          notes: "Saved from v2 UX panel",
           settings,
         }),
       });
@@ -298,7 +325,7 @@ export default function StagingWorkflowPanel() {
       setMode("draft");
       setDirty(false);
       setOk(`Draft guardado (v${payload?.version?.number ?? "?"})`);
-      await fetchVersions();
+      await fetchVersions(true);
     } catch (error) {
       setError(error instanceof Error ? error.message : "Error guardando draft");
     } finally {
@@ -308,6 +335,7 @@ export default function StagingWorkflowPanel() {
 
   const publish = async () => {
     if (!userId.trim()) return setError("Ingresa userId para publicar");
+    if (!panelReady) return setError("Primero usa Cargar panel");
     if (!canPublish) return setError("Tu rol no puede publicar");
 
     setBusy(true);
@@ -319,7 +347,7 @@ export default function StagingWorkflowPanel() {
           "Content-Type": "application/json",
           "x-user-id": userId.trim(),
         },
-        body: JSON.stringify({ userId: userId.trim(), notes: "Published from v1 UX panel" }),
+        body: JSON.stringify({ userId: userId.trim(), notes: "Published from v2 UX panel" }),
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload?.error || "Publish failed");
@@ -327,7 +355,7 @@ export default function StagingWorkflowPanel() {
       setMode("published");
       setDirty(false);
       setOk(`Publicado (v${payload?.version?.number ?? "?"})`);
-      await fetchVersions();
+      await fetchVersions(true);
     } catch (error) {
       setError(error instanceof Error ? error.message : "Error publicando");
     } finally {
@@ -337,6 +365,7 @@ export default function StagingWorkflowPanel() {
 
   const rollback = async (versionNumber: number) => {
     if (!userId.trim()) return setError("Ingresa userId para rollback");
+    if (!panelReady) return setError("Primero usa Cargar panel");
     if (!canRollback) return setError("Tu rol no puede hacer rollback");
 
     setBusy(true);
@@ -351,7 +380,7 @@ export default function StagingWorkflowPanel() {
         body: JSON.stringify({
           userId: userId.trim(),
           versionNumber,
-          notes: `Rollback desde panel v1 a v${versionNumber}`,
+          notes: `Rollback desde panel v2 a v${versionNumber}`,
         }),
       });
       const payload = await response.json();
@@ -360,7 +389,7 @@ export default function StagingWorkflowPanel() {
       setMode("published");
       setDirty(false);
       setOk(`Rollback aplicado a v${versionNumber}`);
-      await fetchVersions();
+      await fetchVersions(true);
     } catch (error) {
       setError(error instanceof Error ? error.message : "Error en rollback");
     } finally {
@@ -382,7 +411,7 @@ export default function StagingWorkflowPanel() {
   };
 
   const renderSectionEditor = () => {
-    if (!settings) return <p className="wf-muted">Carga settings para editar secciones.</p>;
+    if (!settings) return <p className="wf-muted">Carga panel para editar secciones.</p>;
 
     if (editableSection === "hero") {
       const section = heroSection ?? { id: "hero", enabled: true, order: 10, data: {} };
@@ -400,26 +429,18 @@ export default function StagingWorkflowPanel() {
             className="wf-input"
             value={typeof section.data.title === "string" ? section.data.title : ""}
             placeholder="Hero title"
-            onChange={(e) =>
-              updateSettings((prev) => upsertSection(prev, { ...section, data: { ...section.data, title: e.target.value } }))
-            }
+            onChange={(e) => updateSettings((prev) => upsertSection(prev, { ...section, data: { ...section.data, title: e.target.value } }))}
           />
           <textarea
             className="wf-textarea"
             value={typeof section.data.subtitle === "string" ? section.data.subtitle : ""}
             placeholder="Hero subtitle"
-            onChange={(e) =>
-              updateSettings((prev) => upsertSection(prev, { ...section, data: { ...section.data, subtitle: e.target.value } }))
-            }
+            onChange={(e) => updateSettings((prev) => upsertSection(prev, { ...section, data: { ...section.data, subtitle: e.target.value } }))}
           />
           <div className="wf-grid2">
             <input
               className="wf-input"
-              value={
-                typeof (section.data.cta_primary as { text?: unknown } | undefined)?.text === "string"
-                  ? ((section.data.cta_primary as { text: string }).text ?? "")
-                  : ""
-              }
+              value={typeof (section.data.cta_primary as { text?: unknown } | undefined)?.text === "string" ? ((section.data.cta_primary as { text: string }).text ?? "") : ""}
               placeholder="CTA text"
               onChange={(e) =>
                 updateSettings((prev) =>
@@ -438,11 +459,7 @@ export default function StagingWorkflowPanel() {
             />
             <input
               className="wf-input"
-              value={
-                typeof (section.data.cta_primary as { url?: unknown } | undefined)?.url === "string"
-                  ? ((section.data.cta_primary as { url: string }).url ?? "")
-                  : ""
-              }
+              value={typeof (section.data.cta_primary as { url?: unknown } | undefined)?.url === "string" ? ((section.data.cta_primary as { url: string }).url ?? "") : ""}
               placeholder="CTA url"
               onChange={(e) =>
                 updateSettings((prev) =>
@@ -490,9 +507,7 @@ export default function StagingWorkflowPanel() {
               onDragStart={() => setDraggingItemOrder(key)}
               onDragOver={(event) => event.preventDefault()}
               onDrop={() => {
-                if (draggingItemOrder !== null) {
-                  updateSettings((prev) => reorderItemsInSection(prev, section.id, draggingItemOrder, key));
-                }
+                if (draggingItemOrder !== null) updateSettings((prev) => reorderItemsInSection(prev, section.id, draggingItemOrder, key));
                 setDraggingItemOrder(null);
               }}
               onDragEnd={() => setDraggingItemOrder(null)}
@@ -507,9 +522,7 @@ export default function StagingWorkflowPanel() {
                     updateSettings((prev) => {
                       const sec = getSection(prev, section.id);
                       if (!sec) return prev;
-                      const nextItems = toSectionItems(sec).map((nextItem) =>
-                        Number(nextItem.order) === key ? { ...nextItem, [labelA]: e.target.value } : nextItem,
-                      );
+                      const nextItems = toSectionItems(sec).map((nextItem) => (Number(nextItem.order) === key ? { ...nextItem, [labelA]: e.target.value } : nextItem));
                       return upsertSection(prev, { ...sec, data: { ...sec.data, items: nextItems } });
                     })
                   }
@@ -522,9 +535,7 @@ export default function StagingWorkflowPanel() {
                     updateSettings((prev) => {
                       const sec = getSection(prev, section.id);
                       if (!sec) return prev;
-                      const nextItems = toSectionItems(sec).map((nextItem) =>
-                        Number(nextItem.order) === key ? { ...nextItem, [labelB]: e.target.value } : nextItem,
-                      );
+                      const nextItems = toSectionItems(sec).map((nextItem) => (Number(nextItem.order) === key ? { ...nextItem, [labelB]: e.target.value } : nextItem));
                       return upsertSection(prev, { ...sec, data: { ...sec.data, items: nextItems } });
                     })
                   }
@@ -538,9 +549,7 @@ export default function StagingWorkflowPanel() {
                     updateSettings((prev) => {
                       const sec = getSection(prev, section.id);
                       if (!sec) return prev;
-                      const nextItems = toSectionItems(sec).map((nextItem) =>
-                        Number(nextItem.order) === key ? { ...nextItem, enabled: e.target.checked } : nextItem,
-                      );
+                      const nextItems = toSectionItems(sec).map((nextItem) => (Number(nextItem.order) === key ? { ...nextItem, enabled: e.target.checked } : nextItem));
                       return upsertSection(prev, { ...sec, data: { ...sec.data, items: nextItems } });
                     })
                   }
@@ -555,7 +564,7 @@ export default function StagingWorkflowPanel() {
   };
 
   const renderStyleEditor = () => {
-    if (!settings) return <p className="wf-muted">Carga settings para editar estilo.</p>;
+    if (!settings) return <p className="wf-muted">Carga panel para editar estilo.</p>;
     const colors = settings.colors ?? {};
     const typography = settings.typography ?? {};
 
@@ -569,12 +578,7 @@ export default function StagingWorkflowPanel() {
               className="wf-input"
               placeholder={key}
               value={colors[key] ?? ""}
-              onChange={(e) =>
-                updateSettings((prev) => ({
-                  ...prev,
-                  colors: { ...(prev.colors ?? {}), [key]: e.target.value },
-                }))
-              }
+              onChange={(e) => updateSettings((prev) => ({ ...prev, colors: { ...(prev.colors ?? {}), [key]: e.target.value } }))}
             />
           ))}
         </div>
@@ -586,12 +590,7 @@ export default function StagingWorkflowPanel() {
               className="wf-input"
               placeholder={key}
               value={typography[key] ?? ""}
-              onChange={(e) =>
-                updateSettings((prev) => ({
-                  ...prev,
-                  typography: { ...(prev.typography ?? {}), [key]: e.target.value },
-                }))
-              }
+              onChange={(e) => updateSettings((prev) => ({ ...prev, typography: { ...(prev.typography ?? {}), [key]: e.target.value } }))}
             />
           ))}
         </div>
@@ -605,8 +604,8 @@ export default function StagingWorkflowPanel() {
 
       <header className="wf-head">
         <div>
-          <h1 className="wf-title">Gasfiter Admin - Panel v1</h1>
-          <p className="wf-sub">Gestión visual de Draft/Published con versionado y permisos.</p>
+          <h1 className="wf-title">Gasfiter Admin - Panel v2</h1>
+          <p className="wf-sub">Flujo guiado para Draft/Published, versiones y permisos.</p>
         </div>
         <div className="wf-badges">
           <span className="wf-badge wf-badge-env">{envBadge}</span>
@@ -642,22 +641,21 @@ export default function StagingWorkflowPanel() {
               <option value="published">Published</option>
               <option value="draft">Draft</option>
             </select>
-            <button className="wf-btn wf-btn-soft" onClick={() => fetchSettings(mode)} disabled={busy}>
-              Cargar settings
+            <button className="wf-btn wf-btn-soft" onClick={loadPanel} disabled={busy}>
+              Cargar panel
             </button>
-            <button className="wf-btn wf-btn-soft" onClick={fetchVersions} disabled={busy}>
-              Cargar versiones
-            </button>
-            <span className="wf-muted">{autosaveHint}</span>
+            <span className="wf-muted">{panelReady ? autosaveHint : "Panel no cargado"}</span>
+          </div>
+
+          <div className="wf-steps">
+            <div className="wf-step"><span className="wf-step-num">1</span><div><strong>Identidad</strong><div className="wf-muted">Slug y user UUID con membership.</div></div></div>
+            <div className="wf-step"><span className="wf-step-num">2</span><div><strong>Cargar panel</strong><div className="wf-muted">Trae settings + versiones + permisos.</div></div></div>
+            <div className="wf-step"><span className="wf-step-num">3</span><div><strong>Editar/Publicar</strong><div className="wf-muted">Guardar draft, publicar o rollback según rol.</div></div></div>
           </div>
 
           <div className="wf-row" style={{ marginBottom: 12 }}>
-            <button className="wf-btn wf-btn-primary" onClick={saveDraft} disabled={busy || !canSaveDraft}>
-              Guardar Draft
-            </button>
-            <button className="wf-btn wf-btn-primary" onClick={publish} disabled={busy || !canPublish}>
-              Publicar
-            </button>
+            <button className="wf-btn wf-btn-primary" onClick={saveDraft} disabled={busy || !panelReady || !canSaveDraft}>Guardar Draft</button>
+            <button className="wf-btn wf-btn-primary" onClick={publish} disabled={busy || !panelReady || !canPublish}>Publicar</button>
             {message ? <span className={`wf-msg ${message.type === "ok" ? "wf-ok" : "wf-err"}`}>{message.text}</span> : null}
           </div>
 
@@ -684,22 +682,12 @@ export default function StagingWorkflowPanel() {
                       <span className="wf-muted">order {section.order}</span>
                     </button>
                     <label className="wf-toggle">
-                      <input
-                        type="checkbox"
-                        checked={section.enabled}
-                        onChange={(e) =>
-                          updateSettings((prev) =>
-                            upsertSection(prev, {
-                              ...section,
-                              enabled: e.target.checked,
-                            }),
-                          )
-                        }
-                      />
+                      <input type="checkbox" checked={section.enabled} onChange={(e) => updateSettings((prev) => upsertSection(prev, { ...section, enabled: e.target.checked }))} />
                       enabled
                     </label>
                   </div>
                 ))}
+                {!settings?.content?.sections?.length ? <p className="wf-muted">Carga panel para editar secciones.</p> : null}
               </div>
               {renderSectionEditor()}
             </>
@@ -716,12 +704,7 @@ export default function StagingWorkflowPanel() {
             </>
           ) : null}
 
-          {view === "style" ? (
-            <>
-              <h2 className="wf-h3">Estilo</h2>
-              {renderStyleEditor()}
-            </>
-          ) : null}
+          {view === "style" ? <><h2 className="wf-h3">Estilo</h2>{renderStyleEditor()}</> : null}
 
           {view === "versions" ? (
             <>
@@ -729,17 +712,8 @@ export default function StagingWorkflowPanel() {
               <div className="wf-versions">
                 {versions.map((version) => (
                   <div className="wf-row-item" key={version.id}>
-                    <div>
-                      <strong>v{version.version_number}</strong> · {version.status}
-                      <div className="wf-muted">{version.notes ?? "Sin nota"}</div>
-                    </div>
-                    <button
-                      className="wf-btn wf-btn-warn"
-                      disabled={busy || version.status === "published" || !canRollback}
-                      onClick={() => rollback(version.version_number)}
-                    >
-                      Rollback
-                    </button>
+                    <div><strong>v{version.version_number}</strong> · {version.status}<div className="wf-muted">{version.notes ?? "Sin nota"}</div></div>
+                    <button className="wf-btn wf-btn-warn" disabled={busy || !panelReady || version.status === "published" || !canRollback} onClick={() => rollback(version.version_number)}>Rollback</button>
                   </div>
                 ))}
                 {!versions.length ? <p className="wf-muted">No hay versiones cargadas.</p> : null}
@@ -754,18 +728,12 @@ export default function StagingWorkflowPanel() {
               <div className="wf-preview-box">
                 {membership ? (
                   <div className="wf-kv">
-                    <div>
-                      <strong>User:</strong> {membership.userId}
-                    </div>
-                    <div>
-                      <strong>Role:</strong> {membership.role}
-                    </div>
-                    <div>
-                      <strong>Permisos:</strong> saveDraft={String(membership.permissions.canSaveDraft)} publish={String(membership.permissions.canPublish)} rollback={String(membership.permissions.canRollback)}
-                    </div>
+                    <div><strong>User:</strong> {membership.userId}</div>
+                    <div><strong>Role:</strong> {membership.role}</div>
+                    <div><strong>Permisos:</strong> saveDraft={String(membership.permissions.canSaveDraft)} publish={String(membership.permissions.canPublish)} rollback={String(membership.permissions.canRollback)}</div>
                   </div>
                 ) : (
-                  <p className="wf-muted">Carga versiones para obtener permisos del usuario.</p>
+                  <p className="wf-muted">Carga panel para ver permisos.</p>
                 )}
               </div>
             </>
@@ -776,15 +744,9 @@ export default function StagingWorkflowPanel() {
           <h2 className="wf-h3">Preview</h2>
           <div className="wf-preview-box">
             <div className="wf-kv">
-              <div>
-                <strong>Hero title:</strong> {typeof heroSection?.data?.title === "string" ? heroSection.data.title : "-"}
-              </div>
-              <div>
-                <strong>Hero subtitle:</strong> {typeof heroSection?.data?.subtitle === "string" ? heroSection.data.subtitle : "-"}
-              </div>
-              <div>
-                <strong>Sections:</strong> {settings?.content?.sections?.length ?? 0}
-              </div>
+              <div><strong>Hero title:</strong> {typeof heroSection?.data?.title === "string" ? heroSection.data.title : "-"}</div>
+              <div><strong>Hero subtitle:</strong> {typeof heroSection?.data?.subtitle === "string" ? heroSection.data.subtitle : "-"}</div>
+              <div><strong>Sections:</strong> {settings?.content?.sections?.length ?? 0}</div>
             </div>
           </div>
 
@@ -795,6 +757,7 @@ export default function StagingWorkflowPanel() {
                 {
                   mode,
                   role: membership?.role ?? null,
+                  panelReady,
                   heroTitle: typeof heroSection?.data?.title === "string" ? heroSection.data.title : "",
                   sections: settings?.content?.sections?.length ?? 0,
                   colors: settings?.colors ?? {},
