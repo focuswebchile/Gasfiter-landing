@@ -17,7 +17,7 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
 
     const supabase = createAdminSupabaseClient();
     const site = await getSiteBySlug(supabase, slug);
-    await requireSiteRole(supabase, site.id, userId, ["owner", "admin", "editor", "viewer"]);
+    const role = await requireSiteRole(supabase, site.id, userId, ["owner", "admin", "editor", "viewer"]);
 
     const { data, error } = await supabase
       .from("site_versions")
@@ -34,6 +34,16 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
         site: {
           slug: site.slug,
           name: site.name,
+        },
+        membership: {
+          userId,
+          role,
+          permissions: {
+            canSaveDraft: ["owner", "admin", "editor"].includes(role),
+            canPublish: ["owner", "admin"].includes(role),
+            canRollback: ["owner", "admin"].includes(role),
+            readOnly: role === "viewer",
+          },
         },
         versions: data ?? [],
       },

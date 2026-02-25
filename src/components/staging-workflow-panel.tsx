@@ -1,8 +1,17 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type Mode = "draft" | "published";
+type SidebarView = "sections" | "items" | "style" | "versions" | "members";
+type Role = "owner" | "admin" | "editor" | "viewer";
+
+type Section = {
+  id: string;
+  enabled: boolean;
+  order: number;
+  data: Record<string, unknown>;
+};
 
 type SettingsPayload = {
   colors?: Record<string, string | undefined>;
@@ -18,12 +27,7 @@ type SettingsPayload = {
     };
     services?: Array<Record<string, unknown>>;
     faqs?: Array<Record<string, unknown>>;
-    sections?: Array<{
-      id: string;
-      enabled: boolean;
-      order: number;
-      data: Record<string, unknown>;
-    }>;
+    sections?: Section[];
   };
 };
 
@@ -36,48 +40,140 @@ type VersionItem = {
   notes: string | null;
 };
 
+type MembershipInfo = {
+  userId: string;
+  role: Role;
+  permissions: {
+    canSaveDraft: boolean;
+    canPublish: boolean;
+    canRollback: boolean;
+    readOnly: boolean;
+  };
+};
+
 const panelStyles = String.raw`
-  .wf-wrap{max-width:1100px;margin:24px auto;padding:24px;font-family:Inter,sans-serif;color:#0f172a}
-  .wf-card{border:1px solid #dbe3f0;border-radius:14px;background:#fff;padding:16px}
-  .wf-grid{display:grid;gap:16px}
-  @media(min-width:960px){.wf-grid{grid-template-columns:1.3fr 1fr}}
-  .wf-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-  .wf-input,.wf-select,.wf-textarea{border:1px solid #cbd5e1;border-radius:10px;padding:10px 12px;font:inherit}
+  :root{color-scheme:light}
+  .wf-shell{max-width:1320px;margin:20px auto;padding:0 20px 24px;font-family:Inter,sans-serif;color:#0f172a}
+  .wf-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;align-items:flex-end;margin-bottom:14px}
+  .wf-title{margin:0;font-size:26px;line-height:1.1;font-weight:800}
+  .wf-sub{margin:4px 0 0;color:#64748b;font-size:14px}
+  .wf-badges{display:flex;gap:8px;flex-wrap:wrap}
+  .wf-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#e2e8f0;color:#1e293b}
+  .wf-badge-env{background:#fef3c7;color:#92400e}
+  .wf-badge-role{background:#dbeafe;color:#1e3a8a}
+  .wf-layout{display:grid;gap:14px}
+  @media(min-width:1080px){.wf-layout{grid-template-columns:220px 1.25fr 1fr}}
+  .wf-card{border:1px solid #dbe3f0;border-radius:14px;background:#fff;padding:14px}
+  .wf-sidebar{display:grid;gap:8px;align-content:start}
+  .wf-nav-btn{display:flex;justify-content:space-between;align-items:center;border:1px solid #dbe3f0;background:#f8fafc;border-radius:10px;padding:10px 12px;font-weight:700;color:#334155;cursor:pointer}
+  .wf-nav-btn.active{background:#e0ebff;border-color:#9db4ee;color:#1e3a8a}
+  .wf-grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .wf-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .wf-input,.wf-select,.wf-textarea{border:1px solid #cbd5e1;border-radius:10px;padding:10px 12px;font:inherit;background:#fff}
   .wf-input,.wf-select{height:40px}
-  .wf-input{min-width:250px;flex:1}
+  .wf-input{min-width:200px;flex:1}
   .wf-select{min-width:150px}
-  .wf-textarea{width:100%;min-height:90px;resize:vertical}
-  .wf-btn{height:40px;border:0;border-radius:10px;padding:0 14px;font-weight:700;cursor:pointer}
+  .wf-textarea{width:100%;min-height:88px;resize:vertical}
+  .wf-btn{height:38px;border:0;border-radius:10px;padding:0 12px;font-weight:700;cursor:pointer}
+  .wf-btn:disabled{opacity:.5;cursor:not-allowed}
   .wf-btn-primary{background:#1565c0;color:#fff}
-  .wf-btn-ghost{background:#eff6ff;color:#1e3a8a}
+  .wf-btn-soft{background:#eef2ff;color:#1e3a8a}
   .wf-btn-warn{background:#ffedd5;color:#9a3412}
-  .wf-note{font-size:13px;color:#475569}
-  .wf-title{margin:0 0 8px;font-size:24px}
-  .wf-sub{margin:0 0 16px;color:#64748b}
-  .wf-status{display:inline-block;padding:4px 10px;border-radius:999px;background:#e2e8f0;font-size:12px;font-weight:700}
+  .wf-msg{display:inline-block;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700}
   .wf-ok{background:#dcfce7;color:#166534}
   .wf-err{background:#fee2e2;color:#991b1b}
-  .wf-list{display:grid;gap:8px}
-  .wf-item{border:1px solid #e2e8f0;border-radius:10px;padding:10px;display:flex;justify-content:space-between;gap:10px;align-items:center}
+  .wf-h3{margin:0 0 8px;font-size:17px}
   .wf-muted{color:#64748b;font-size:12px}
-  .wf-code{font-family:ui-monospace, SFMono-Regular, Menlo, monospace;font-size:12px;background:#f8fafc;padding:10px;border-radius:8px;overflow:auto}
+  .wf-sections,.wf-versions,.wf-items{display:grid;gap:8px}
+  .wf-row-item{border:1px solid #e2e8f0;border-radius:10px;padding:8px 10px;background:#fff;display:flex;gap:8px;align-items:center;justify-content:space-between}
+  .wf-drag{cursor:grab;font-size:16px;color:#64748b;user-select:none;padding:0 2px}
+  .wf-row-item.dragging{opacity:.65;border-style:dashed}
+  .wf-row-item.active{border-color:#9db4ee;background:#f8fbff}
+  .wf-toggle{display:flex;gap:8px;align-items:center;font-size:13px}
+  .wf-toggle input{width:16px;height:16px}
+  .wf-code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;background:#f8fafc;padding:10px;border-radius:8px;overflow:auto;max-height:280px}
+  .wf-preview{display:grid;gap:12px}
+  .wf-preview-box{border:1px solid #dbe3f0;border-radius:10px;background:#f8fafc;padding:12px}
+  .wf-kv{display:grid;gap:6px;font-size:13px}
 `;
 
-function patchHeroTitle(settings: SettingsPayload, nextTitle: string): SettingsPayload {
-  const cloned = structuredClone(settings);
+function detectEnvBadge(slug: string): "DEV" | "STAGING" | "PROD" {
+  const lower = slug.toLowerCase();
+  if (lower.includes("staging")) return "STAGING";
+  if (lower.includes("prod")) return "PROD";
+  return "DEV";
+}
+
+function sortByOrder<T extends { order: number }>(items: T[]) {
+  return [...items].sort((a, b) => a.order - b.order);
+}
+
+function toSectionItems(section: Section): Array<Record<string, unknown>> {
+  const raw = Array.isArray(section.data?.items) ? (section.data.items as Array<Record<string, unknown>>) : [];
+  return sortByOrder(
+    raw.map((item, index) => ({
+      enabled: item.enabled !== false,
+      order: typeof item.order === "number" ? item.order : index + 1,
+      ...item,
+    })),
+  );
+}
+
+function normalizeSettings(settings: SettingsPayload): SettingsPayload {
+  const cloned = structuredClone(settings ?? {});
   if (!cloned.content) cloned.content = {};
-  if (!cloned.content.hero) cloned.content.hero = {};
-  cloned.content.hero.title = nextTitle;
-
   if (!Array.isArray(cloned.content.sections)) cloned.content.sections = [];
-  const heroSectionIndex = cloned.content.sections.findIndex((section) => section.id === "hero");
-  if (heroSectionIndex >= 0) {
-    const heroSection = cloned.content.sections[heroSectionIndex];
-    if (!heroSection.data) heroSection.data = {};
-    heroSection.data.title = nextTitle;
-  }
-
+  cloned.content.sections = sortByOrder(
+    cloned.content.sections.map((section, index) => ({
+      ...section,
+      enabled: section.enabled !== false,
+      order: typeof section.order === "number" ? section.order : (index + 1) * 10,
+      data: section.data ?? {},
+    })),
+  );
   return cloned;
+}
+
+function getSection(settings: SettingsPayload, sectionId: string): Section | null {
+  const sections = settings.content?.sections ?? [];
+  return sections.find((section) => section.id === sectionId) ?? null;
+}
+
+function upsertSection(settings: SettingsPayload, nextSection: Section): SettingsPayload {
+  const cloned = normalizeSettings(settings);
+  const sections = cloned.content!.sections!;
+  const index = sections.findIndex((section) => section.id === nextSection.id);
+  if (index >= 0) sections[index] = nextSection;
+  else sections.push(nextSection);
+  cloned.content!.sections = sortByOrder(sections).map((section, i) => ({ ...section, order: (i + 1) * 10 }));
+  return cloned;
+}
+
+function reorderById<T extends { id: string }>(items: T[], draggedId: string, targetId: string): T[] {
+  if (draggedId === targetId) return items;
+  const draggedIndex = items.findIndex((item) => item.id === draggedId);
+  const targetIndex = items.findIndex((item) => item.id === targetId);
+  if (draggedIndex < 0 || targetIndex < 0) return items;
+  const next = [...items];
+  const [moved] = next.splice(draggedIndex, 1);
+  next.splice(targetIndex, 0, moved);
+  return next;
+}
+
+function reorderItemsInSection(settings: SettingsPayload, sectionId: string, fromOrder: number, toOrder: number): SettingsPayload {
+  const section = getSection(settings, sectionId);
+  if (!section) return settings;
+  const items = toSectionItems(section);
+  const fromIndex = items.findIndex((item) => Number(item.order) === fromOrder);
+  const toIndex = items.findIndex((item) => Number(item.order) === toOrder);
+  if (fromIndex < 0 || toIndex < 0) return settings;
+
+  const nextItems = [...items];
+  const [moved] = nextItems.splice(fromIndex, 1);
+  nextItems.splice(toIndex, 0, moved);
+  const normalizedItems = nextItems.map((item, index) => ({ ...item, order: index + 1 }));
+
+  return upsertSection(settings, { ...section, data: { ...section.data, items: normalizedItems } });
 }
 
 export default function StagingWorkflowPanel() {
@@ -87,19 +183,55 @@ export default function StagingWorkflowPanel() {
   const [siteSlug, setSiteSlug] = useState(defaultSlug);
   const [userId, setUserId] = useState("");
   const [mode, setMode] = useState<Mode>("published");
+  const [view, setView] = useState<SidebarView>("sections");
+  const [editableSection, setEditableSection] = useState<"hero" | "services" | "faq">("hero");
   const [settings, setSettings] = useState<SettingsPayload | null>(null);
-  const [heroTitle, setHeroTitle] = useState("");
   const [versions, setVersions] = useState<VersionItem[]>([]);
+  const [membership, setMembership] = useState<MembershipInfo | null>(null);
   const [message, setMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [dirty, setDirty] = useState(false);
+  const [autosaveHint, setAutosaveHint] = useState("Sin cambios pendientes");
+  const [draggingSectionId, setDraggingSectionId] = useState<string | null>(null);
+  const [draggingItemOrder, setDraggingItemOrder] = useState<number | null>(null);
 
   const endpointBase = useMemo(
     () => `${baseUrl.replace(/\/$/, "")}/api/sites/${encodeURIComponent(siteSlug)}`,
     [baseUrl, siteSlug],
   );
+  const envBadge = detectEnvBadge(siteSlug);
+
+  useEffect(() => {
+    if (!dirty) {
+      setAutosaveHint("Sin cambios pendientes");
+      return;
+    }
+    setAutosaveHint("Autosave: cambios detectados");
+    const timer = window.setTimeout(() => {
+      setAutosaveHint("Autosave listo (guardado manual activo)");
+    }, 1200);
+    return () => window.clearTimeout(timer);
+  }, [dirty]);
 
   const setError = (text: string) => setMessage({ type: "err", text });
   const setOk = (text: string) => setMessage({ type: "ok", text });
+
+  const canSaveDraft = membership?.permissions.canSaveDraft ?? false;
+  const canPublish = membership?.permissions.canPublish ?? false;
+  const canRollback = membership?.permissions.canRollback ?? false;
+
+  const heroSection = settings ? getSection(settings, "hero") : null;
+  const servicesSection = settings ? getSection(settings, "services") : null;
+  const faqSection = settings ? getSection(settings, "faq") : null;
+
+  const updateSettings = (updater: (prev: SettingsPayload) => SettingsPayload) => {
+    setSettings((prev) => {
+      if (!prev) return prev;
+      const next = normalizeSettings(updater(prev));
+      setDirty(true);
+      return next;
+    });
+  };
 
   const fetchSettings = async (nextMode = mode) => {
     setBusy(true);
@@ -109,11 +241,9 @@ export default function StagingWorkflowPanel() {
       const payload = await response.json();
       if (!response.ok) throw new Error(payload?.error || "Unable to fetch settings");
 
-      const nextSettings = (payload?.settings ?? null) as SettingsPayload | null;
-      setSettings(nextSettings);
-      const titleFromHero = nextSettings?.content?.hero?.title;
-      const titleFromSection = nextSettings?.content?.sections?.find((s) => s.id === "hero")?.data?.title;
-      setHeroTitle(typeof titleFromHero === "string" ? titleFromHero : typeof titleFromSection === "string" ? titleFromSection : "");
+      setSettings(normalizeSettings((payload?.settings ?? {}) as SettingsPayload));
+      setMode(nextMode);
+      setDirty(false);
       setOk(`Settings cargados en modo ${nextMode}`);
     } catch (error) {
       setError(error instanceof Error ? error.message : "Error cargando settings");
@@ -123,10 +253,7 @@ export default function StagingWorkflowPanel() {
   };
 
   const fetchVersions = async () => {
-    if (!userId.trim()) {
-      setError("Ingresa userId para listar versiones");
-      return;
-    }
+    if (!userId.trim()) return setError("Ingresa userId para listar versiones");
     setBusy(true);
     setMessage(null);
     try {
@@ -136,6 +263,7 @@ export default function StagingWorkflowPanel() {
       const payload = await response.json();
       if (!response.ok) throw new Error(payload?.error || "Unable to fetch versions");
       setVersions(Array.isArray(payload?.versions) ? payload.versions : []);
+      setMembership((payload?.membership ?? null) as MembershipInfo | null);
       setOk("Versiones cargadas");
     } catch (error) {
       setError(error instanceof Error ? error.message : "Error cargando versiones");
@@ -147,7 +275,7 @@ export default function StagingWorkflowPanel() {
   const saveDraft = async () => {
     if (!userId.trim()) return setError("Ingresa userId para guardar draft");
     if (!settings) return setError("Primero carga settings");
-    const nextSettings = patchHeroTitle(settings, heroTitle);
+    if (!canSaveDraft) return setError("Tu rol no puede guardar draft");
 
     setBusy(true);
     setMessage(null);
@@ -160,13 +288,15 @@ export default function StagingWorkflowPanel() {
         },
         body: JSON.stringify({
           userId: userId.trim(),
-          notes: "Saved from mini staging panel",
-          settings: nextSettings,
+          notes: "Saved from v1 UX panel",
+          settings,
         }),
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload?.error || "Save draft failed");
-      setSettings(payload.settings as SettingsPayload);
+      setSettings(normalizeSettings((payload?.settings ?? {}) as SettingsPayload));
+      setMode("draft");
+      setDirty(false);
       setOk(`Draft guardado (v${payload?.version?.number ?? "?"})`);
       await fetchVersions();
     } catch (error) {
@@ -178,6 +308,8 @@ export default function StagingWorkflowPanel() {
 
   const publish = async () => {
     if (!userId.trim()) return setError("Ingresa userId para publicar");
+    if (!canPublish) return setError("Tu rol no puede publicar");
+
     setBusy(true);
     setMessage(null);
     try {
@@ -187,16 +319,14 @@ export default function StagingWorkflowPanel() {
           "Content-Type": "application/json",
           "x-user-id": userId.trim(),
         },
-        body: JSON.stringify({
-          userId: userId.trim(),
-          notes: "Published from mini staging panel",
-        }),
+        body: JSON.stringify({ userId: userId.trim(), notes: "Published from v1 UX panel" }),
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload?.error || "Publish failed");
-      setOk(`Publicado (v${payload?.version?.number ?? "?"})`);
+      setSettings(normalizeSettings((payload?.settings ?? {}) as SettingsPayload));
       setMode("published");
-      await fetchSettings("published");
+      setDirty(false);
+      setOk(`Publicado (v${payload?.version?.number ?? "?"})`);
       await fetchVersions();
     } catch (error) {
       setError(error instanceof Error ? error.message : "Error publicando");
@@ -207,6 +337,8 @@ export default function StagingWorkflowPanel() {
 
   const rollback = async (versionNumber: number) => {
     if (!userId.trim()) return setError("Ingresa userId para rollback");
+    if (!canRollback) return setError("Tu rol no puede hacer rollback");
+
     setBusy(true);
     setMessage(null);
     try {
@@ -219,14 +351,15 @@ export default function StagingWorkflowPanel() {
         body: JSON.stringify({
           userId: userId.trim(),
           versionNumber,
-          notes: `Rollback desde mini panel a v${versionNumber}`,
+          notes: `Rollback desde panel v1 a v${versionNumber}`,
         }),
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload?.error || "Rollback failed");
-      setOk(`Rollback aplicado a v${versionNumber} -> nueva published v${payload?.version?.number ?? "?"}`);
+      setSettings(normalizeSettings((payload?.settings ?? {}) as SettingsPayload));
       setMode("published");
-      await fetchSettings("published");
+      setDirty(false);
+      setOk(`Rollback aplicado a v${versionNumber}`);
       await fetchVersions();
     } catch (error) {
       setError(error instanceof Error ? error.message : "Error en rollback");
@@ -235,97 +368,444 @@ export default function StagingWorkflowPanel() {
     }
   };
 
-  return (
-    <main className="wf-wrap">
-      <style dangerouslySetInnerHTML={{ __html: panelStyles }} />
-      <h1 className="wf-title">Mini Panel UX - Staging Workflow</h1>
-      <p className="wf-sub">Valida draft/published/rollback antes del panel completo.</p>
+  const reorderSections = (draggedId: string, targetId: string) => {
+    updateSettings((prev) => {
+      const next = normalizeSettings(prev);
+      const sections = next.content?.sections ?? [];
+      const reordered = reorderById(sections, draggedId, targetId).map((section, index) => ({
+        ...section,
+        order: (index + 1) * 10,
+      }));
+      next.content!.sections = reordered;
+      return next;
+    });
+  };
 
-      <div className="wf-grid">
+  const renderSectionEditor = () => {
+    if (!settings) return <p className="wf-muted">Carga settings para editar secciones.</p>;
+
+    if (editableSection === "hero") {
+      const section = heroSection ?? { id: "hero", enabled: true, order: 10, data: {} };
+      return (
+        <div className="wf-sections">
+          <div className="wf-toggle">
+            <input
+              type="checkbox"
+              checked={section.enabled}
+              onChange={(e) => updateSettings((prev) => upsertSection(prev, { ...section, enabled: e.target.checked }))}
+            />
+            Hero enabled
+          </div>
+          <input
+            className="wf-input"
+            value={typeof section.data.title === "string" ? section.data.title : ""}
+            placeholder="Hero title"
+            onChange={(e) =>
+              updateSettings((prev) => upsertSection(prev, { ...section, data: { ...section.data, title: e.target.value } }))
+            }
+          />
+          <textarea
+            className="wf-textarea"
+            value={typeof section.data.subtitle === "string" ? section.data.subtitle : ""}
+            placeholder="Hero subtitle"
+            onChange={(e) =>
+              updateSettings((prev) => upsertSection(prev, { ...section, data: { ...section.data, subtitle: e.target.value } }))
+            }
+          />
+          <div className="wf-grid2">
+            <input
+              className="wf-input"
+              value={
+                typeof (section.data.cta_primary as { text?: unknown } | undefined)?.text === "string"
+                  ? ((section.data.cta_primary as { text: string }).text ?? "")
+                  : ""
+              }
+              placeholder="CTA text"
+              onChange={(e) =>
+                updateSettings((prev) =>
+                  upsertSection(prev, {
+                    ...section,
+                    data: {
+                      ...section.data,
+                      cta_primary: {
+                        ...((section.data.cta_primary as Record<string, unknown>) ?? {}),
+                        text: e.target.value,
+                      },
+                    },
+                  }),
+                )
+              }
+            />
+            <input
+              className="wf-input"
+              value={
+                typeof (section.data.cta_primary as { url?: unknown } | undefined)?.url === "string"
+                  ? ((section.data.cta_primary as { url: string }).url ?? "")
+                  : ""
+              }
+              placeholder="CTA url"
+              onChange={(e) =>
+                updateSettings((prev) =>
+                  upsertSection(prev, {
+                    ...section,
+                    data: {
+                      ...section.data,
+                      cta_primary: {
+                        ...((section.data.cta_primary as Record<string, unknown>) ?? {}),
+                        url: e.target.value,
+                      },
+                    },
+                  }),
+                )
+              }
+            />
+          </div>
+        </div>
+      );
+    }
+
+    const section = editableSection === "services" ? servicesSection : faqSection;
+    if (!section) return <p className="wf-muted">No existe la sección seleccionada en este draft.</p>;
+
+    const items = toSectionItems(section);
+    return (
+      <div className="wf-items">
+        <div className="wf-toggle">
+          <input
+            type="checkbox"
+            checked={section.enabled}
+            onChange={(e) => updateSettings((prev) => upsertSection(prev, { ...section, enabled: e.target.checked }))}
+          />
+          {section.id} enabled
+        </div>
+        {items.map((item) => {
+          const key = Number(item.order);
+          const labelA = section.id === "services" ? "title" : "question";
+          const labelB = section.id === "services" ? "description" : "answer";
+          return (
+            <div
+              key={key}
+              className={`wf-row-item ${draggingItemOrder === key ? "dragging" : ""}`}
+              draggable
+              onDragStart={() => setDraggingItemOrder(key)}
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={() => {
+                if (draggingItemOrder !== null) {
+                  updateSettings((prev) => reorderItemsInSection(prev, section.id, draggingItemOrder, key));
+                }
+                setDraggingItemOrder(null);
+              }}
+              onDragEnd={() => setDraggingItemOrder(null)}
+            >
+              <span className="wf-drag">⋮⋮</span>
+              <div style={{ flex: 1, display: "grid", gap: 6 }}>
+                <input
+                  className="wf-input"
+                  value={typeof item[labelA] === "string" ? (item[labelA] as string) : ""}
+                  placeholder={labelA}
+                  onChange={(e) =>
+                    updateSettings((prev) => {
+                      const sec = getSection(prev, section.id);
+                      if (!sec) return prev;
+                      const nextItems = toSectionItems(sec).map((nextItem) =>
+                        Number(nextItem.order) === key ? { ...nextItem, [labelA]: e.target.value } : nextItem,
+                      );
+                      return upsertSection(prev, { ...sec, data: { ...sec.data, items: nextItems } });
+                    })
+                  }
+                />
+                <textarea
+                  className="wf-textarea"
+                  value={typeof item[labelB] === "string" ? (item[labelB] as string) : ""}
+                  placeholder={labelB}
+                  onChange={(e) =>
+                    updateSettings((prev) => {
+                      const sec = getSection(prev, section.id);
+                      if (!sec) return prev;
+                      const nextItems = toSectionItems(sec).map((nextItem) =>
+                        Number(nextItem.order) === key ? { ...nextItem, [labelB]: e.target.value } : nextItem,
+                      );
+                      return upsertSection(prev, { ...sec, data: { ...sec.data, items: nextItems } });
+                    })
+                  }
+                />
+              </div>
+              <div className="wf-toggle">
+                <input
+                  type="checkbox"
+                  checked={item.enabled !== false}
+                  onChange={(e) =>
+                    updateSettings((prev) => {
+                      const sec = getSection(prev, section.id);
+                      if (!sec) return prev;
+                      const nextItems = toSectionItems(sec).map((nextItem) =>
+                        Number(nextItem.order) === key ? { ...nextItem, enabled: e.target.checked } : nextItem,
+                      );
+                      return upsertSection(prev, { ...sec, data: { ...sec.data, items: nextItems } });
+                    })
+                  }
+                />
+                enabled
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const renderStyleEditor = () => {
+    if (!settings) return <p className="wf-muted">Carga settings para editar estilo.</p>;
+    const colors = settings.colors ?? {};
+    const typography = settings.typography ?? {};
+
+    return (
+      <div className="wf-sections">
+        <h3 className="wf-h3">Colores</h3>
+        <div className="wf-grid2">
+          {(["primary", "secondary", "background", "text"] as const).map((key) => (
+            <input
+              key={key}
+              className="wf-input"
+              placeholder={key}
+              value={colors[key] ?? ""}
+              onChange={(e) =>
+                updateSettings((prev) => ({
+                  ...prev,
+                  colors: { ...(prev.colors ?? {}), [key]: e.target.value },
+                }))
+              }
+            />
+          ))}
+        </div>
+        <h3 className="wf-h3">Tipografía</h3>
+        <div className="wf-grid2">
+          {(["font", "fontFamily", "baseSize", "lineHeight"] as const).map((key) => (
+            <input
+              key={key}
+              className="wf-input"
+              placeholder={key}
+              value={typography[key] ?? ""}
+              onChange={(e) =>
+                updateSettings((prev) => ({
+                  ...prev,
+                  typography: { ...(prev.typography ?? {}), [key]: e.target.value },
+                }))
+              }
+            />
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <main className="wf-shell">
+      <style dangerouslySetInnerHTML={{ __html: panelStyles }} />
+
+      <header className="wf-head">
+        <div>
+          <h1 className="wf-title">Gasfiter Admin - Panel v1</h1>
+          <p className="wf-sub">Gestión visual de Draft/Published con versionado y permisos.</p>
+        </div>
+        <div className="wf-badges">
+          <span className="wf-badge wf-badge-env">{envBadge}</span>
+          <span className="wf-badge">{mode.toUpperCase()}</span>
+          {membership?.role ? <span className="wf-badge wf-badge-role">ROLE: {membership.role.toUpperCase()}</span> : null}
+        </div>
+      </header>
+
+      <div className="wf-layout">
+        <aside className="wf-card wf-sidebar">
+          {([
+            ["sections", "Secciones"],
+            ["items", "Items"],
+            ["style", "Estilo"],
+            ["versions", "Versiones"],
+            ["members", "Miembros"],
+          ] as Array<[SidebarView, string]>).map(([key, label]) => (
+            <button key={key} className={`wf-nav-btn ${view === key ? "active" : ""}`} onClick={() => setView(key)}>
+              <span>{label}</span>
+              <span className="wf-muted">›</span>
+            </button>
+          ))}
+        </aside>
+
         <section className="wf-card">
           <div className="wf-row" style={{ marginBottom: 10 }}>
             <input className="wf-input" value={siteSlug} onChange={(e) => setSiteSlug(e.target.value)} placeholder="site slug" />
-            <input className="wf-input" value={userId} onChange={(e) => setUserId(e.target.value)} placeholder="user UUID (membership required)" />
+            <input className="wf-input" value={userId} onChange={(e) => setUserId(e.target.value)} placeholder="user UUID" />
           </div>
 
-          <div className="wf-row" style={{ marginBottom: 14 }}>
+          <div className="wf-row" style={{ marginBottom: 12 }}>
             <select className="wf-select" value={mode} onChange={(e) => setMode(e.target.value as Mode)}>
               <option value="published">Published</option>
               <option value="draft">Draft</option>
             </select>
-            <button className="wf-btn wf-btn-ghost" onClick={() => fetchSettings(mode)} disabled={busy}>
+            <button className="wf-btn wf-btn-soft" onClick={() => fetchSettings(mode)} disabled={busy}>
               Cargar settings
             </button>
-            <button className="wf-btn wf-btn-ghost" onClick={fetchVersions} disabled={busy}>
+            <button className="wf-btn wf-btn-soft" onClick={fetchVersions} disabled={busy}>
               Cargar versiones
             </button>
-            <span className="wf-status">{mode.toUpperCase()}</span>
+            <span className="wf-muted">{autosaveHint}</span>
           </div>
 
-          <label className="wf-note" htmlFor="hero-title">
-            Hero title (edición rápida)
-          </label>
-          <textarea
-            id="hero-title"
-            className="wf-textarea"
-            value={heroTitle}
-            onChange={(e) => setHeroTitle(e.target.value)}
-            placeholder="Título hero para draft"
-          />
-
-          <div className="wf-row" style={{ marginTop: 12 }}>
-            <button className="wf-btn wf-btn-primary" onClick={saveDraft} disabled={busy}>
-              Guardar draft
+          <div className="wf-row" style={{ marginBottom: 12 }}>
+            <button className="wf-btn wf-btn-primary" onClick={saveDraft} disabled={busy || !canSaveDraft}>
+              Guardar Draft
             </button>
-            <button className="wf-btn wf-btn-primary" onClick={publish} disabled={busy}>
+            <button className="wf-btn wf-btn-primary" onClick={publish} disabled={busy || !canPublish}>
               Publicar
             </button>
+            {message ? <span className={`wf-msg ${message.type === "ok" ? "wf-ok" : "wf-err"}`}>{message.text}</span> : null}
           </div>
 
-          {message ? (
-            <p className={`wf-status ${message.type === "ok" ? "wf-ok" : "wf-err"}`} style={{ marginTop: 12 }}>
-              {message.text}
-            </p>
+          {view === "sections" ? (
+            <>
+              <h2 className="wf-h3">Secciones</h2>
+              <div className="wf-sections" style={{ marginBottom: 12 }}>
+                {(settings?.content?.sections ?? []).map((section) => (
+                  <div
+                    key={section.id}
+                    className={`wf-row-item ${draggingSectionId === section.id ? "dragging" : ""} ${editableSection === section.id ? "active" : ""}`}
+                    draggable
+                    onDragStart={() => setDraggingSectionId(section.id)}
+                    onDragOver={(event) => event.preventDefault()}
+                    onDrop={() => {
+                      if (draggingSectionId) reorderSections(draggingSectionId, section.id);
+                      setDraggingSectionId(null);
+                    }}
+                    onDragEnd={() => setDraggingSectionId(null)}
+                  >
+                    <span className="wf-drag">⋮⋮</span>
+                    <button className="wf-nav-btn" style={{ flex: 1, padding: "8px 10px" }} onClick={() => setEditableSection(section.id as typeof editableSection)}>
+                      <span>{section.id}</span>
+                      <span className="wf-muted">order {section.order}</span>
+                    </button>
+                    <label className="wf-toggle">
+                      <input
+                        type="checkbox"
+                        checked={section.enabled}
+                        onChange={(e) =>
+                          updateSettings((prev) =>
+                            upsertSection(prev, {
+                              ...section,
+                              enabled: e.target.checked,
+                            }),
+                          )
+                        }
+                      />
+                      enabled
+                    </label>
+                  </div>
+                ))}
+              </div>
+              {renderSectionEditor()}
+            </>
+          ) : null}
+
+          {view === "items" ? (
+            <>
+              <h2 className="wf-h3">Items</h2>
+              <div className="wf-row" style={{ marginBottom: 10 }}>
+                <button className="wf-btn wf-btn-soft" onClick={() => setEditableSection("services")}>Servicios</button>
+                <button className="wf-btn wf-btn-soft" onClick={() => setEditableSection("faq")}>FAQ</button>
+              </div>
+              {renderSectionEditor()}
+            </>
+          ) : null}
+
+          {view === "style" ? (
+            <>
+              <h2 className="wf-h3">Estilo</h2>
+              {renderStyleEditor()}
+            </>
+          ) : null}
+
+          {view === "versions" ? (
+            <>
+              <h2 className="wf-h3">Versiones</h2>
+              <div className="wf-versions">
+                {versions.map((version) => (
+                  <div className="wf-row-item" key={version.id}>
+                    <div>
+                      <strong>v{version.version_number}</strong> · {version.status}
+                      <div className="wf-muted">{version.notes ?? "Sin nota"}</div>
+                    </div>
+                    <button
+                      className="wf-btn wf-btn-warn"
+                      disabled={busy || version.status === "published" || !canRollback}
+                      onClick={() => rollback(version.version_number)}
+                    >
+                      Rollback
+                    </button>
+                  </div>
+                ))}
+                {!versions.length ? <p className="wf-muted">No hay versiones cargadas.</p> : null}
+              </div>
+            </>
+          ) : null}
+
+          {view === "members" ? (
+            <>
+              <h2 className="wf-h3">Miembros</h2>
+              <p className="wf-muted">Rol actual cargado desde site_memberships.</p>
+              <div className="wf-preview-box">
+                {membership ? (
+                  <div className="wf-kv">
+                    <div>
+                      <strong>User:</strong> {membership.userId}
+                    </div>
+                    <div>
+                      <strong>Role:</strong> {membership.role}
+                    </div>
+                    <div>
+                      <strong>Permisos:</strong> saveDraft={String(membership.permissions.canSaveDraft)} publish={String(membership.permissions.canPublish)} rollback={String(membership.permissions.canRollback)}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="wf-muted">Carga versiones para obtener permisos del usuario.</p>
+                )}
+              </div>
+            </>
           ) : null}
         </section>
 
-        <section className="wf-card">
-          <h2 style={{ margin: "0 0 10px" }}>Versiones</h2>
-          <div className="wf-list">
-            {versions.map((version) => (
-              <div className="wf-item" key={version.id}>
-                <div>
-                  <strong>v{version.version_number}</strong> · {version.status}
-                  <div className="wf-muted">{version.notes || "Sin nota"}</div>
-                </div>
-                <button
-                  className="wf-btn wf-btn-warn"
-                  disabled={busy || version.status === "published"}
-                  onClick={() => rollback(version.version_number)}
-                >
-                  Rollback
-                </button>
+        <section className="wf-card wf-preview">
+          <h2 className="wf-h3">Preview</h2>
+          <div className="wf-preview-box">
+            <div className="wf-kv">
+              <div>
+                <strong>Hero title:</strong> {typeof heroSection?.data?.title === "string" ? heroSection.data.title : "-"}
               </div>
-            ))}
-            {!versions.length ? <p className="wf-muted">No hay versiones cargadas.</p> : null}
+              <div>
+                <strong>Hero subtitle:</strong> {typeof heroSection?.data?.subtitle === "string" ? heroSection.data.subtitle : "-"}
+              </div>
+              <div>
+                <strong>Sections:</strong> {settings?.content?.sections?.length ?? 0}
+              </div>
+            </div>
+          </div>
+
+          <div className="wf-preview-box">
+            <strong>Snapshot actual (resumen)</strong>
+            <pre className="wf-code">
+              {JSON.stringify(
+                {
+                  mode,
+                  role: membership?.role ?? null,
+                  heroTitle: typeof heroSection?.data?.title === "string" ? heroSection.data.title : "",
+                  sections: settings?.content?.sections?.length ?? 0,
+                  colors: settings?.colors ?? {},
+                },
+                null,
+                2,
+              )}
+            </pre>
           </div>
         </section>
       </div>
-
-      <section className="wf-card" style={{ marginTop: 16 }}>
-        <h3 style={{ margin: "0 0 8px" }}>Snapshot actual (resumen)</h3>
-        <pre className="wf-code">
-          {JSON.stringify(
-            {
-              heroTitle,
-              sections: settings?.content?.sections?.length ?? 0,
-              colors: settings?.colors ?? {},
-            },
-            null,
-            2,
-          )}
-        </pre>
-      </section>
     </main>
   );
 }
