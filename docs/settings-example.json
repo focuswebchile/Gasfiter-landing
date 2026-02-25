@@ -1,0 +1,215 @@
+{
+  "colors": {
+    "primary": "#1565c0",
+    "secondary": "#ff6f00",
+    "background": "#f2f4f7",
+    "text": "#1f2937"
+  },
+  "typography": {
+    "font": "Inter",
+    "fontFamily": "Inter",
+    "baseSize": "16px",
+    "lineHeight": "1.5"
+  },
+  "content": {
+    "hero": {
+      "title": "Gasfiter urgente en Santiago\nLlegamos en menos de 40 minutos",
+      "subtitle": "Fugas, destapes, calefont e instalaciones. Respuesta inmediata, diagnóstico claro y solución en terreno.",
+      "cta": {
+        "primary_text": "LLAMAR AHORA +56 9 XXXX XXXX",
+        "primary_url": "tel:+569XXXXXXX"
+      }
+    },
+    "services": [
+      {
+        "title": "Filtraciones y fugas",
+        "description": "Detección rápida y reparación inmediata."
+      },
+      {
+        "title": "Destapes urgentes",
+        "description": "Atendemos obstrucciones críticas."
+      },
+      {
+        "title": "Instalaciones y reparaciones",
+        "description": "Grifería, lavamanos y calefont."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "¿Cobran visita?",
+        "answer": "Cobramos solo si hay diagnóstico en terreno."
+      }
+    ],
+    "sections": [
+      {
+        "id": "hero",
+        "enabled": true,
+        "order": 10,
+        "data": {
+          "eyebrow": "SERVICIO 24/7 · SANTIAGO",
+          "title": "Gasfiter urgente en Santiago\nLlegamos en menos de 40 minutos",
+          "subtitle": "Fugas, destapes, calefont e instalaciones. Respuesta inmediata y solución en terreno.",
+          "cta_primary": { "text": "LLAMAR AHORA +56 9 XXXX XXXX", "url": "tel:+569XXXXXXX" },
+          "cta_secondary": { "text": "WhatsApp", "url": "https://wa.me/569XXXXXXX" },
+          "badges": [
+            { "text": "Disponible ahora", "icon": "fa-bolt", "enabled": true, "order": 1 },
+            { "text": "Pago contra trabajo", "icon": "fa-hand-holding-dollar", "enabled": true, "order": 2 },
+            { "text": "Técnicos certificados", "icon": "fa-certificate", "enabled": true, "order": 3 }
+          ],
+          "stats": [
+            { "label": "Urgencias por día", "value": "20+", "enabled": true, "order": 1 },
+            { "label": "Clientes semanales", "value": "100+", "enabled": true, "order": 2 },
+            { "label": "Nuevos casos diarios", "value": "10+", "enabled": true, "order": 3 }
+          ],
+          "image": "/images/heroseccion.webp"
+        }
+      },
+      {
+        "id": "audience",
+        "enabled": true,
+        "order": 20,
+        "data": {
+          "kicker": "¿Para quién es este servicio?",
+          "title": "Atención urgente para hogares y negocios en Santiago",
+          "description": "Atendemos dueños de casa, arrendatarios, pymes y administradores.",
+          "bullets": [
+            { "text": "Respuesta rápida 24/7", "icon": "fa-circle-check", "enabled": true, "order": 1 },
+            { "text": "Diagnóstico claro", "icon": "fa-circle-check", "enabled": true, "order": 2 },
+            { "text": "Garantía por escrito", "icon": "fa-circle-check", "enabled": true, "order": 3 }
+          ],
+          "cta_primary": { "text": "+56 9 XXXX XXXX", "url": "tel:+569XXXXXXX" },
+          "cta_secondary": { "text": "Agendar visita", "url": "#contacto" },
+          "images": {
+            "back": "/images/gasfiter-calefont.webp",
+            "front": "/images/gasfiter-emergencias.webp"
+          }
+        }
+      },
+      {
+        "id": "services",
+        "enabled": true,
+        "order": 30,
+        "data": {
+          "title": "¿Qué problema tienes ahora?",
+          "items": [
+            {
+              "title": "Filtraciones y fugas",
+              "description": "Detección rápida y reparación inmediata.",
+              "icon": "fa-droplet",
+              "cta": { "text": "Llamar por esto", "url": "tel:+569XXXXXXX" },
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "title": "Destapes urgentes",
+              "description": "Atendemos obstrucciones críticas.",
+              "icon": "fa-toilet",
+              "cta": { "text": "Llamar por esto", "url": "tel:+569XXXXXXX" },
+              "enabled": true,
+              "order": 2
+            }
+          ]
+        }
+      },
+      {
+        "id": "projects",
+        "enabled": true,
+        "order": 40,
+        "data": {
+          "title": "Trabajos realizados en Santiago",
+          "description": "Haz click y arrastra para deslizar imágenes.",
+          "items": [
+            {
+              "title": "Destape urgente",
+              "location": "Providencia",
+              "image": "/images/gasfiter-destape.webp",
+              "size": "square",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "title": "Instalación calefont",
+              "location": "Las Condes",
+              "image": "/images/gasfiter-calefont.webp",
+              "size": "wide",
+              "enabled": true,
+              "order": 2
+            }
+          ]
+        }
+      },
+      {
+        "id": "urgency_banner",
+        "enabled": true,
+        "order": 50,
+        "data": {
+          "title": "¿Tienes una urgencia ahora?",
+          "description": "Te atendemos hoy, en tu comuna.",
+          "cta_primary": { "text": "Llamar ahora", "url": "tel:+569XXXXXXX" }
+        }
+      },
+      {
+        "id": "contact_banner",
+        "enabled": true,
+        "order": 60,
+        "data": {
+          "kicker": "CONTACTO",
+          "title": "¿Tienes preguntas?\nEscríbenos ahora.",
+          "background_image": "/images/contact.jpg",
+          "form_enabled": true,
+          "submit_text": "Enviar solicitud"
+        }
+      },
+      {
+        "id": "testimonials",
+        "enabled": true,
+        "order": 70,
+        "data": {
+          "kicker": "Testimonios",
+          "title": "Comentarios de nuestros clientes",
+          "items": [
+            {
+              "quote": "Llegaron rápido, explicaron todo y dejaron impecable.",
+              "name": "Roland Berry",
+              "location": "Providencia, RM",
+              "avatar": "/images/gasfiter-testimonial.webp",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "quote": "Puntuales y transparentes con costos.",
+              "name": "George Caldwell",
+              "location": "Las Condes, RM",
+              "avatar": "/images/gasfiter-testimonial-2.webp",
+              "enabled": true,
+              "order": 2
+            }
+          ]
+        }
+      },
+      {
+        "id": "faq",
+        "enabled": true,
+        "order": 80,
+        "data": {
+          "title": "Preguntas frecuentes",
+          "items": [
+            {
+              "question": "¿Cobran visita?",
+              "answer": "Solo si hay diagnóstico en terreno.",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "question": "¿Cuánto demoran en llegar?",
+              "answer": "Promedio 40 minutos según comuna.",
+              "enabled": true,
+              "order": 2
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
+
