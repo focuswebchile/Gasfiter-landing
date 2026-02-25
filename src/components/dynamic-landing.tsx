@@ -73,6 +73,17 @@ const landingStyles = String.raw`
         transition: opacity 0.18s ease;
       }
 
+      .icon-fallback-active i.fa-solid,
+      .icon-fallback-active i.fa-brands {
+        font-family: inherit !important;
+        font-style: normal;
+        font-weight: 700;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
       .top-nav {
         position: fixed;
         top: 0;
@@ -1862,6 +1873,94 @@ type Settings = {
 
 export default function DynamicLanding() {
   useEffect(() => {
+    const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+    const getFallbackIcon = (classList: DOMTokenList) => {
+      if (classList.contains("fa-arrow-left")) return "←";
+      if (classList.contains("fa-arrow-right")) return "→";
+      if (classList.contains("fa-chevron-down")) return "⌄";
+      if (classList.contains("fa-circle-check")) return "✓";
+      if (classList.contains("fa-phone-volume")) return "☎";
+      if (classList.contains("fa-bolt")) return "⚡";
+      if (classList.contains("fa-droplet")) return "💧";
+      if (classList.contains("fa-screwdriver-wrench")) return "🛠";
+      if (classList.contains("fa-toilet")) return "🚽";
+      if (classList.contains("fa-certificate")) return "◉";
+      if (classList.contains("fa-hand-holding-dollar")) return "$";
+      if (classList.contains("fa-whatsapp")) return "WA";
+      return "";
+    };
+
+    const applyIconFallback = () => {
+      document.body.classList.add("icon-fallback-active");
+      const icons = document.querySelectorAll<HTMLElement>("i.fa-solid, i.fa-brands");
+      icons.forEach((icon) => {
+        const glyph = getFallbackIcon(icon.classList);
+        if (!glyph) return;
+        icon.textContent = glyph;
+        icon.setAttribute("data-icon-fallback", "true");
+        if (!icon.hasAttribute("aria-hidden")) {
+          icon.setAttribute("aria-hidden", "true");
+        }
+      });
+    };
+
+    const hasFontAwesomeLoaded = () => {
+      const probe = document.createElement("i");
+      probe.className = "fa-solid fa-arrow-right";
+      probe.style.position = "absolute";
+      probe.style.visibility = "hidden";
+      probe.style.pointerEvents = "none";
+      document.body.appendChild(probe);
+
+      const family = getComputedStyle(probe).fontFamily || "";
+      const beforeContent = getComputedStyle(probe, "::before").content || "";
+      probe.remove();
+
+      const hasFamily = /font awesome/i.test(family);
+      const hasGlyph = beforeContent !== "none" && beforeContent !== '""' && beforeContent !== "";
+      return hasFamily || hasGlyph;
+    };
+
+    const appendFaLink = (id: string, href: string) =>
+      new Promise<void>((resolve) => {
+        const existing = document.getElementById(id) as HTMLLinkElement | null;
+        if (existing) {
+          resolve();
+          return;
+        }
+        const link = document.createElement("link");
+        link.id = id;
+        link.rel = "stylesheet";
+        link.href = href;
+        link.crossOrigin = "anonymous";
+        link.referrerPolicy = "no-referrer";
+        link.onload = () => resolve();
+        link.onerror = () => resolve();
+        document.head.appendChild(link);
+      });
+
+    const ensureIconsReady = async () => {
+      if (hasFontAwesomeLoaded()) return;
+
+      await appendFaLink(
+        "fa-cdnjs-runtime",
+        "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css",
+      );
+      await sleep(120);
+      if (hasFontAwesomeLoaded()) return;
+
+      await appendFaLink(
+        "fa-jsdelivr-runtime",
+        "https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css",
+      );
+      await sleep(140);
+
+      if (!hasFontAwesomeLoaded()) {
+        applyIconFallback();
+      }
+    };
+
     const shellEl = document.querySelector<HTMLElement>("[data-landing-shell]");
     const heroTitleEl = document.querySelector<HTMLElement>("[data-hero-title]");
     if (heroTitleEl) {
@@ -2169,6 +2268,7 @@ export default function DynamicLanding() {
 
     const initDynamicContent = async () => {
       try {
+        await ensureIconsReady();
         await hydrateFromBackend();
         await waitForFonts();
       } finally {
