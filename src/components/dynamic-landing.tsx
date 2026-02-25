@@ -1877,10 +1877,26 @@ type Settings = {
     lineHeight?: string;
   };
   content?: {
+    sections?: Array<{
+      id?: string;
+      enabled?: boolean;
+      order?: number;
+      data?: {
+        title?: string;
+        subtitle?: string;
+        cta_primary?: { text?: string; url?: string };
+        cta_secondary?: { text?: string; url?: string };
+      } & Record<string, unknown>;
+    }>;
     hero?: {
       title?: string;
       subtitle?: string;
-      cta?: { primary_text?: string; primary_url?: string };
+      cta?: {
+        primary_text?: string;
+        primary_url?: string;
+        secondary_text?: string;
+        secondary_url?: string;
+      };
     };
     services?:
       | Array<{ title?: string; description?: string }>
