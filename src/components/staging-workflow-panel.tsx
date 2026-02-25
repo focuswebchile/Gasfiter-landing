@@ -183,7 +183,7 @@ function reorderItemsInSection(settings: SettingsPayload, sectionId: string, fro
 
 export default function StagingWorkflowPanel() {
   const defaultSlug = process.env.NEXT_PUBLIC_SITE_SLUG?.trim() || "gasfiter-staging";
-  const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.trim() || "http://localhost:3000";
+  const configuredBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.trim() || "";
 
   const [siteSlug, setSiteSlug] = useState(defaultSlug);
   const [userId, setUserId] = useState("");
@@ -200,6 +200,23 @@ export default function StagingWorkflowPanel() {
   const [draggingSectionId, setDraggingSectionId] = useState<string | null>(null);
   const [draggingItemOrder, setDraggingItemOrder] = useState<number | null>(null);
   const [panelReady, setPanelReady] = useState(false);
+
+  const baseUrl = useMemo(() => {
+    if (typeof window === "undefined") {
+      return configuredBaseUrl || "http://localhost:3000";
+    }
+    const sameOrigin = window.location.origin;
+    if (!configuredBaseUrl) return sameOrigin;
+    try {
+      const configuredHost = new URL(configuredBaseUrl).hostname;
+      const isConfiguredLocal = /^(localhost|127\.0\.0\.1)$/.test(configuredHost);
+      const isCurrentLocal = /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname);
+      if (isConfiguredLocal && !isCurrentLocal) return sameOrigin;
+      return configuredBaseUrl;
+    } catch {
+      return sameOrigin;
+    }
+  }, [configuredBaseUrl]);
 
   const endpointBase = useMemo(
     () => `${baseUrl.replace(/\/$/, "")}/api/sites/${encodeURIComponent(siteSlug)}`,

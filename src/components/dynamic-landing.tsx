@@ -1283,6 +1283,8 @@ const landingStyles = String.raw`
 
       @media (min-width: 992px) {
         .top-nav {
+          position: absolute;
+          top: 0;
           left: auto;
           right: 0;
           width: 50vw;
@@ -1293,11 +1295,11 @@ const landingStyles = String.raw`
 
         .top-nav.nav--desktop-hidden {
           opacity: 0;
-          transform: translateY(-120%);
+          transform: translateY(-10px);
           pointer-events: none;
         }
 
-        .top-nav.nav--visible {
+        .top-nav.nav--desktop-integrated {
           left: auto;
           right: 0;
           width: 50vw;
@@ -1311,7 +1313,7 @@ const landingStyles = String.raw`
           display: none;
         }
 
-        .top-nav.nav--visible .brand {
+        .top-nav.nav--desktop-integrated .brand {
           display: none;
         }
 
@@ -1319,15 +1321,37 @@ const landingStyles = String.raw`
           padding: 22px 38px;
         }
 
-        .top-nav.nav--visible .top-nav-inner {
+        .top-nav.nav--desktop-integrated .top-nav-inner {
           max-width: none;
           margin: 0;
           padding: 22px 38px;
         }
 
         .top-nav .nav-links,
-        .top-nav.nav--visible .nav-links {
+        .top-nav.nav--desktop-integrated .nav-links,
+        .top-nav.nav--desktop-bar .nav-links {
           display: flex;
+        }
+
+        .top-nav.nav--desktop-bar {
+          position: fixed;
+          left: 0;
+          right: 0;
+          width: 100%;
+          background: rgba(255, 255, 255, 0.96);
+          backdrop-filter: blur(8px);
+          border-bottom: 1px solid #e2e8f0;
+          box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+        }
+
+        .top-nav.nav--desktop-bar .brand {
+          display: inline-flex;
+        }
+
+        .top-nav.nav--desktop-bar .top-nav-inner {
+          max-width: 1240px;
+          margin: 0 auto;
+          padding: 12px 20px;
         }
 
         .hero-grid {
@@ -1429,7 +1453,7 @@ const landingMarkup = String.raw`
           <a href="#faq">FAQ</a>
           <a href="#contacto">Contacto</a>
         </div>
-        <a class="btn btn-primary" href="tel:+569XXXXXXX" style="padding: 10px 14px; font-size: 13px">📞 Llamar</a>
+        <a class="btn btn-primary" href="tel:+569XXXXXXX" style="padding: 10px 14px; font-size: 13px">Llamar</a>
       </div>
     </nav>
 
@@ -1501,7 +1525,7 @@ const landingMarkup = String.raw`
             <li><i class="fa-solid fa-circle-check"></i>Trabajo limpio y garantía por escrito</li>
           </ul>
           <div class="audience-cta">
-            <a class="btn btn-primary" href="tel:+569XXXXXXX">📞 +56 9 XXXX XXXX</a>
+            <a class="btn btn-primary" href="tel:+569XXXXXXX">+56 9 XXXX XXXX</a>
             <a class="btn btn-ghost" href="#contacto">Agendar visita</a>
           </div>
         </div>
@@ -1536,7 +1560,7 @@ const landingMarkup = String.raw`
               <li><i class="fa-solid fa-circle-check"></i>Control de humedad inicial</li>
               <li><i class="fa-solid fa-circle-check"></i>Prueba de funcionamiento</li>
             </ul>
-            <a class="btn btn-primary" href="tel:+569XXXXXXX">📞 Llamar por esto</a>
+            <a class="btn btn-primary" href="tel:+569XXXXXXX">Llamar por esto</a>
           </article>
 
           <article class="card service-card" data-service-card>
@@ -1549,7 +1573,7 @@ const landingMarkup = String.raw`
               <li><i class="fa-solid fa-circle-check"></i>Limpieza de sifones</li>
               <li><i class="fa-solid fa-circle-check"></i>Prevención de rebalses</li>
             </ul>
-            <a class="btn btn-primary" href="tel:+569XXXXXXX">📞 Llamar por esto</a>
+            <a class="btn btn-primary" href="tel:+569XXXXXXX">Llamar por esto</a>
           </article>
 
           <article class="card service-card" data-service-card>
@@ -1562,7 +1586,7 @@ const landingMarkup = String.raw`
               <li><i class="fa-solid fa-circle-check"></i>Cambio de conexiones</li>
               <li><i class="fa-solid fa-circle-check"></i>Ajustes y sellado final</li>
             </ul>
-            <a class="btn btn-primary" href="tel:+569XXXXXXX">📞 Llamar por esto</a>
+            <a class="btn btn-primary" href="tel:+569XXXXXXX">Llamar por esto</a>
           </article>
         </div>
       </div>
@@ -1644,7 +1668,7 @@ const landingMarkup = String.raw`
       <div class="container">
         <h2>¿Tienes una urgencia ahora?</h2>
         <p style="margin: 10px auto 18px; max-width: 56ch">Te atendemos hoy, en tu comuna, con respuesta rápida y técnica.</p>
-        <a class="btn btn-primary" href="tel:+569XXXXXXX" style="font-size: 1rem; padding: 16px 26px">📞 Llamar ahora</a>
+        <a class="btn btn-primary" href="tel:+569XXXXXXX" style="font-size: 1rem; padding: 16px 26px">Llamar ahora</a>
       </div>
     </section>
 
@@ -1833,7 +1857,7 @@ const landingMarkup = String.raw`
     </footer>
 
     <div class="mobile-sticky" aria-label="acciones rápidas móviles">
-      <a class="mobile-call" href="tel:+569XXXXXXX">📞 Llamar</a>
+      <a class="mobile-call" href="tel:+569XXXXXXX">Llamar</a>
       <a class="mobile-wa" href="https://wa.me/569XXXXXXX" target="_blank" rel="noopener noreferrer">WhatsApp</a>
     </div>
 
@@ -1991,23 +2015,23 @@ export default function DynamicLanding() {
     window.addEventListener("pageshow", onPageShow);
 
     const nav = document.querySelector(".top-nav");
-    let lastScrollY = window.scrollY;
+    const desktopShowAfter = 700;
+    const desktopHideBeforeTop = 140;
     const toggleNav = () => {
       if (!nav) return;
       if (window.innerWidth >= 992) {
-        nav.classList.remove("nav--visible");
+        nav.classList.remove("nav--visible", "nav--desktop-hidden", "nav--desktop-integrated", "nav--desktop-bar");
         const currentY = window.scrollY;
-        if (currentY <= 4) {
-          nav.classList.remove("nav--desktop-hidden");
-        } else if (currentY > lastScrollY) {
-          nav.classList.add("nav--desktop-hidden");
+        if (currentY <= desktopHideBeforeTop) {
+          nav.classList.add("nav--desktop-integrated");
+        } else if (currentY >= desktopShowAfter) {
+          nav.classList.add("nav--desktop-bar");
         } else {
-          nav.classList.remove("nav--desktop-hidden");
+          nav.classList.add("nav--desktop-hidden");
         }
-        lastScrollY = currentY;
         return;
       }
-      nav.classList.remove("nav--desktop-hidden");
+      nav.classList.remove("nav--desktop-bar", "nav--desktop-hidden", "nav--desktop-integrated");
       if (window.scrollY > 40) nav.classList.add("nav--visible");
       else nav.classList.remove("nav--visible");
     };
@@ -2092,19 +2116,68 @@ export default function DynamicLanding() {
     const applySettings = (settings: Settings | null) => {
       if (!settings || typeof settings !== "object") return;
       const content = settings.content || {};
+      const sectionHero = Array.isArray(content.sections)
+        ? content.sections.find(
+            (section) =>
+              section &&
+              typeof section === "object" &&
+              section.id === "hero" &&
+              section.enabled !== false &&
+              section.data &&
+              typeof section.data === "object",
+          )
+        : null;
 
-      const hero = content.hero || {};
-      if (typeof hero.title === "string" && hero.title.trim()) {
+      const legacyHero = content.hero && typeof content.hero === "object" ? content.hero : {};
+      const sectionHeroData = sectionHero && typeof sectionHero === "object" ? sectionHero.data : {};
+      const heroTitle =
+        typeof sectionHeroData?.title === "string" && sectionHeroData.title.trim()
+          ? sectionHeroData.title.trim()
+          : typeof legacyHero?.title === "string" && legacyHero.title.trim()
+            ? legacyHero.title.trim()
+            : "";
+      const heroSubtitle =
+        typeof sectionHeroData?.subtitle === "string" && sectionHeroData.subtitle.trim()
+          ? sectionHeroData.subtitle.trim()
+          : typeof legacyHero?.subtitle === "string" && legacyHero.subtitle.trim()
+            ? legacyHero.subtitle.trim()
+            : "";
+      const heroPrimaryUrl =
+        typeof sectionHeroData?.cta_primary?.url === "string" && sectionHeroData.cta_primary.url.trim()
+          ? sectionHeroData.cta_primary.url.trim()
+          : typeof legacyHero?.cta?.primary_url === "string" && legacyHero.cta.primary_url.trim()
+            ? legacyHero.cta.primary_url.trim()
+            : "";
+      const heroPrimaryText =
+        typeof sectionHeroData?.cta_primary?.text === "string" && sectionHeroData.cta_primary.text.trim()
+          ? sectionHeroData.cta_primary.text.trim()
+          : typeof legacyHero?.cta?.primary_text === "string" && legacyHero.cta.primary_text.trim()
+            ? legacyHero.cta.primary_text.trim()
+            : "";
+      const heroSecondaryUrl =
+        typeof sectionHeroData?.cta_secondary?.url === "string" && sectionHeroData.cta_secondary.url.trim()
+          ? sectionHeroData.cta_secondary.url.trim()
+          : typeof legacyHero?.cta?.secondary_url === "string" && legacyHero.cta.secondary_url.trim()
+            ? legacyHero.cta.secondary_url.trim()
+            : "";
+      const heroSecondaryText =
+        typeof sectionHeroData?.cta_secondary?.text === "string" && sectionHeroData.cta_secondary.text.trim()
+          ? sectionHeroData.cta_secondary.text.trim()
+          : typeof legacyHero?.cta?.secondary_text === "string" && legacyHero.cta.secondary_text.trim()
+            ? legacyHero.cta.secondary_text.trim()
+            : "";
+
+      if (heroTitle) {
         const titleEl = document.querySelector("[data-hero-title]");
         if (titleEl) {
           const normalize = (value: string) => value.replace(/\s+/g, " ").trim();
-          const lines = hero.title
+          const lines = heroTitle
             .split("\n")
             .map((line) => line.trim())
             .filter(Boolean)
             .slice(0, 2);
           const currentCombined = normalize(titleEl.textContent || "");
-          const nextCombined = normalize(hero.title);
+          const nextCombined = normalize(heroTitle);
           const sameText = currentCombined === nextCombined;
           if (!sameText) {
             if (lines.length === 2) {
@@ -2115,30 +2188,35 @@ export default function DynamicLanding() {
             } else {
               titleEl.innerHTML = '<span class="hero-line"></span>';
               const span = titleEl.querySelector(".hero-line");
-              if (span) span.textContent = hero.title.trim();
+              if (span) span.textContent = heroTitle;
             }
           }
         }
       }
 
-      if (typeof hero.subtitle === "string" && hero.subtitle.trim()) {
+      if (heroSubtitle) {
         const subtitleEl = document.querySelector("[data-hero-subtitle]");
-        if (subtitleEl) subtitleEl.textContent = hero.subtitle.trim();
+        if (subtitleEl) subtitleEl.textContent = heroSubtitle;
       }
 
-      if (hero.cta && typeof hero.cta === "object") {
-        const primaryBtn = document.querySelector("[data-hero-cta-primary]");
-        if (primaryBtn && typeof hero.cta.primary_url === "string" && hero.cta.primary_url.trim()) {
-          primaryBtn.setAttribute("href", hero.cta.primary_url.trim());
+      const primaryBtn = document.querySelector("[data-hero-cta-primary]");
+      if (primaryBtn && heroPrimaryUrl) {
+        primaryBtn.setAttribute("href", heroPrimaryUrl);
+      }
+      if (primaryBtn && heroPrimaryText) {
+        const icon = primaryBtn.querySelector("i");
+        primaryBtn.textContent = " " + heroPrimaryText;
+        if (icon) {
+          primaryBtn.prepend(icon);
+          primaryBtn.insertBefore(document.createTextNode(" "), icon.nextSibling);
         }
-        if (primaryBtn && typeof hero.cta.primary_text === "string" && hero.cta.primary_text.trim()) {
-          const icon = primaryBtn.querySelector("i");
-          primaryBtn.textContent = " " + hero.cta.primary_text.trim();
-          if (icon) {
-            primaryBtn.prepend(icon);
-            primaryBtn.insertBefore(document.createTextNode(" "), icon.nextSibling);
-          }
-        }
+      }
+      const secondaryBtn = document.querySelector("[data-hero-cta-secondary]");
+      if (secondaryBtn && heroSecondaryUrl) {
+        secondaryBtn.setAttribute("href", heroSecondaryUrl);
+      }
+      if (secondaryBtn && heroSecondaryText) {
+        secondaryBtn.textContent = heroSecondaryText;
       }
 
       const services = content.services;
@@ -2246,12 +2324,29 @@ export default function DynamicLanding() {
 
     const hydrateFromBackend = async () => {
       try {
-        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.trim();
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.trim() || "";
         const siteSlug = process.env.NEXT_PUBLIC_SITE_SLUG?.trim();
-        if (!backendUrl || !siteSlug) return;
+        if (!siteSlug) return;
+        let resolvedBackendUrl = backendUrl;
+        if (!resolvedBackendUrl && typeof window !== "undefined") {
+          resolvedBackendUrl = window.location.origin;
+        }
+        if (resolvedBackendUrl && typeof window !== "undefined") {
+          try {
+            const configuredHost = new URL(resolvedBackendUrl).hostname;
+            const onLocalhost = /^(localhost|127\.0\.0\.1)$/.test(configuredHost);
+            const currentLocalhost = /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname);
+            if (onLocalhost && !currentLocalhost) {
+              resolvedBackendUrl = window.location.origin;
+            }
+          } catch {
+            resolvedBackendUrl = window.location.origin;
+          }
+        }
+        if (!resolvedBackendUrl) return;
 
         const settingsRes = await fetch(
-          `${backendUrl.replace(/\/$/, "")}/api/sites/${encodeURIComponent(siteSlug)}/settings?t=${Date.now()}`,
+          `${resolvedBackendUrl.replace(/\/$/, "")}/api/sites/${encodeURIComponent(siteSlug)}/settings?t=${Date.now()}`,
           {
             cache: "no-store",
             headers: { "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0" },
