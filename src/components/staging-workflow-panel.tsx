@@ -222,6 +222,10 @@ export default function StagingWorkflowPanel() {
     () => `${baseUrl.replace(/\/$/, "")}/api/sites/${encodeURIComponent(siteSlug)}`,
     [baseUrl, siteSlug],
   );
+  const sameOriginEndpointBase = useMemo(() => {
+    if (typeof window === "undefined") return endpointBase;
+    return `${window.location.origin}/api/sites/${encodeURIComponent(siteSlug)}`;
+  }, [endpointBase, siteSlug]);
   const envBadge = detectEnvBadge(siteSlug);
 
   useEffect(() => {
@@ -275,9 +279,36 @@ export default function StagingWorkflowPanel() {
     });
   };
 
+  const parseJsonResponse = async (response: Response) => {
+    const text = await response.text();
+    try {
+      return text ? JSON.parse(text) : {};
+    } catch {
+      throw new Error(`Respuesta no JSON (${response.status}) desde ${response.url}`);
+    }
+  };
+
+  const fetchWithJsonFallback = async (path: string) => {
+    const primary = `${endpointBase}${path}`;
+    const fallback = `${sameOriginEndpointBase}${path}`;
+    const targets = primary === fallback ? [primary] : [primary, fallback];
+    let lastError: Error | null = null;
+
+    for (const url of targets) {
+      try {
+        const response = await fetch(url, { cache: "no-store" });
+        const payload = await parseJsonResponse(response);
+        return { response, payload };
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error("Request failed");
+      }
+    }
+
+    throw lastError ?? new Error("No se pudo cargar respuesta JSON");
+  };
+
   const fetchSettings = async (nextMode = mode, silent = false) => {
-    const response = await fetch(`${endpointBase}/settings?mode=${nextMode}&t=${Date.now()}`, { cache: "no-store" });
-    const payload = await response.json();
+    const { response, payload } = await fetchWithJsonFallback(`/settings?mode=${nextMode}&t=${Date.now()}`);
     if (!response.ok) throw new Error(payload?.error || "Unable to fetch settings");
 
     setSettings(normalizeSettings((payload?.settings ?? {}) as SettingsPayload));
@@ -287,10 +318,9 @@ export default function StagingWorkflowPanel() {
   };
 
   const fetchVersions = async (silent = false) => {
-    const response = await fetch(`${endpointBase}/versions?userId=${encodeURIComponent(userId.trim())}&t=${Date.now()}`, {
-      cache: "no-store",
-    });
-    const payload = await response.json();
+    const { response, payload } = await fetchWithJsonFallback(
+      `/versions?userId=${encodeURIComponent(userId.trim())}&t=${Date.now()}`,
+    );
     if (!response.ok) throw new Error(payload?.error || "Unable to fetch versions");
     setVersions(Array.isArray(payload?.versions) ? payload.versions : []);
     setMembership((payload?.membership ?? null) as MembershipInfo | null);
