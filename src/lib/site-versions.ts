@@ -92,6 +92,13 @@ export function apiErrorResponse(error: unknown) {
     };
   }
 
+  if (error instanceof Error) {
+    return {
+      status: 500,
+      body: { error: error.message },
+    };
+  }
+
   return {
     status: 500,
     body: { error: "Unknown server error" },
