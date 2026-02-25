@@ -1,21 +1,14 @@
-# Gasfiter Landing (Next.js + Builder)
+# Gasfiter Landing (Next.js dinámico)
 
-Landing page de gasfitería con fallback estático y soporte de edición vía Builder.io.
+Landing page de gasfitería en Next.js (App Router) con hidratación de contenido desde backend.
 
 ## Requisitos
 
 - Node.js 18+
-- Cuenta de Builder.io
 
 ## Configuración
 
-1) Crea un archivo `.env.local` con tu API key:
-
-```bash
-NEXT_PUBLIC_BUILDER_API_KEY=TU_API_KEY
-```
-
-2) Instala dependencias y levanta el entorno:
+1) Instala dependencias y levanta el entorno:
 
 ```bash
 npm install
@@ -24,11 +17,22 @@ npm run dev
 
 Visita `http://localhost:3000`.
 
+## Variables de entorno
+
+Configura `.env.local`:
+
+```bash
+NEXT_PUBLIC_BACKEND_URL=https://tu-backend.com
+NEXT_PUBLIC_SITE_SLUG=gasfiter
+```
+
 ## Cómo funciona
 
-- Si existe contenido publicado en Builder para el modelo **page**, se renderiza en el sitio.
-- Si no hay contenido o no hay API key, se muestra la landing de fallback.
+- El layout se renderiza en `/` con componentes Next.js.
+- El frontend hidrata en runtime desde:
+  - `${NEXT_PUBLIC_BACKEND_URL}/api/sites/${NEXT_PUBLIC_SITE_SLUG}/settings`
+- Se usa `cache: "no-store"` para evitar cachear settings.
 
 ## Deploy
 
-Despliega en Vercel importando este repositorio. Agrega la variable `NEXT_PUBLIC_BUILDER_API_KEY` en el dashboard de Vercel.
+Despliega en Vercel importando este repositorio.

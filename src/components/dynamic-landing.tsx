@@ -1,26 +1,8 @@
-<!doctype html>
-<html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Gasfiter de Urgencias en Santiago | 24/7</title>
-    <meta
-      name="description"
-      content="Gasfiter de urgencias en Santiago. Llegamos en menos de 40 minutos para fugas, destapes e instalaciones. Atención 24/7."
-    />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
-      crossorigin="anonymous"
-      referrerpolicy="no-referrer"
-    />
-    <style>
+"use client";
+
+import { useEffect } from "react";
+
+const landingStyles = String.raw`
       :root {
         --navy: #0a1628;
         --blue: #1565c0;
@@ -1404,9 +1386,9 @@
           display: none;
         }
       }
-    </style>
-  </head>
-  <body>
+`;
+
+const landingMarkup = String.raw`
     <nav class="top-nav">
       <div class="top-nav-inner">
         <a class="brand" href="#inicio">Gasfiter 24/7</a>
@@ -1436,11 +1418,11 @@
         <div class="hero-content">
           <div class="hero-content-inner">
             <span class="eyebrow">SERVICIO 24/7 · SANTIAGO</span>
-            <h1>
+            <h1 data-hero-title>
               <span class="hero-line">Gasfiter urgente en Santiago</span>
               <span class="hero-line">Llegamos en menos de 40 minutos</span>
             </h1>
-            <p class="hero-lead">
+            <p class="hero-lead" data-hero-subtitle>
               Fugas, destapes, calefont e instalaciones. Respuesta inmediata, diagnóstico claro y solución en terreno.
             </p>
             <div class="badges">
@@ -1449,10 +1431,10 @@
               <span class="badge"><i class="fa-solid fa-certificate" aria-hidden="true"></i>Técnicos certificados</span>
             </div>
             <div class="hero-cta">
-              <a class="btn btn-primary" href="tel:+569XXXXXXX">
+              <a class="btn btn-primary" href="tel:+569XXXXXXX" data-hero-cta-primary>
                 <i class="fa-solid fa-phone-volume" aria-hidden="true"></i> LLAMAR AHORA +56 9 XXXX XXXX
               </a>
-              <a class="btn btn-ghost" href="https://wa.me/569XXXXXXX" target="_blank" rel="noopener noreferrer">
+              <a class="btn btn-ghost" href="https://wa.me/569XXXXXXX" target="_blank" rel="noopener noreferrer" data-hero-cta-secondary>
                 <i class="fa-brands fa-whatsapp" aria-hidden="true"></i> WhatsApp
               </a>
             </div>
@@ -1513,12 +1495,12 @@
 
     <section class="section reveal" id="servicios">
       <div class="container">
-        <h2 style="font-size: clamp(2rem, 6vw, 3.5rem); color: var(--navy)">¿Qué problema tienes ahora?</h2>
+        <h2 style="font-size: clamp(2rem, 6vw, 3.5rem); color: var(--navy)" data-services-title>¿Qué problema tienes ahora?</h2>
         <div class="services-grid">
-          <article class="card service-card">
+          <article class="card service-card" data-service-card>
             <div class="service-icon"><i class="fa-solid fa-droplet"></i></div>
-            <h3>Filtraciones y fugas</h3>
-            <p>Detección rápida y reparación inmediata para evitar daños mayores en muros, pisos y techos.</p>
+            <h3 data-service-title>Filtraciones y fugas</h3>
+            <p data-service-description>Detección rápida y reparación inmediata para evitar daños mayores en muros, pisos y techos.</p>
             <ul class="checklist">
               <li><i class="fa-solid fa-circle-check"></i>Fugas visibles y ocultas</li>
               <li><i class="fa-solid fa-circle-check"></i>Reparación de llaves y cañerías</li>
@@ -1528,10 +1510,10 @@
             <a class="btn btn-primary" href="tel:+569XXXXXXX">📞 Llamar por esto</a>
           </article>
 
-          <article class="card service-card">
+          <article class="card service-card" data-service-card>
             <div class="service-icon"><i class="fa-solid fa-toilet"></i></div>
-            <h3>Destapes urgentes</h3>
-            <p>Atendemos obstrucciones críticas en cocina, baño y desagües con herramientas profesionales.</p>
+            <h3 data-service-title>Destapes urgentes</h3>
+            <p data-service-description>Atendemos obstrucciones críticas en cocina, baño y desagües con herramientas profesionales.</p>
             <ul class="checklist">
               <li><i class="fa-solid fa-circle-check"></i>Destape de lavaplatos</li>
               <li><i class="fa-solid fa-circle-check"></i>Destape de WC</li>
@@ -1541,10 +1523,10 @@
             <a class="btn btn-primary" href="tel:+569XXXXXXX">📞 Llamar por esto</a>
           </article>
 
-          <article class="card service-card">
+          <article class="card service-card" data-service-card>
             <div class="service-icon"><i class="fa-solid fa-screwdriver-wrench"></i></div>
-            <h3>Instalaciones y reparaciones</h3>
-            <p>Grifería, lavamanos, calefont y artefactos sanitarios con instalación segura y rápida.</p>
+            <h3 data-service-title>Instalaciones y reparaciones</h3>
+            <p data-service-description>Grifería, lavamanos, calefont y artefactos sanitarios con instalación segura y rápida.</p>
             <ul class="checklist">
               <li><i class="fa-solid fa-circle-check"></i>Instalación de grifería</li>
               <li><i class="fa-solid fa-circle-check"></i>Reparación de calefont</li>
@@ -1747,7 +1729,7 @@
         <h2 style="font-size: clamp(2rem, 6vw, 3.3rem); color: var(--navy); max-width: 760px; margin: 0 auto">
           Preguntas frecuentes
         </h2>
-        <div class="faq-list">
+        <div class="faq-list" data-faq-list>
           <article class="faq-item">
             <button class="faq-btn" type="button">¿Cobran visita? <i class="fa-solid fa-chevron-down"></i></button>
             <div class="faq-content"><p>Cobramos solo si hay diagnóstico en terreno y siempre se informa antes de iniciar.</p></div>
@@ -1826,65 +1808,95 @@
       <a class="mobile-wa" href="https://wa.me/569XXXXXXX" target="_blank" rel="noopener noreferrer">WhatsApp</a>
     </div>
 
-    <script>
-      if ("scrollRestoration" in history) {
-        history.scrollRestoration = "manual";
-      }
+`;
 
-      const navEntry = performance.getEntriesByType("navigation")[0];
-      const isReload = !!navEntry && navEntry.type === "reload";
-      if (isReload) {
-        window.scrollTo(0, 0);
-      }
+type Settings = {
+  colors?: {
+    primary?: string;
+    secondary?: string;
+    background?: string;
+    text?: string;
+  };
+  typography?: {
+    font?: string;
+    fontFamily?: string;
+    baseSize?: string;
+    lineHeight?: string;
+  };
+  content?: {
+    hero?: {
+      title?: string;
+      subtitle?: string;
+      cta?: { primary_text?: string; primary_url?: string };
+    };
+    services?:
+      | Array<{ title?: string; description?: string }>
+      | {
+          title?: string;
+          subtitle?: string;
+          items?:
+            | Array<{ title?: string; description?: string }>
+            | Record<string, { title?: string; description?: string }>;
+        };
+    faqs?: Array<{ question?: string; answer?: string }>;
+  };
+};
 
-      window.addEventListener("pageshow", () => {
-        if (isReload) {
-          window.scrollTo(0, 0);
-        }
-      });
+export default function DynamicLanding() {
+  useEffect(() => {
+    if ("scrollRestoration" in history) {
+      history.scrollRestoration = "manual";
+    }
 
-      const nav = document.querySelector(".top-nav");
-      let lastScrollY = window.scrollY;
-      const toggleNav = () => {
-        if (!nav) return;
-        if (window.innerWidth >= 992) {
-          nav.classList.remove("nav--visible");
-          const currentY = window.scrollY;
-          if (currentY <= 4) {
-            nav.classList.remove("nav--desktop-hidden");
-          } else if (currentY > lastScrollY) {
-            nav.classList.add("nav--desktop-hidden");
-          } else {
-            nav.classList.remove("nav--desktop-hidden");
-          }
-          lastScrollY = currentY;
-          return;
-        }
-        nav.classList.remove("nav--desktop-hidden");
-        if (window.scrollY > 40) {
-          nav.classList.add("nav--visible");
+    const navEntry = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
+    const isReload = !!navEntry && navEntry.type === "reload";
+    if (isReload) window.scrollTo(0, 0);
+
+    const onPageShow = () => {
+      if (isReload) window.scrollTo(0, 0);
+    };
+    window.addEventListener("pageshow", onPageShow);
+
+    const nav = document.querySelector(".top-nav");
+    let lastScrollY = window.scrollY;
+    const toggleNav = () => {
+      if (!nav) return;
+      if (window.innerWidth >= 992) {
+        nav.classList.remove("nav--visible");
+        const currentY = window.scrollY;
+        if (currentY <= 4) {
+          nav.classList.remove("nav--desktop-hidden");
+        } else if (currentY > lastScrollY) {
+          nav.classList.add("nav--desktop-hidden");
         } else {
-          nav.classList.remove("nav--visible");
+          nav.classList.remove("nav--desktop-hidden");
         }
-      };
-      toggleNav();
-      window.addEventListener("scroll", toggleNav, { passive: true });
-      window.addEventListener("resize", toggleNav);
+        lastScrollY = currentY;
+        return;
+      }
+      nav.classList.remove("nav--desktop-hidden");
+      if (window.scrollY > 40) nav.classList.add("nav--visible");
+      else nav.classList.remove("nav--visible");
+    };
+    toggleNav();
+    window.addEventListener("scroll", toggleNav, { passive: true });
+    window.addEventListener("resize", toggleNav);
 
-      const reveals = document.querySelectorAll(".reveal");
-      const io = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              entry.target.classList.add("visible");
-              io.unobserve(entry.target);
-            }
-          });
-        },
-        { threshold: 0.14 }
-      );
-      reveals.forEach((item) => io.observe(item));
+    const reveals = document.querySelectorAll(".reveal");
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("visible");
+            io.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.14 },
+    );
+    reveals.forEach((item) => io.observe(item));
 
+    const bindFaqButtons = () => {
       const faqBtns = document.querySelectorAll(".faq-btn");
       faqBtns.forEach((btn) => {
         btn.addEventListener("click", () => {
@@ -1893,200 +1905,339 @@
           item.classList.toggle("active");
         });
       });
+    };
+    bindFaqButtons();
 
-      const projectsTrack = document.querySelector("[data-projects-track]");
-      const prevBtn = document.querySelector("[data-projects-prev]");
-      const nextBtn = document.querySelector("[data-projects-next]");
-
-      if (projectsTrack) {
-        const cards = Array.from(projectsTrack.querySelectorAll(".project-card"));
-        const getStep = () => {
-          const firstCard = cards[0];
-          if (!firstCard) return Math.max(280, Math.round(projectsTrack.clientWidth * 0.35));
-          const gap = 24;
-          return firstCard.getBoundingClientRect().width + gap;
-        };
-
-        if (prevBtn) {
-          prevBtn.addEventListener("click", () => {
-            projectsTrack.scrollBy({ left: -getStep(), behavior: "smooth" });
-          });
-        }
-
-        if (nextBtn) {
-          nextBtn.addEventListener("click", () => {
-            projectsTrack.scrollBy({ left: getStep(), behavior: "smooth" });
-          });
-        }
-
-        let isDown = false;
-        let startX = 0;
-        let startScrollLeft = 0;
-        let hasMoved = false;
-
-        projectsTrack.addEventListener("pointerdown", (event) => {
-          if (event.pointerType !== "mouse") return;
-          if (event.button !== 0) return;
-          isDown = true;
-          hasMoved = false;
-          startX = event.clientX;
-          startScrollLeft = projectsTrack.scrollLeft;
-          projectsTrack.classList.add("is-dragging");
-        });
-
-        projectsTrack.addEventListener("pointermove", (event) => {
-          if (!isDown) return;
-          const deltaX = event.clientX - startX;
-          if (Math.abs(deltaX) > 3) {
-            hasMoved = true;
-            event.preventDefault();
-          }
-          projectsTrack.scrollLeft = startScrollLeft - deltaX;
-        });
-
-        const stopDragging = () => {
-          isDown = false;
-          projectsTrack.classList.remove("is-dragging");
-        };
-
-        projectsTrack.addEventListener("pointerup", stopDragging);
-        projectsTrack.addEventListener("pointercancel", stopDragging);
-        projectsTrack.addEventListener("mouseleave", stopDragging);
-        projectsTrack.addEventListener("dragstart", (event) => event.preventDefault());
-        projectsTrack.addEventListener("click", (event) => {
-          if (hasMoved) {
-            event.preventDefault();
-          }
-        });
-
-        projectsTrack.addEventListener(
-          "wheel",
-          (event) => {
-            if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
-            projectsTrack.scrollLeft += event.deltaY;
-            event.preventDefault();
-          },
-          { passive: false }
+    const toServicesArray = (services: unknown): Array<{ title?: string; description?: string }> => {
+      if (Array.isArray(services)) return services;
+      if (!services || typeof services !== "object") return [];
+      const items = (services as { items?: unknown }).items;
+      if (Array.isArray(items)) return items;
+      if (items && typeof items === "object") {
+        return Object.values(items as Record<string, unknown>).filter(
+          (item): item is { title?: string; description?: string } =>
+            !!item && typeof item === "object",
         );
       }
+      return [];
+    };
 
-      const clientsTrack = document.querySelector("[data-clients-track]");
-      const clientsDotsWrap = document.querySelector("[data-clients-dots]");
+    const applySettings = (settings: Settings | null) => {
+      if (!settings || typeof settings !== "object") return;
+      const content = settings.content || {};
 
-      if (clientsTrack) {
-        const clientCards = Array.from(clientsTrack.querySelectorAll(".client-card"));
-        const dots = clientsDotsWrap ? Array.from(clientsDotsWrap.querySelectorAll(".clients-dot")) : [];
-        const enableClientsAutoplay = false;
-        let autoplayId = null;
-        let isDown = false;
-        let startX = 0;
-        let startScrollLeft = 0;
-        let hasMoved = false;
-        const canScroll = () => clientsTrack.scrollWidth > clientsTrack.clientWidth + 2;
-        const getStep = () => {
-          const first = clientCards[0];
-          if (!first) return Math.max(280, Math.round(clientsTrack.clientWidth * 0.55));
-          const styles = getComputedStyle(clientsTrack);
-          const gap = parseFloat(styles.columnGap || styles.gap || "0") || 0;
-          return first.getBoundingClientRect().width + gap;
-        };
-
-        const updateActiveDot = () => {
-          if (!dots.length) return;
-          const step = Math.max(1, getStep());
-          const index = Math.max(0, Math.min(dots.length - 1, Math.round(clientsTrack.scrollLeft / step)));
-          dots.forEach((dot, i) => dot.classList.toggle("active", i === index));
-        };
-
-        const nextSlide = () => {
-          const step = getStep();
-          const max = clientsTrack.scrollWidth - clientsTrack.clientWidth - 2;
-          const next = clientsTrack.scrollLeft + step;
-          if (next >= max) {
-            clientsTrack.scrollTo({ left: 0, behavior: "smooth" });
+      const hero = content.hero || {};
+      if (typeof hero.title === "string" && hero.title.trim()) {
+        const titleEl = document.querySelector("[data-hero-title]");
+        if (titleEl) {
+          const lines = hero.title
+            .split("\n")
+            .map((line) => line.trim())
+            .filter(Boolean)
+            .slice(0, 2);
+          if (lines.length === 2) {
+            titleEl.innerHTML = '<span class="hero-line"></span><span class="hero-line"></span>';
+            const spans = titleEl.querySelectorAll(".hero-line");
+            if (spans[0]) spans[0].textContent = lines[0];
+            if (spans[1]) spans[1].textContent = lines[1];
           } else {
-            clientsTrack.scrollBy({ left: step, behavior: "smooth" });
+            titleEl.innerHTML = '<span class="hero-line"></span>';
+            const span = titleEl.querySelector(".hero-line");
+            if (span) span.textContent = hero.title.trim();
           }
-        };
-
-        const stopAuto = () => {
-          if (autoplayId) {
-            clearInterval(autoplayId);
-            autoplayId = null;
-          }
-        };
-
-        const startAuto = () => {
-          if (!enableClientsAutoplay) return;
-          if (!canScroll()) return;
-          stopAuto();
-          autoplayId = setInterval(nextSlide, 3800);
-        };
-
-        clientsTrack.addEventListener("scroll", updateActiveDot, { passive: true });
-
-        clientsTrack.addEventListener("pointerdown", (event) => {
-          if (event.pointerType !== "mouse") return;
-          if (event.button !== 0 || !canScroll()) return;
-          event.preventDefault();
-          stopAuto();
-          isDown = true;
-          hasMoved = false;
-          startX = event.clientX;
-          startScrollLeft = clientsTrack.scrollLeft;
-          clientsTrack.classList.add("is-dragging");
-          clientsTrack.setPointerCapture(event.pointerId);
-        });
-
-        clientsTrack.addEventListener("pointermove", (event) => {
-          if (!isDown) return;
-          const deltaX = event.clientX - startX;
-          if (Math.abs(deltaX) > 1) {
-            hasMoved = true;
-            event.preventDefault();
-          }
-          clientsTrack.scrollLeft = startScrollLeft - deltaX * 1.15;
-        });
-
-        const stopDrag = (event) => {
-          if (!isDown) return;
-          if (event?.pointerId !== undefined && clientsTrack.hasPointerCapture(event.pointerId)) {
-            clientsTrack.releasePointerCapture(event.pointerId);
-          }
-          isDown = false;
-          clientsTrack.classList.remove("is-dragging");
-          startAuto();
-        };
-
-        clientsTrack.addEventListener("pointerup", stopDrag);
-        clientsTrack.addEventListener("pointercancel", stopDrag);
-        window.addEventListener("blur", () => {
-          if (isDown) {
-            isDown = false;
-            clientsTrack.classList.remove("is-dragging");
-            startAuto();
-          }
-        });
-        clientsTrack.addEventListener("dragstart", (event) => event.preventDefault());
-        clientsTrack.addEventListener("mouseenter", stopAuto);
-        clientsTrack.addEventListener("touchstart", stopAuto, { passive: true });
-        clientsTrack.addEventListener("touchend", startAuto, { passive: true });
-        clientsTrack.addEventListener("click", (event) => {
-          if (hasMoved) event.preventDefault();
-        });
-        clientsTrack.addEventListener(
-          "wheel",
-          (event) => {
-            if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
-            clientsTrack.scrollLeft += event.deltaY;
-            event.preventDefault();
-          },
-          { passive: false }
-        );
-
-        updateActiveDot();
-        startAuto();
+        }
       }
-    </script>
-  </body>
-</html>
+
+      if (typeof hero.subtitle === "string" && hero.subtitle.trim()) {
+        const subtitleEl = document.querySelector("[data-hero-subtitle]");
+        if (subtitleEl) subtitleEl.textContent = hero.subtitle.trim();
+      }
+
+      if (hero.cta && typeof hero.cta === "object") {
+        const primaryBtn = document.querySelector("[data-hero-cta-primary]");
+        if (primaryBtn && typeof hero.cta.primary_url === "string" && hero.cta.primary_url.trim()) {
+          primaryBtn.setAttribute("href", hero.cta.primary_url.trim());
+        }
+        if (primaryBtn && typeof hero.cta.primary_text === "string" && hero.cta.primary_text.trim()) {
+          const icon = primaryBtn.querySelector("i");
+          primaryBtn.textContent = " " + hero.cta.primary_text.trim();
+          if (icon) {
+            primaryBtn.prepend(icon);
+            primaryBtn.insertBefore(document.createTextNode(" "), icon.nextSibling);
+          }
+        }
+      }
+
+      const services = content.services;
+      const servicesTitleEl = document.querySelector("[data-services-title]");
+      if (
+        services &&
+        typeof services === "object" &&
+        !Array.isArray(services) &&
+        typeof services.title === "string" &&
+        services.title.trim() &&
+        servicesTitleEl
+      ) {
+        servicesTitleEl.textContent = services.title.trim();
+      }
+
+      const serviceItems = toServicesArray(services);
+      const servicesSection = document.getElementById("servicios");
+      if (Array.isArray(serviceItems) && serviceItems.length === 0 && servicesSection) {
+        servicesSection.style.display = "none";
+      }
+
+      if (serviceItems.length) {
+        const cards = Array.from(document.querySelectorAll("[data-service-card]"));
+        cards.forEach((card, idx) => {
+          const item = serviceItems[idx] as { title?: string; description?: string } | undefined;
+          if (!item) {
+            (card as HTMLElement).style.display = "none";
+            return;
+          }
+          const titleEl = card.querySelector("[data-service-title]");
+          const descEl = card.querySelector("[data-service-description]");
+          if (titleEl && typeof item.title === "string" && item.title.trim()) {
+            titleEl.textContent = item.title.trim();
+          }
+          if (descEl && typeof item.description === "string" && item.description.trim()) {
+            descEl.textContent = item.description.trim();
+          }
+        });
+      }
+
+      const faqSection = document.getElementById("faq");
+      if (Array.isArray(content.faqs) && content.faqs.length) {
+        const faqList = document.querySelector("[data-faq-list]");
+        if (faqList) {
+          faqList.innerHTML = content.faqs
+            .filter((faq) => faq && typeof faq === "object")
+            .map((faq) => {
+              const q = typeof faq.question === "string" ? faq.question.trim() : "";
+              const a = typeof faq.answer === "string" ? faq.answer.trim() : "";
+              if (!q || !a) return "";
+              return `
+                <article class="faq-item">
+                  <button class="faq-btn" type="button">${q} <i class="fa-solid fa-chevron-down"></i></button>
+                  <div class="faq-content"><p>${a}</p></div>
+                </article>
+              `;
+            })
+            .join("");
+          bindFaqButtons();
+        }
+      } else if (faqSection) {
+        faqSection.style.display = "none";
+      }
+
+      const root = document.documentElement;
+      if (settings.colors) {
+        if (settings.colors.primary) root.style.setProperty("--blue", settings.colors.primary);
+        if (settings.colors.secondary) root.style.setProperty("--orange", settings.colors.secondary);
+        if (settings.colors.text) root.style.setProperty("--text", settings.colors.text);
+        if (settings.colors.background) document.body.style.backgroundColor = settings.colors.background;
+        if (settings.colors.text) document.body.style.color = settings.colors.text;
+      }
+
+      const body = document.body;
+      if (settings.typography) {
+        if (settings.typography.baseSize) body.style.fontSize = settings.typography.baseSize;
+        if (settings.typography.lineHeight) body.style.lineHeight = settings.typography.lineHeight;
+        const fontStack = settings.typography.font || settings.typography.fontFamily;
+        if (fontStack) body.style.fontFamily = `${fontStack}, Inter, sans-serif`;
+      }
+    };
+
+    const hydrateFromBackend = async () => {
+      try {
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.trim();
+        const siteSlug = process.env.NEXT_PUBLIC_SITE_SLUG?.trim();
+        if (!backendUrl || !siteSlug) return;
+
+        const settingsRes = await fetch(
+          `${backendUrl.replace(/\/$/, "")}/api/sites/${encodeURIComponent(siteSlug)}/settings?t=${Date.now()}`,
+          {
+            cache: "no-store",
+            headers: { "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0" },
+          },
+        );
+        if (!settingsRes.ok) return;
+
+        const payload = await settingsRes.json();
+        applySettings(payload?.settings ?? null);
+      } catch {
+        // Keep static content as fallback.
+      }
+    };
+
+    hydrateFromBackend();
+
+    const projectsTrack = document.querySelector<HTMLElement>("[data-projects-track]");
+    const prevBtn = document.querySelector<HTMLElement>("[data-projects-prev]");
+    const nextBtn = document.querySelector<HTMLElement>("[data-projects-next]");
+
+    if (projectsTrack) {
+      const cards = Array.from(projectsTrack.querySelectorAll(".project-card"));
+      const getStep = () => {
+        const firstCard = cards[0] as HTMLElement | undefined;
+        if (!firstCard) return Math.max(280, Math.round(projectsTrack.clientWidth * 0.35));
+        const gap = 24;
+        return firstCard.getBoundingClientRect().width + gap;
+      };
+
+      prevBtn?.addEventListener("click", () => {
+        projectsTrack.scrollBy({ left: -getStep(), behavior: "smooth" });
+      });
+
+      nextBtn?.addEventListener("click", () => {
+        projectsTrack.scrollBy({ left: getStep(), behavior: "smooth" });
+      });
+
+      let isDown = false;
+      let startX = 0;
+      let startScrollLeft = 0;
+      let hasMoved = false;
+
+      const onPointerDown = (event: PointerEvent) => {
+        if (event.pointerType !== "mouse") return;
+        if (event.button !== 0) return;
+        isDown = true;
+        hasMoved = false;
+        startX = event.clientX;
+        startScrollLeft = projectsTrack.scrollLeft;
+        projectsTrack.classList.add("is-dragging");
+      };
+
+      const onPointerMove = (event: PointerEvent) => {
+        if (!isDown) return;
+        const deltaX = event.clientX - startX;
+        if (Math.abs(deltaX) > 3) {
+          hasMoved = true;
+          event.preventDefault();
+        }
+        projectsTrack.scrollLeft = startScrollLeft - deltaX;
+      };
+
+      const stopDragging = () => {
+        isDown = false;
+        projectsTrack.classList.remove("is-dragging");
+      };
+
+      projectsTrack.addEventListener("pointerdown", onPointerDown);
+      projectsTrack.addEventListener("pointermove", onPointerMove);
+      projectsTrack.addEventListener("pointerup", stopDragging);
+      projectsTrack.addEventListener("pointercancel", stopDragging);
+      projectsTrack.addEventListener("mouseleave", stopDragging);
+      projectsTrack.addEventListener("dragstart", (event) => event.preventDefault());
+      projectsTrack.addEventListener("click", (event) => {
+        if (hasMoved) event.preventDefault();
+      });
+      projectsTrack.addEventListener(
+        "wheel",
+        (event) => {
+          if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+          projectsTrack.scrollLeft += event.deltaY;
+          event.preventDefault();
+        },
+        { passive: false },
+      );
+    }
+
+    const clientsTrack = document.querySelector<HTMLElement>("[data-clients-track]");
+    const clientsDotsWrap = document.querySelector<HTMLElement>("[data-clients-dots]");
+
+    if (clientsTrack) {
+      const clientCards = Array.from(clientsTrack.querySelectorAll(".client-card"));
+      const dots = clientsDotsWrap ? Array.from(clientsDotsWrap.querySelectorAll(".clients-dot")) : [];
+      let isDown = false;
+      let startX = 0;
+      let startScrollLeft = 0;
+      let hasMoved = false;
+      const canScroll = () => clientsTrack.scrollWidth > clientsTrack.clientWidth + 2;
+      const getStep = () => {
+        const first = clientCards[0] as HTMLElement | undefined;
+        if (!first) return Math.max(280, Math.round(clientsTrack.clientWidth * 0.55));
+        const styles = getComputedStyle(clientsTrack);
+        const gap = parseFloat(styles.columnGap || styles.gap || "0") || 0;
+        return first.getBoundingClientRect().width + gap;
+      };
+
+      const updateActiveDot = () => {
+        if (!dots.length) return;
+        const step = Math.max(1, getStep());
+        const index = Math.max(0, Math.min(dots.length - 1, Math.round(clientsTrack.scrollLeft / step)));
+        dots.forEach((dot, i) => dot.classList.toggle("active", i === index));
+      };
+
+      clientsTrack.addEventListener("scroll", updateActiveDot, { passive: true });
+
+      clientsTrack.addEventListener("pointerdown", (event) => {
+        if (event.pointerType !== "mouse") return;
+        if (event.button !== 0 || !canScroll()) return;
+        event.preventDefault();
+        isDown = true;
+        hasMoved = false;
+        startX = event.clientX;
+        startScrollLeft = clientsTrack.scrollLeft;
+        clientsTrack.classList.add("is-dragging");
+        clientsTrack.setPointerCapture(event.pointerId);
+      });
+
+      clientsTrack.addEventListener("pointermove", (event) => {
+        if (!isDown) return;
+        const deltaX = event.clientX - startX;
+        if (Math.abs(deltaX) > 1) {
+          hasMoved = true;
+          event.preventDefault();
+        }
+        clientsTrack.scrollLeft = startScrollLeft - deltaX * 1.15;
+      });
+
+      const stopDrag = (event?: PointerEvent) => {
+        if (!isDown) return;
+        if (event?.pointerId !== undefined && clientsTrack.hasPointerCapture(event.pointerId)) {
+          clientsTrack.releasePointerCapture(event.pointerId);
+        }
+        isDown = false;
+        clientsTrack.classList.remove("is-dragging");
+      };
+
+      clientsTrack.addEventListener("pointerup", stopDrag);
+      clientsTrack.addEventListener("pointercancel", stopDrag);
+      window.addEventListener("blur", () => {
+        if (!isDown) return;
+        isDown = false;
+        clientsTrack.classList.remove("is-dragging");
+      });
+      clientsTrack.addEventListener("dragstart", (event) => event.preventDefault());
+      clientsTrack.addEventListener("click", (event) => {
+        if (hasMoved) event.preventDefault();
+      });
+      clientsTrack.addEventListener(
+        "wheel",
+        (event) => {
+          if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+          clientsTrack.scrollLeft += event.deltaY;
+          event.preventDefault();
+        },
+        { passive: false },
+      );
+
+      updateActiveDot();
+    }
+
+    return () => {
+      window.removeEventListener("pageshow", onPageShow);
+      window.removeEventListener("scroll", toggleNav);
+      window.removeEventListener("resize", toggleNav);
+      io.disconnect();
+    };
+  }, []);
+
+  return (
+    <div>
+      <style dangerouslySetInnerHTML={{ __html: landingStyles }} />
+      <div dangerouslySetInnerHTML={{ __html: landingMarkup }} />
+    </div>
+  );
+}

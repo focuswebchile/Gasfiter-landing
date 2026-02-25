@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import DynamicLanding from "@/components/dynamic-landing";
 
 export default function Home() {
-  redirect("/landing.html");
+  return <DynamicLanding />;
 }
