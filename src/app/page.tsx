@@ -1,5 +1,5 @@
-import BuilderPage from "@/components/builder-page";
+import { redirect } from "next/navigation";
 
 export default function Home() {
-  return <BuilderPage />;
+  redirect("/landing.html");
 }
