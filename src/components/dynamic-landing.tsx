@@ -62,6 +62,17 @@ const landingStyles = String.raw`
         padding: 72px 20px;
       }
 
+      .landing-shell {
+        visibility: hidden;
+        opacity: 0;
+      }
+
+      .landing-shell.is-ready {
+        visibility: visible;
+        opacity: 1;
+        transition: opacity 0.18s ease;
+      }
+
       .top-nav {
         position: fixed;
         top: 0;
@@ -1851,6 +1862,7 @@ type Settings = {
 
 export default function DynamicLanding() {
   useEffect(() => {
+    const shellEl = document.querySelector<HTMLElement>("[data-landing-shell]");
     const heroTitleEl = document.querySelector<HTMLElement>("[data-hero-title]");
     if (heroTitleEl) {
       heroTitleEl.style.visibility = "hidden";
@@ -2160,6 +2172,9 @@ export default function DynamicLanding() {
         await hydrateFromBackend();
         await waitForFonts();
       } finally {
+        if (shellEl) {
+          shellEl.classList.add("is-ready");
+        }
         if (heroTitleEl) {
           heroTitleEl.style.visibility = "visible";
         }
@@ -2330,7 +2345,7 @@ export default function DynamicLanding() {
   }, []);
 
   return (
-    <div>
+    <div className="landing-shell" data-landing-shell>
       <style dangerouslySetInnerHTML={{ __html: landingStyles }} />
       <div dangerouslySetInnerHTML={{ __html: landingMarkup }} />
     </div>
