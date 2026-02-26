@@ -1317,6 +1317,54 @@ export default function StagingWorkflowPanel() {
           />
           {section.id} enabled
         </div>
+        {section.id === "services" ? (
+          <>
+            <input
+              className="wf-input"
+              disabled={editingLocked}
+              value={typeof section.data.title === "string" ? section.data.title : ""}
+              placeholder="services title"
+              onChange={(e) =>
+                updateSettings((prev) =>
+                  upsertSection(prev, {
+                    ...section,
+                    data: { ...section.data, title: e.target.value },
+                  }),
+                )
+              }
+            />
+            <textarea
+              className="wf-textarea"
+              disabled={editingLocked}
+              value={typeof section.data.subtitle === "string" ? section.data.subtitle : ""}
+              placeholder="services subtitle"
+              onChange={(e) =>
+                updateSettings((prev) =>
+                  upsertSection(prev, {
+                    ...section,
+                    data: { ...section.data, subtitle: e.target.value },
+                  }),
+                )
+              }
+            />
+          </>
+        ) : null}
+        {section.id === "faq" ? (
+          <input
+            className="wf-input"
+            disabled={editingLocked}
+            value={typeof section.data.title === "string" ? section.data.title : ""}
+            placeholder="faq title"
+            onChange={(e) =>
+              updateSettings((prev) =>
+                upsertSection(prev, {
+                  ...section,
+                  data: { ...section.data, title: e.target.value },
+                }),
+              )
+            }
+          />
+        ) : null}
         {items.map((item) => {
           const key = Number(item.order);
           const labelA = section.id === "services" ? "title" : "question";
