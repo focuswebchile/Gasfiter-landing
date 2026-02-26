@@ -93,6 +93,23 @@ function buildLegacyFallback(sections: Array<{ id: string; data: Record<string, 
   return { hero, services, faqs };
 }
 
+function withLegacyFromSections(payload: SettingsPayload): SettingsPayload {
+  const sections = Array.isArray(payload.content?.sections)
+    ? (payload.content?.sections as Array<{ id: string; data: Record<string, unknown> }>)
+    : [];
+  const legacy = buildLegacyFallback(sections);
+  return {
+    ...payload,
+    content: {
+      ...(payload.content ?? {}),
+      hero: legacy.hero,
+      services: legacy.services,
+      faqs: legacy.faqs,
+      sections: payload.content?.sections ?? [],
+    },
+  };
+}
+
 function parseMode(input: string | null): "draft" | "published" {
   return input?.toLowerCase() === "draft" ? "draft" : "published";
 }
@@ -204,7 +221,7 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
             name: site.name,
             status: versioned.status,
           },
-          settings: versioned.payload,
+          settings: withLegacyFromSections(versioned.payload),
           draftUpdatedAt: resolvedDraftUpdatedAt,
         },
         {
