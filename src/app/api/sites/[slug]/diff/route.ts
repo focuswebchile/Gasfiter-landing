@@ -21,6 +21,8 @@ type DiffField = {
   changed: boolean;
 };
 
+type SnapshotSettings = Record<string, unknown> | null;
+
 function parseMode(input: string | null): Mode {
   return input?.toLowerCase() === "published" ? "published" : "draft";
 }
@@ -49,6 +51,31 @@ function getHeroLegacy(settings: Record<string, unknown> | null): Record<string,
   return hero && typeof hero === "object" ? hero : {};
 }
 
+function getSectionData(settings: SnapshotSettings, sectionId: string): Record<string, unknown> {
+  if (!settings || typeof settings !== "object") return {};
+  const content = (settings.content ?? {}) as Record<string, unknown>;
+  const sections = Array.isArray(content.sections)
+    ? (content.sections as Array<Record<string, unknown>>)
+    : [];
+  const section = sections.find((row) => row?.id === sectionId);
+  if (section && typeof section.data === "object" && section.data) {
+    return section.data as Record<string, unknown>;
+  }
+  return {};
+}
+
+function getSectionItems(settings: SnapshotSettings, sectionId: string): Array<Record<string, unknown>> {
+  const data = getSectionData(settings, sectionId);
+  const items = Array.isArray(data.items) ? (data.items as Array<Record<string, unknown>>) : [];
+  return items
+    .map((item, index) => ({
+      ...item,
+      order: typeof item.order === "number" ? item.order : index + 1,
+      enabled: item.enabled !== false,
+    }))
+    .sort((a, b) => Number(a.order) - Number(b.order));
+}
+
 function readHeroField(settings: Record<string, unknown> | null, key: "title" | "subtitle" | "cta_text" | "cta_url"): string {
   const sectionData = getHeroSectionData(settings);
   const legacy = getHeroLegacy(settings);
@@ -59,6 +86,57 @@ function readHeroField(settings: Record<string, unknown> | null, key: "title" | 
   if (key === "subtitle") return normalizeText(sectionData.subtitle ?? legacy.subtitle);
   if (key === "cta_text") return normalizeText(sectionCta.text ?? legacyCta.primary_text);
   return normalizeText(sectionCta.url ?? legacyCta.primary_url);
+}
+
+function buildListDiffFields(
+  fromSettings: SnapshotSettings,
+  toSettings: SnapshotSettings,
+  sectionId: "services" | "faq",
+): DiffField[] {
+  const fromItems = getSectionItems(fromSettings, sectionId);
+  const toItems = getSectionItems(toSettings, sectionId);
+  const max = Math.max(fromItems.length, toItems.length);
+  const fields: DiffField[] = [];
+
+  for (let i = 0; i < max; i += 1) {
+    const from = fromItems[i] ?? {};
+    const to = toItems[i] ?? {};
+    const row = i + 1;
+
+    if (sectionId === "services") {
+      fields.push({
+        path: `services[${row}].title`,
+        label: `Servicio #${row} title`,
+        from: normalizeText(from.title),
+        to: normalizeText(to.title),
+        changed: false,
+      });
+      fields.push({
+        path: `services[${row}].description`,
+        label: `Servicio #${row} description`,
+        from: normalizeText(from.description),
+        to: normalizeText(to.description),
+        changed: false,
+      });
+    } else {
+      fields.push({
+        path: `faq[${row}].question`,
+        label: `FAQ #${row} question`,
+        from: normalizeText(from.question),
+        to: normalizeText(to.question),
+        changed: false,
+      });
+      fields.push({
+        path: `faq[${row}].answer`,
+        label: `FAQ #${row} answer`,
+        from: normalizeText(from.answer),
+        to: normalizeText(to.answer),
+        changed: false,
+      });
+    }
+  }
+
+  return fields.map((field) => ({ ...field, changed: field.from !== field.to }));
 }
 
 async function getLatestByMode(
@@ -117,7 +195,7 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
       return NextResponse.json({ error: "Invalid snapshot format in one or both versions" }, { status: 422 });
     }
 
-    const fields: DiffField[] = [
+    const heroFields: DiffField[] = [
       {
         path: "hero.title",
         label: "Hero title",
@@ -148,7 +226,10 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
       },
     ].map((field) => ({ ...field, changed: field.from !== field.to }));
 
-    const changedFields = fields.filter((field) => field.changed).length;
+    const servicesFields = buildListDiffFields(fromSettings as SnapshotSettings, toSettings as SnapshotSettings, "services");
+    const faqFields = buildListDiffFields(fromSettings as SnapshotSettings, toSettings as SnapshotSettings, "faq");
+    const allFields = [...heroFields, ...servicesFields, ...faqFields];
+    const changedFields = allFields.filter((field) => field.changed).length;
 
     return NextResponse.json(
       {
@@ -168,12 +249,18 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
         },
         summary: {
           changedFields,
-          totalFields: fields.length,
+          totalFields: allFields.length,
           hasChanges: changedFields > 0,
         },
         sections: {
           hero: {
-            fields,
+            fields: heroFields,
+          },
+          services: {
+            fields: servicesFields,
+          },
+          faq: {
+            fields: faqFields,
           },
         },
       },

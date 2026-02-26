@@ -96,6 +96,12 @@ type HeroDiffResult = {
     hero: {
       fields: HeroDiffField[];
     };
+    services: {
+      fields: HeroDiffField[];
+    };
+    faq: {
+      fields: HeroDiffField[];
+    };
   };
 };
 
@@ -523,6 +529,31 @@ export default function StagingWorkflowPanel() {
       setLoadingDiff(false);
     }
   }, [siteSlug, userId, panelReady, fetchWithJsonFallback, setError, setOk, appendActionLog]);
+
+  const renderDiffSection = (title: string, fields: HeroDiffField[]) => (
+    <div className="wf-diff" style={{ marginTop: 8 }}>
+      <strong>{title}</strong>
+      {fields.length ? (
+        fields.map((field) => (
+          <div key={field.path} className={`wf-diff-row ${field.changed ? "changed" : "same"}`}>
+            <strong>{field.label}</strong>
+            <div className="wf-diff-values">
+              <div className="wf-diff-cell">
+                <div className="wf-muted">Draft</div>
+                <div>{field.from || "—"}</div>
+              </div>
+              <div className="wf-diff-cell">
+                <div className="wf-muted">Published</div>
+                <div>{field.to || "—"}</div>
+              </div>
+            </div>
+          </div>
+        ))
+      ) : (
+        <p className="wf-muted">Sin items para comparar.</p>
+      )}
+    </div>
+  );
 
   const activateDraftConflict = useCallback((payload?: DraftConflictPayload) => {
     setDraftConflict({
@@ -1136,7 +1167,7 @@ export default function StagingWorkflowPanel() {
         return {
           className: "wf-sticky wf-sticky-warn",
           title: "Draft con cambios vs Published",
-          detail: `${heroDiff.summary.changedFields} campo(s) distinto(s) en Hero.`,
+          detail: `${heroDiff.summary.changedFields} campo(s) distinto(s) en Hero/Servicios/FAQ.`,
         };
       }
       return {
@@ -1384,32 +1415,20 @@ export default function StagingWorkflowPanel() {
           </div>
 
           <div className="wf-preview-box">
-            <strong>Diff Hero (Draft vs Published)</strong>
+            <strong>Diff (Draft vs Published)</strong>
             {heroDiff ? (
               <div className="wf-diff" style={{ marginTop: 8 }}>
                 <div className="wf-muted">
                   Draft v{heroDiff.from.versionNumber} vs Published v{heroDiff.to.versionNumber} ·{" "}
                   {heroDiff.summary.changedFields}/{heroDiff.summary.totalFields} cambios
                 </div>
-                {heroDiff.sections.hero.fields.map((field) => (
-                  <div key={field.path} className={`wf-diff-row ${field.changed ? "changed" : "same"}`}>
-                    <strong>{field.label}</strong>
-                    <div className="wf-diff-values">
-                      <div className="wf-diff-cell">
-                        <div className="wf-muted">Draft</div>
-                        <div>{field.from || "—"}</div>
-                      </div>
-                      <div className="wf-diff-cell">
-                        <div className="wf-muted">Published</div>
-                        <div>{field.to || "—"}</div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                {renderDiffSection("Hero", heroDiff.sections.hero.fields)}
+                {renderDiffSection("Servicios", heroDiff.sections.services.fields)}
+                {renderDiffSection("FAQ", heroDiff.sections.faq.fields)}
               </div>
             ) : (
               <p className="wf-muted" style={{ marginTop: 8 }}>
-                Usa “Ver cambios” para comparar Draft vs Published en Hero.
+                Usa “Ver cambios” para comparar Draft vs Published.
               </p>
             )}
           </div>
