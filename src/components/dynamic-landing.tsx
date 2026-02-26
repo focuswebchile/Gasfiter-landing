@@ -2180,6 +2180,8 @@ export default function DynamicLanding() {
         ? findSection("hero")
         : null;
       const sectionServices = findSection("services");
+      const sectionAudience = findSection("audience");
+      const sectionProjects = findSection("projects");
       const sectionFaq = findSection("faq");
       const sectionTestimonials = findSection("testimonials");
       const sectionUrgency = findSection("urgency_banner");
@@ -2329,6 +2331,161 @@ export default function DynamicLanding() {
             descEl.textContent = item.description.trim();
           }
         });
+      }
+
+      if (sectionAudience?.data) {
+        const audienceRoot = document.querySelector(".audience-wrap");
+        const audienceKicker = audienceRoot?.querySelector(".audience-kicker");
+        const audienceTitle = audienceRoot?.querySelector(".audience-copy h2");
+        const audienceDescription = audienceRoot?.querySelector(".audience-copy p");
+        const audienceList = audienceRoot?.querySelector(".audience-list");
+        const audiencePrimaryBtn = audienceRoot?.querySelector(".audience-cta .btn-primary");
+        const audienceSecondaryBtn = audienceRoot?.querySelector(".audience-cta .btn-ghost");
+        const audienceBackImage = audienceRoot?.querySelector(".audience-image-back");
+        const audienceFrontImage = audienceRoot?.querySelector(".audience-image-front");
+
+        if (
+          audienceKicker &&
+          typeof sectionAudience.data.kicker === "string" &&
+          sectionAudience.data.kicker.trim()
+        ) {
+          audienceKicker.textContent = sectionAudience.data.kicker.trim();
+        }
+        if (
+          audienceTitle &&
+          typeof sectionAudience.data.title === "string" &&
+          sectionAudience.data.title.trim()
+        ) {
+          audienceTitle.textContent = sectionAudience.data.title.trim();
+        }
+        if (
+          audienceDescription &&
+          typeof sectionAudience.data.description === "string" &&
+          sectionAudience.data.description.trim()
+        ) {
+          audienceDescription.textContent = sectionAudience.data.description.trim();
+        }
+
+        const audienceBulletsRaw = Array.isArray(
+          (sectionAudience.data as { bullets?: unknown }).bullets,
+        )
+          ? ((sectionAudience.data as { bullets?: unknown[] }).bullets ?? [])
+          : [];
+        const audienceBullets = audienceBulletsRaw
+          .filter((item) => item && typeof item === "object" && (item as { enabled?: unknown }).enabled !== false)
+          .map((item) => ({
+            text:
+              typeof (item as { text?: unknown }).text === "string"
+                ? ((item as { text?: string }).text ?? "").trim()
+                : "",
+            icon:
+              typeof (item as { icon?: unknown }).icon === "string"
+                ? ((item as { icon?: string }).icon ?? "").trim()
+                : "fa-circle-check",
+          }))
+          .filter((item) => item.text);
+        if (audienceList && audienceBullets.length) {
+          audienceList.innerHTML = audienceBullets
+            .map(
+              (item) =>
+                `<li><i class="fa-solid ${escapeHtml(item.icon || "fa-circle-check")}"></i>${escapeHtml(item.text)}</li>`,
+            )
+            .join("");
+        }
+
+        const audiencePrimary = (sectionAudience.data as { cta_primary?: { text?: unknown; url?: unknown } })
+          .cta_primary;
+        const audienceSecondary = (
+          sectionAudience.data as { cta_secondary?: { text?: unknown; url?: unknown } }
+        ).cta_secondary;
+        if (audiencePrimaryBtn && audiencePrimary) {
+          if (typeof audiencePrimary.text === "string" && audiencePrimary.text.trim()) {
+            audiencePrimaryBtn.textContent = audiencePrimary.text.trim();
+          }
+          if (typeof audiencePrimary.url === "string" && audiencePrimary.url.trim()) {
+            audiencePrimaryBtn.setAttribute("href", audiencePrimary.url.trim());
+          }
+        }
+        if (audienceSecondaryBtn && audienceSecondary) {
+          if (typeof audienceSecondary.text === "string" && audienceSecondary.text.trim()) {
+            audienceSecondaryBtn.textContent = audienceSecondary.text.trim();
+          }
+          if (typeof audienceSecondary.url === "string" && audienceSecondary.url.trim()) {
+            audienceSecondaryBtn.setAttribute("href", audienceSecondary.url.trim());
+          }
+        }
+
+        const audienceImages = (sectionAudience.data as { images?: { back?: unknown; front?: unknown } }).images;
+        if (
+          audienceBackImage instanceof HTMLImageElement &&
+          typeof audienceImages?.back === "string" &&
+          audienceImages.back.trim()
+        ) {
+          audienceBackImage.src = audienceImages.back.trim();
+        }
+        if (
+          audienceFrontImage instanceof HTMLImageElement &&
+          typeof audienceImages?.front === "string" &&
+          audienceImages.front.trim()
+        ) {
+          audienceFrontImage.src = audienceImages.front.trim();
+        }
+      }
+
+      if (sectionProjects?.data) {
+        const projectsRoot = document.getElementById("trabajos");
+        const projectsTitle = projectsRoot?.querySelector(".projects-head h2");
+        const projectsDescription = projectsRoot?.querySelector(".projects-desc");
+        const projectsTrack = projectsRoot?.querySelector("[data-projects-track]");
+        const projectsControls = projectsRoot?.querySelector(".projects-controls");
+
+        if (
+          projectsTitle &&
+          typeof sectionProjects.data.title === "string" &&
+          sectionProjects.data.title.trim()
+        ) {
+          projectsTitle.textContent = sectionProjects.data.title.trim();
+        }
+        if (
+          projectsDescription &&
+          typeof sectionProjects.data.description === "string" &&
+          sectionProjects.data.description.trim()
+        ) {
+          projectsDescription.textContent = sectionProjects.data.description.trim();
+        }
+
+        const controlsEnabled = (sectionProjects.data as { controls_enabled?: unknown }).controls_enabled;
+        if (projectsControls) {
+          projectsControls.setAttribute("style", controlsEnabled === false ? "display:none" : "");
+        }
+
+        const projectItems = toItemsArray(
+          sectionProjects.data && typeof sectionProjects.data === "object"
+            ? (sectionProjects.data as { items?: unknown }).items
+            : undefined,
+        ).filter((item) => item.enabled !== false);
+
+        if (projectsTrack && projectItems.length) {
+          projectsTrack.innerHTML = projectItems
+            .map((item) => {
+              const title = typeof item.title === "string" ? item.title.trim() : "";
+              const location = typeof item.location === "string" ? item.location.trim() : "";
+              const image = typeof item.image === "string" ? item.image.trim() : "";
+              const size = typeof item.size === "string" ? item.size.trim() : "";
+              const alt = typeof item.alt === "string" ? item.alt.trim() : title;
+              if (!title || !image) return "";
+              const wideClass = size === "wide" ? " project-card-wide" : "";
+              return `
+                <figure class="project-card${wideClass}">
+                  <img src="${escapeHtml(image)}" alt="${escapeHtml(alt || title)}" loading="lazy" />
+                  <figcaption class="project-overlay"><strong>${escapeHtml(title)}</strong><span>${escapeHtml(
+                    location,
+                  )}</span></figcaption>
+                </figure>
+              `;
+            })
+            .join("");
+        }
       }
 
       const faqSectionEl = document.getElementById("faq");
