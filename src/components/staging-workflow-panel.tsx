@@ -202,6 +202,11 @@ function reorderItemsInSection(settings: SettingsPayload, sectionId: string, fro
   return upsertSection(settings, { ...section, data: { ...section.data, items: normalizedItems } });
 }
 
+function pickTimestamp(value: unknown, fallback: string | null = null): string | null {
+  if (typeof value === "string" && value.trim()) return value;
+  return fallback;
+}
+
 export default function StagingWorkflowPanel() {
   const defaultSlug = process.env.NEXT_PUBLIC_SITE_SLUG?.trim() || "gasfiter-staging";
   const configuredBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.trim() || "";
@@ -296,6 +301,7 @@ export default function StagingWorkflowPanel() {
   const editingLocked = !panelReady || publishedReadOnly || busy || autosaving || flushingPublish || draftConflict.active;
   const latestPublishedVersion = versions.find((version) => version.status === "published") ?? null;
   const latestDraftVersion = versions.find((version) => version.status === "draft") ?? null;
+  const latestDraftVersionToken = latestDraftVersion?.created_at ?? null;
 
   useEffect(() => {
     if (!toast) return;
@@ -381,7 +387,7 @@ export default function StagingWorkflowPanel() {
     const normalized = normalizeSettings((payload?.settings ?? {}) as SettingsPayload);
     setSettings(normalized);
     setMode(nextMode);
-    setDraftUpdatedAt(typeof payload?.draftUpdatedAt === "string" ? payload.draftUpdatedAt : null);
+    setDraftUpdatedAt(pickTimestamp(payload?.draftUpdatedAt, nextMode === "draft" ? latestDraftVersionToken : null));
     setDraftConflict({ active: false, message: "", serverUpdatedAt: null });
     setDirty(false);
     if (!silent) setOk(`Settings cargados en modo ${nextMode}`);
@@ -389,17 +395,24 @@ export default function StagingWorkflowPanel() {
       settings: normalized,
       draftUpdatedAt: typeof payload?.draftUpdatedAt === "string" ? payload.draftUpdatedAt : null,
     };
-  }, [mode, fetchWithJsonFallback, setOk]);
+  }, [mode, fetchWithJsonFallback, setOk, latestDraftVersionToken]);
 
   const fetchVersions = useCallback(async (silent = false) => {
     const { response, payload } = await fetchWithJsonFallback(
       `/versions?userId=${encodeURIComponent(userId.trim())}&t=${Date.now()}`,
     );
     if (!response.ok) throw new Error(payload?.error || "Unable to fetch versions");
-    setVersions(Array.isArray(payload?.versions) ? payload.versions : []);
+    const nextVersions = Array.isArray(payload?.versions) ? (payload.versions as VersionItem[]) : [];
+    setVersions(nextVersions);
     setMembership((payload?.membership ?? null) as MembershipInfo | null);
+    if (mode === "draft") {
+      const latestDraft = nextVersions.find((version) => version.status === "draft") ?? null;
+      if (latestDraft?.created_at) {
+        setDraftUpdatedAt((prev) => pickTimestamp(prev, latestDraft.created_at));
+      }
+    }
     if (!silent) setOk("Versiones cargadas");
-  }, [fetchWithJsonFallback, userId, setOk]);
+  }, [fetchWithJsonFallback, userId, setOk, mode]);
 
   const loadPanel = useCallback(async () => {
     if (!siteSlug.trim()) return setError("Ingresa site slug");
@@ -448,6 +461,10 @@ export default function StagingWorkflowPanel() {
     }
 
     const silent = options?.silent === true;
+    const expectedUpdatedAt = pickTimestamp(
+      draftUpdatedAt,
+      mode === "draft" ? latestDraftVersionToken : null,
+    );
     autosaveInFlightRef.current = true;
     const run = (async () => {
       if (silent) {
@@ -468,7 +485,7 @@ export default function StagingWorkflowPanel() {
             userId: userId.trim(),
             notes: options?.notes ?? "Saved from v2 UX panel",
             settings: snapshot,
-            expectedUpdatedAt: draftUpdatedAt ?? null,
+            expectedUpdatedAt,
           }),
         });
         const payloadUnknown = (await response.json().catch(() => ({}))) as
@@ -493,11 +510,7 @@ export default function StagingWorkflowPanel() {
           draftUpdatedAt?: string | null;
         };
         setSettings(normalizeSettings((payload.settings ?? {}) as SettingsPayload));
-        setDraftUpdatedAt(
-          typeof (payload as { draftUpdatedAt?: unknown }).draftUpdatedAt === "string"
-            ? ((payload as { draftUpdatedAt?: string }).draftUpdatedAt ?? null)
-            : null,
-        );
+        setDraftUpdatedAt(pickTimestamp((payload as { draftUpdatedAt?: unknown }).draftUpdatedAt, expectedUpdatedAt));
         setMode("draft");
         setDraftConflict({ active: false, message: "", serverUpdatedAt: null });
         setDirty(false);
@@ -525,7 +538,7 @@ export default function StagingWorkflowPanel() {
     autosavePromiseRef.current = run;
     await run;
     autosavePromiseRef.current = null;
-  }, [userId, settings, panelReady, canSaveDraft, draftConflict.active, endpointBase, fetchVersions, draftUpdatedAt, activateDraftConflict, setError, setOk]);
+  }, [userId, settings, panelReady, canSaveDraft, draftConflict.active, endpointBase, fetchVersions, draftUpdatedAt, activateDraftConflict, setError, setOk, mode, latestDraftVersionToken]);
 
   const saveDraft = async () => {
     if (autosaveTimerRef.current) {
@@ -576,9 +589,7 @@ export default function StagingWorkflowPanel() {
         if (!response.ok) throw new Error((payload as { error?: string })?.error || "No se pudo crear draft");
         setSettings(normalizeSettings(((payload as { settings?: SettingsPayload }).settings ?? {}) as SettingsPayload));
         setDraftUpdatedAt(
-          typeof (payload as { draftUpdatedAt?: unknown }).draftUpdatedAt === "string"
-            ? ((payload as { draftUpdatedAt?: string }).draftUpdatedAt ?? null)
-            : null,
+          pickTimestamp((payload as { draftUpdatedAt?: unknown }).draftUpdatedAt, latestDraftVersionToken),
         );
       }
       setMode("draft");
@@ -591,7 +602,7 @@ export default function StagingWorkflowPanel() {
     } finally {
       setBusy(false);
     }
-  }, [userId, panelReady, canSaveDraft, fetchSettings, endpointBase, settings, activateDraftConflict, fetchVersions, setError, setOk]);
+  }, [userId, panelReady, canSaveDraft, fetchSettings, endpointBase, settings, activateDraftConflict, fetchVersions, setError, setOk, latestDraftVersionToken]);
 
   const flushPendingAutosave = useCallback(async () => {
     if (!panelReady || !canSaveDraft) return;
@@ -613,6 +624,11 @@ export default function StagingWorkflowPanel() {
     if (!panelReady) return setError("Primero usa Cargar panel");
     if (!canPublish) return setError("Tu rol no puede publicar");
     if (draftConflict.active) return setError("Conflicto de draft: recarga borrador antes de publicar.");
+
+    const expectedUpdatedAt = pickTimestamp(
+      draftUpdatedAt,
+      mode === "draft" ? latestDraftVersionToken : null,
+    );
 
     try {
       setFlushingPublish(true);
@@ -637,7 +653,7 @@ export default function StagingWorkflowPanel() {
         body: JSON.stringify({
           userId: userId.trim(),
           notes: "Published from v2 UX panel",
-          expectedUpdatedAt: draftUpdatedAt ?? null,
+          expectedUpdatedAt,
         }),
       });
       const payloadUnknown = (await response.json().catch(() => ({}))) as
@@ -663,9 +679,7 @@ export default function StagingWorkflowPanel() {
       };
       setSettings(normalizeSettings((payload.settings ?? {}) as SettingsPayload));
       setDraftUpdatedAt(
-        typeof (payload as { draftUpdatedAt?: unknown }).draftUpdatedAt === "string"
-          ? ((payload as { draftUpdatedAt?: string }).draftUpdatedAt ?? null)
-          : draftUpdatedAt,
+        pickTimestamp((payload as { draftUpdatedAt?: unknown }).draftUpdatedAt, expectedUpdatedAt),
       );
       setMode("published");
       setDraftConflict({ active: false, message: "", serverUpdatedAt: null });
