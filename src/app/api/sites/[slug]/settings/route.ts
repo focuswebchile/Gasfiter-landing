@@ -130,16 +130,33 @@ function extractSettingsFromSnapshot(snapshot: Record<string, unknown> | null): 
   const loose = candidate as Record<string, unknown>;
   const content = (loose.content ?? {}) as Record<string, unknown>;
   const sections = Array.isArray(content.sections)
-    ? content.sections.filter(
-        (section) =>
-          section &&
-          typeof section === "object" &&
-          typeof (section as { id?: unknown }).id === "string" &&
-          typeof (section as { enabled?: unknown }).enabled === "boolean" &&
-          typeof (section as { order?: unknown }).order === "number" &&
-          (section as { data?: unknown }).data &&
-          typeof (section as { data?: unknown }).data === "object",
-      )
+    ? content.sections
+        .filter(
+          (section) =>
+            section &&
+            typeof section === "object" &&
+            typeof (section as { id?: unknown }).id === "string",
+        )
+        .map((section) => {
+          const s = section as {
+            id: string;
+            enabled?: unknown;
+            order?: unknown;
+            data?: unknown;
+          };
+          const parsedOrder =
+            typeof s.order === "number"
+              ? s.order
+              : typeof s.order === "string"
+                ? Number(s.order)
+                : 100;
+          return {
+            id: s.id,
+            enabled: s.enabled !== false,
+            order: Number.isFinite(parsedOrder) ? parsedOrder : 100,
+            data: s.data && typeof s.data === "object" ? (s.data as Record<string, unknown>) : {},
+          };
+        })
     : [];
 
   return {
