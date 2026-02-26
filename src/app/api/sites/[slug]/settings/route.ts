@@ -178,7 +178,7 @@ async function getVersionedSettings(
 ): Promise<{ payload: SettingsPayload; status: "draft" | "published"; updatedAt: string | null } | null> {
   const { data, error } = await supabase
     .from("site_versions")
-    .select("status, snapshot, version_number, updated_at, created_at")
+    .select("status, snapshot, version_number, created_at")
     .eq("site_id", siteId)
     .eq("status", mode)
     .order("version_number", { ascending: false })
@@ -186,8 +186,7 @@ async function getVersionedSettings(
     .maybeSingle();
 
   if (error) {
-    const message = `${error.message ?? ""} ${error.details ?? ""} ${error.hint ?? ""}`.toLowerCase();
-    const tableMissing = error.code === "42P01" || message.includes("site_versions");
+    const tableMissing = error.code === "42P01";
     if (tableMissing) return null;
     throw new Error(`Unable to fetch versioned settings: ${error.message}`);
   }
@@ -199,7 +198,7 @@ async function getVersionedSettings(
   return {
     payload: parsed,
     status: mode,
-    updatedAt: (data.updated_at as string | null | undefined) ?? (data.created_at as string | null | undefined) ?? null,
+    updatedAt: (data.created_at as string | null | undefined) ?? null,
   };
 }
 
@@ -209,7 +208,7 @@ async function getLatestDraftUpdatedAt(
 ): Promise<string | null> {
   const { data, error } = await supabase
     .from("site_versions")
-    .select("updated_at, created_at, version_number")
+    .select("created_at, version_number")
     .eq("site_id", siteId)
     .eq("status", "draft")
     .order("version_number", { ascending: false })
@@ -217,14 +216,13 @@ async function getLatestDraftUpdatedAt(
     .maybeSingle();
 
   if (error) {
-    const message = `${error.message ?? ""} ${error.details ?? ""} ${error.hint ?? ""}`.toLowerCase();
-    const tableMissing = error.code === "42P01" || message.includes("site_versions");
+    const tableMissing = error.code === "42P01";
     if (tableMissing) return null;
     throw new Error(`Unable to fetch latest draft timestamp: ${error.message}`);
   }
 
   if (!data) return null;
-  return (data.updated_at as string | null | undefined) ?? (data.created_at as string | null | undefined) ?? null;
+  return (data.created_at as string | null | undefined) ?? null;
 }
 
 export async function GET(request: Request, context: { params: Promise<{ slug: string }> }) {
