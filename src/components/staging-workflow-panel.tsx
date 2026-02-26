@@ -293,7 +293,7 @@ export default function StagingWorkflowPanel() {
   const canPublish = membership?.permissions.canPublish ?? false;
   const canRollback = membership?.permissions.canRollback ?? false;
   const publishedReadOnly = mode === "published";
-  const editingLocked = publishedReadOnly || busy || autosaving || flushingPublish || draftConflict.active;
+  const editingLocked = !panelReady || publishedReadOnly || busy || autosaving || flushingPublish || draftConflict.active;
   const latestPublishedVersion = versions.find((version) => version.status === "published") ?? null;
   const latestDraftVersion = versions.find((version) => version.status === "draft") ?? null;
 
@@ -306,6 +306,17 @@ export default function StagingWorkflowPanel() {
   const heroSection = settings ? getSection(settings, "hero") : null;
   const servicesSection = settings ? getSection(settings, "services") : null;
   const faqSection = settings ? getSection(settings, "faq") : null;
+
+  const handleModeChange = (nextMode: Mode) => {
+    if (nextMode === mode) return;
+    setMode(nextMode);
+    setPanelReady(false);
+    setDirty(false);
+    setDraftUpdatedAt(null);
+    setDraftConflict({ active: false, message: "", serverUpdatedAt: null });
+    setAutosaveHint(`Modo ${nextMode} seleccionado. Presiona Cargar panel.`);
+    setOk(`Modo ${nextMode} seleccionado. Recarga panel para sincronizar.`);
+  };
 
   const updateSettings = (
     updater: (prev: SettingsPayload) => SettingsPayload,
@@ -1054,7 +1065,7 @@ export default function StagingWorkflowPanel() {
           </div>
 
           <div className="wf-row" style={{ marginBottom: 12 }}>
-            <select className="wf-select" value={mode} onChange={(e) => setMode(e.target.value as Mode)}>
+            <select className="wf-select" value={mode} onChange={(e) => handleModeChange(e.target.value as Mode)}>
               <option value="published">Published</option>
               <option value="draft">Draft</option>
             </select>
