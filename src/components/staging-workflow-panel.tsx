@@ -528,6 +528,10 @@ export default function StagingWorkflowPanel() {
   }, [userId, settings, panelReady, canSaveDraft, draftConflict.active, endpointBase, fetchVersions, draftUpdatedAt, activateDraftConflict, setError, setOk]);
 
   const saveDraft = async () => {
+    if (autosaveTimerRef.current) {
+      window.clearTimeout(autosaveTimerRef.current);
+      autosaveTimerRef.current = null;
+    }
     await saveDraftInternal({ silent: false, notes: "Saved from v2 UX panel" });
   };
 

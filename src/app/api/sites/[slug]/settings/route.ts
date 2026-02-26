@@ -141,6 +141,30 @@ async function getVersionedSettings(
   };
 }
 
+async function getLatestDraftUpdatedAt(
+  supabase: ReturnType<typeof createAdminSupabaseClient>,
+  siteId: string,
+): Promise<string | null> {
+  const { data, error } = await supabase
+    .from("site_versions")
+    .select("updated_at, created_at, version_number")
+    .eq("site_id", siteId)
+    .eq("status", "draft")
+    .order("version_number", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    const message = `${error.message ?? ""} ${error.details ?? ""} ${error.hint ?? ""}`.toLowerCase();
+    const tableMissing = error.code === "42P01" || message.includes("site_versions");
+    if (tableMissing) return null;
+    throw new Error(`Unable to fetch latest draft timestamp: ${error.message}`);
+  }
+
+  if (!data) return null;
+  return (data.updated_at as string | null | undefined) ?? (data.created_at as string | null | undefined) ?? null;
+}
+
 export async function GET(request: Request, context: { params: Promise<{ slug: string }> }) {
   try {
     const { slug } = await context.params;
@@ -166,16 +190,23 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
 
     const versioned = await getVersionedSettings(supabase, site.id, mode);
     if (versioned) {
+      const resolvedDraftUpdatedAt =
+        versioned.status === "draft" && !versioned.updatedAt
+          ? await getLatestDraftUpdatedAt(supabase, site.id)
+          : versioned.status === "draft"
+            ? versioned.updatedAt
+            : null;
+
       return NextResponse.json(
         {
           site: {
             slug: site.slug,
             name: site.name,
-          status: versioned.status,
+            status: versioned.status,
+          },
+          settings: versioned.payload,
+          draftUpdatedAt: resolvedDraftUpdatedAt,
         },
-        settings: versioned.payload,
-        draftUpdatedAt: versioned.status === "draft" ? versioned.updatedAt : null,
-      },
         {
           headers: {
             "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
@@ -245,6 +276,8 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
       );
     }
 
+    const fallbackDraftUpdatedAt = mode === "draft" ? await getLatestDraftUpdatedAt(supabase, site.id) : null;
+
     return NextResponse.json(
       {
         site: {
@@ -253,6 +286,7 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
           status: mode,
         },
         settings: parsed.data,
+        draftUpdatedAt: fallbackDraftUpdatedAt,
       },
       {
         headers: {
