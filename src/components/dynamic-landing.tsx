@@ -1549,6 +1549,7 @@ const landingMarkup = String.raw`
     <section class="section reveal" id="servicios">
       <div class="container">
         <h2 style="font-size: clamp(2rem, 6vw, 3.5rem); color: var(--navy)" data-services-title>¿Qué problema tienes ahora?</h2>
+        <p class="section-subtitle" data-services-subtitle>Servicios más solicitados</p>
         <div class="services-grid">
           <article class="card service-card" data-service-card>
             <div class="service-icon"><i class="fa-solid fa-droplet"></i></div>
@@ -2265,6 +2266,7 @@ export default function DynamicLanding() {
           ? sectionServices.data
           : content.services;
       const servicesTitleEl = document.querySelector("[data-services-title]");
+      const servicesSubtitleEl = document.querySelector("[data-services-subtitle]");
       if (
         services &&
         typeof services === "object" &&
@@ -2274,6 +2276,16 @@ export default function DynamicLanding() {
         servicesTitleEl
       ) {
         servicesTitleEl.textContent = services.title.trim();
+      }
+      if (
+        services &&
+        typeof services === "object" &&
+        !Array.isArray(services) &&
+        typeof services.subtitle === "string" &&
+        services.subtitle.trim() &&
+        servicesSubtitleEl
+      ) {
+        servicesSubtitleEl.textContent = services.subtitle.trim();
       }
 
       const serviceItems = toServicesArray(services);
