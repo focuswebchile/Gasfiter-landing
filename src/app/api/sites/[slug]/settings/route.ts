@@ -123,7 +123,35 @@ function extractSettingsFromSnapshot(snapshot: Record<string, unknown> | null): 
       : (snapshot as SettingsPayload);
 
   const parsed = settingsSchema.safeParse(candidate);
-  return parsed.success ? parsed.data : null;
+  if (parsed.success) return parsed.data;
+
+  // Legacy/partial snapshots should still render instead of falling back to table data.
+  if (!candidate || typeof candidate !== "object") return null;
+  const loose = candidate as Record<string, unknown>;
+  const content = (loose.content ?? {}) as Record<string, unknown>;
+  const sections = Array.isArray(content.sections)
+    ? content.sections.filter(
+        (section) =>
+          section &&
+          typeof section === "object" &&
+          typeof (section as { id?: unknown }).id === "string" &&
+          typeof (section as { enabled?: unknown }).enabled === "boolean" &&
+          typeof (section as { order?: unknown }).order === "number" &&
+          (section as { data?: unknown }).data &&
+          typeof (section as { data?: unknown }).data === "object",
+      )
+    : [];
+
+  return {
+    colors: (loose.colors ?? {}) as SettingsPayload["colors"],
+    typography: (loose.typography ?? {}) as SettingsPayload["typography"],
+    content: {
+      hero: (content.hero ?? {}) as SettingsPayload["content"]["hero"],
+      services: Array.isArray(content.services) ? (content.services as SettingsPayload["content"]["services"]) : [],
+      faqs: Array.isArray(content.faqs) ? (content.faqs as SettingsPayload["content"]["faqs"]) : [],
+      sections: sections as SettingsPayload["content"]["sections"],
+    },
+  };
 }
 
 async function getVersionedSettings(
