@@ -202,8 +202,10 @@ export default function StagingWorkflowPanel() {
   const [draggingItemOrder, setDraggingItemOrder] = useState<number | null>(null);
   const [panelReady, setPanelReady] = useState(false);
   const [autosaving, setAutosaving] = useState(false);
+  const [flushingPublish, setFlushingPublish] = useState(false);
   const autosaveTimerRef = useRef<number | null>(null);
   const autosaveInFlightRef = useRef(false);
+  const autosavePromiseRef = useRef<Promise<void> | null>(null);
 
   const baseUrl = useMemo(() => {
     if (typeof window === "undefined") {
@@ -365,65 +367,92 @@ export default function StagingWorkflowPanel() {
     if (!snapshot) return setError("Primero usa Cargar panel");
     if (!panelReady) return setError("Primero usa Cargar panel");
     if (!canSaveDraft) return setError("Tu rol no puede guardar draft");
-    if (autosaveInFlightRef.current) return;
+    if (autosaveInFlightRef.current) {
+      if (autosavePromiseRef.current) await autosavePromiseRef.current;
+      return;
+    }
 
     const silent = options?.silent === true;
     autosaveInFlightRef.current = true;
-    if (silent) {
-      setAutosaving(true);
-      setAutosaveHint("Autosave guardando draft...");
-    } else {
-      setBusy(true);
-      setMessage(null);
-    }
-    try {
-      const response = await fetch(`${endpointBase}/save-draft`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-user-id": userId.trim(),
-        },
-        body: JSON.stringify({
-          userId: userId.trim(),
-          notes: options?.notes ?? "Saved from v2 UX panel",
-          settings: snapshot,
-        }),
-      });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload?.error || "Save draft failed");
-      setSettings(normalizeSettings((payload?.settings ?? {}) as SettingsPayload));
-      setMode("draft");
-      setDirty(false);
+    const run = (async () => {
       if (silent) {
-        setAutosaveHint(`Autosave OK (v${payload?.version?.number ?? "?"})`);
+        setAutosaving(true);
+        setAutosaveHint("Autosave guardando draft...");
       } else {
-        setOk(`Draft guardado (v${payload?.version?.number ?? "?"})`);
+        setBusy(true);
+        setMessage(null);
       }
-      await fetchVersions(true);
-    } catch (error) {
-      if (silent) {
-        setAutosaveHint("Autosave pausado por error");
-      } else {
-        setError(error instanceof Error ? error.message : "Error guardando draft");
+      try {
+        const response = await fetch(`${endpointBase}/save-draft`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-user-id": userId.trim(),
+          },
+          body: JSON.stringify({
+            userId: userId.trim(),
+            notes: options?.notes ?? "Saved from v2 UX panel",
+            settings: snapshot,
+          }),
+        });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload?.error || "Save draft failed");
+        setSettings(normalizeSettings((payload?.settings ?? {}) as SettingsPayload));
+        setMode("draft");
+        setDirty(false);
+        if (silent) {
+          setAutosaveHint(`Autosave OK (v${payload?.version?.number ?? "?"})`);
+        } else {
+          setOk(`Draft guardado (v${payload?.version?.number ?? "?"})`);
+        }
+        await fetchVersions(true);
+      } catch (error) {
+        if (silent) {
+          setAutosaveHint("Autosave pausado por error");
+        } else {
+          setError(error instanceof Error ? error.message : "Error guardando draft");
+        }
+      } finally {
+        autosaveInFlightRef.current = false;
+        if (silent) {
+          setAutosaving(false);
+        } else {
+          setBusy(false);
+        }
       }
-    } finally {
-      autosaveInFlightRef.current = false;
-      if (silent) {
-        setAutosaving(false);
-      } else {
-        setBusy(false);
-      }
-    }
+    })();
+    autosavePromiseRef.current = run;
+    await run;
+    autosavePromiseRef.current = null;
   }, [userId, settings, panelReady, canSaveDraft, endpointBase, fetchVersions]);
 
   const saveDraft = async () => {
     await saveDraftInternal({ silent: false, notes: "Saved from v2 UX panel" });
   };
 
+  const flushPendingAutosave = useCallback(async () => {
+    if (!panelReady || !canSaveDraft) return;
+    if (autosaveTimerRef.current) {
+      window.clearTimeout(autosaveTimerRef.current);
+      autosaveTimerRef.current = null;
+      await saveDraftInternal({ silent: true, notes: "Autosave flush before publish" });
+      return;
+    }
+    if (autosaveInFlightRef.current && autosavePromiseRef.current) {
+      setAutosaveHint("Esperando autosave en curso...");
+      await autosavePromiseRef.current;
+    }
+  }, [panelReady, canSaveDraft, saveDraftInternal]);
+
   const publish = async () => {
     if (!userId.trim()) return setError("Ingresa userId para publicar");
     if (!panelReady) return setError("Primero usa Cargar panel");
     if (!canPublish) return setError("Tu rol no puede publicar");
+
+    setFlushingPublish(true);
+    setAutosaveHint("Esperando guardado...");
+    await flushPendingAutosave();
+    setFlushingPublish(false);
 
     setBusy(true);
     setMessage(null);
@@ -788,7 +817,13 @@ export default function StagingWorkflowPanel() {
 
           <div className="wf-row" style={{ marginBottom: 12 }}>
             <button className="wf-btn wf-btn-primary" onClick={saveDraft} disabled={busy || !panelReady || !canSaveDraft}>Guardar Draft</button>
-            <button className="wf-btn wf-btn-primary" onClick={publish} disabled={busy || !panelReady || !canPublish}>Publicar</button>
+            <button
+              className="wf-btn wf-btn-primary"
+              onClick={publish}
+              disabled={busy || autosaving || flushingPublish || !panelReady || !canPublish}
+            >
+              {flushingPublish ? "Esperando guardado..." : "Publicar"}
+            </button>
             {message ? <span className={`wf-msg ${message.type === "ok" ? "wf-ok" : "wf-err"}`}>{message.text}</span> : null}
           </div>
 
