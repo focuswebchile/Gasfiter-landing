@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type Mode = "draft" | "published";
 type SidebarView = "sections" | "items" | "style" | "versions" | "members";
@@ -100,6 +100,7 @@ const panelStyles = String.raw`
   .wf-steps{display:grid;gap:8px;margin-bottom:12px}
   .wf-step{display:flex;gap:8px;align-items:flex-start;padding:8px 10px;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0}
   .wf-step-num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:999px;background:#dbeafe;color:#1d4ed8;font-size:12px;font-weight:800}
+  .wf-status{display:flex;gap:8px;flex-wrap:wrap}
 `;
 
 function detectEnvBadge(slug: string): "DEV" | "STAGING" | "PROD" {
@@ -200,6 +201,9 @@ export default function StagingWorkflowPanel() {
   const [draggingSectionId, setDraggingSectionId] = useState<string | null>(null);
   const [draggingItemOrder, setDraggingItemOrder] = useState<number | null>(null);
   const [panelReady, setPanelReady] = useState(false);
+  const [autosaving, setAutosaving] = useState(false);
+  const autosaveTimerRef = useRef<number | null>(null);
+  const autosaveInFlightRef = useRef(false);
 
   const baseUrl = useMemo(() => {
     if (typeof window === "undefined") {
@@ -229,18 +233,6 @@ export default function StagingWorkflowPanel() {
   const envBadge = detectEnvBadge(siteSlug);
 
   useEffect(() => {
-    if (!dirty) {
-      setAutosaveHint("Sin cambios pendientes");
-      return;
-    }
-    setAutosaveHint("Autosave: cambios detectados");
-    const timer = window.setTimeout(() => {
-      setAutosaveHint("Autosave listo (guardado manual activo)");
-    }, 1200);
-    return () => window.clearTimeout(timer);
-  }, [dirty]);
-
-  useEffect(() => {
     if (typeof window === "undefined") return;
     const stored = window.localStorage.getItem(STORAGE_KEY);
     if (!stored) return;
@@ -265,30 +257,48 @@ export default function StagingWorkflowPanel() {
   const canSaveDraft = membership?.permissions.canSaveDraft ?? false;
   const canPublish = membership?.permissions.canPublish ?? false;
   const canRollback = membership?.permissions.canRollback ?? false;
+  const latestPublishedVersion = versions.find((version) => version.status === "published") ?? null;
+  const latestDraftVersion = versions.find((version) => version.status === "draft") ?? null;
 
   const heroSection = settings ? getSection(settings, "hero") : null;
   const servicesSection = settings ? getSection(settings, "services") : null;
   const faqSection = settings ? getSection(settings, "faq") : null;
 
-  const updateSettings = (updater: (prev: SettingsPayload) => SettingsPayload) => {
+  const updateSettings = (
+    updater: (prev: SettingsPayload) => SettingsPayload,
+    options?: { persistNow?: boolean; note?: string },
+  ) => {
+    let nextSnapshot: SettingsPayload | null = null;
     setSettings((prev) => {
       if (!prev) return prev;
       const next = normalizeSettings(updater(prev));
+      nextSnapshot = next;
       setDirty(true);
       return next;
     });
+    if (options?.persistNow && nextSnapshot) {
+      if (autosaveTimerRef.current) {
+        window.clearTimeout(autosaveTimerRef.current);
+        autosaveTimerRef.current = null;
+      }
+      void saveDraftInternal({
+        silent: true,
+        notes: options.note ?? "Autosave immediate update",
+        settingsOverride: nextSnapshot,
+      });
+    }
   };
 
-  const parseJsonResponse = async (response: Response) => {
+  const parseJsonResponse = useCallback(async (response: Response) => {
     const text = await response.text();
     try {
       return text ? JSON.parse(text) : {};
     } catch {
       throw new Error(`Respuesta no JSON (${response.status}) desde ${response.url}`);
     }
-  };
+  }, []);
 
-  const fetchWithJsonFallback = async (path: string) => {
+  const fetchWithJsonFallback = useCallback(async (path: string) => {
     const primary = `${endpointBase}${path}`;
     const fallback = `${sameOriginEndpointBase}${path}`;
     const targets = primary === fallback ? [primary] : [primary, fallback];
@@ -305,9 +315,9 @@ export default function StagingWorkflowPanel() {
     }
 
     throw lastError ?? new Error("No se pudo cargar respuesta JSON");
-  };
+  }, [endpointBase, sameOriginEndpointBase, parseJsonResponse]);
 
-  const fetchSettings = async (nextMode = mode, silent = false) => {
+  const fetchSettings = useCallback(async (nextMode = mode, silent = false) => {
     const { response, payload } = await fetchWithJsonFallback(`/settings?mode=${nextMode}&t=${Date.now()}`);
     if (!response.ok) throw new Error(payload?.error || "Unable to fetch settings");
 
@@ -315,9 +325,9 @@ export default function StagingWorkflowPanel() {
     setMode(nextMode);
     setDirty(false);
     if (!silent) setOk(`Settings cargados en modo ${nextMode}`);
-  };
+  }, [mode, fetchWithJsonFallback]);
 
-  const fetchVersions = async (silent = false) => {
+  const fetchVersions = useCallback(async (silent = false) => {
     const { response, payload } = await fetchWithJsonFallback(
       `/versions?userId=${encodeURIComponent(userId.trim())}&t=${Date.now()}`,
     );
@@ -325,9 +335,9 @@ export default function StagingWorkflowPanel() {
     setVersions(Array.isArray(payload?.versions) ? payload.versions : []);
     setMembership((payload?.membership ?? null) as MembershipInfo | null);
     if (!silent) setOk("Versiones cargadas");
-  };
+  }, [fetchWithJsonFallback, userId]);
 
-  const loadPanel = async () => {
+  const loadPanel = useCallback(async () => {
     if (!siteSlug.trim()) return setError("Ingresa site slug");
     if (!userId.trim()) return setError("Ingresa userId para cargar panel");
 
@@ -343,16 +353,29 @@ export default function StagingWorkflowPanel() {
     } finally {
       setBusy(false);
     }
-  };
+  }, [siteSlug, userId, mode, fetchSettings, fetchVersions]);
 
-  const saveDraft = async () => {
+  const saveDraftInternal = useCallback(async (options?: {
+    silent?: boolean;
+    notes?: string;
+    settingsOverride?: SettingsPayload;
+  }) => {
     if (!userId.trim()) return setError("Ingresa userId para guardar draft");
-    if (!settings) return setError("Primero usa Cargar panel");
+    const snapshot = options?.settingsOverride ?? settings;
+    if (!snapshot) return setError("Primero usa Cargar panel");
     if (!panelReady) return setError("Primero usa Cargar panel");
     if (!canSaveDraft) return setError("Tu rol no puede guardar draft");
+    if (autosaveInFlightRef.current) return;
 
-    setBusy(true);
-    setMessage(null);
+    const silent = options?.silent === true;
+    autosaveInFlightRef.current = true;
+    if (silent) {
+      setAutosaving(true);
+      setAutosaveHint("Autosave guardando draft...");
+    } else {
+      setBusy(true);
+      setMessage(null);
+    }
     try {
       const response = await fetch(`${endpointBase}/save-draft`, {
         method: "POST",
@@ -362,8 +385,8 @@ export default function StagingWorkflowPanel() {
         },
         body: JSON.stringify({
           userId: userId.trim(),
-          notes: "Saved from v2 UX panel",
-          settings,
+          notes: options?.notes ?? "Saved from v2 UX panel",
+          settings: snapshot,
         }),
       });
       const payload = await response.json();
@@ -371,13 +394,30 @@ export default function StagingWorkflowPanel() {
       setSettings(normalizeSettings((payload?.settings ?? {}) as SettingsPayload));
       setMode("draft");
       setDirty(false);
-      setOk(`Draft guardado (v${payload?.version?.number ?? "?"})`);
+      if (silent) {
+        setAutosaveHint(`Autosave OK (v${payload?.version?.number ?? "?"})`);
+      } else {
+        setOk(`Draft guardado (v${payload?.version?.number ?? "?"})`);
+      }
       await fetchVersions(true);
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Error guardando draft");
+      if (silent) {
+        setAutosaveHint("Autosave pausado por error");
+      } else {
+        setError(error instanceof Error ? error.message : "Error guardando draft");
+      }
     } finally {
-      setBusy(false);
+      autosaveInFlightRef.current = false;
+      if (silent) {
+        setAutosaving(false);
+      } else {
+        setBusy(false);
+      }
     }
+  }, [userId, settings, panelReady, canSaveDraft, endpointBase, fetchVersions]);
+
+  const saveDraft = async () => {
+    await saveDraftInternal({ silent: false, notes: "Saved from v2 UX panel" });
   };
 
   const publish = async () => {
@@ -454,8 +494,38 @@ export default function StagingWorkflowPanel() {
       }));
       next.content!.sections = reordered;
       return next;
-    });
+    }, { persistNow: true, note: "Autosave: section order updated" });
   };
+
+  useEffect(() => {
+    if (autosaveTimerRef.current) {
+      window.clearTimeout(autosaveTimerRef.current);
+      autosaveTimerRef.current = null;
+    }
+    if (!panelReady || !dirty) {
+      setAutosaveHint(panelReady ? "Sin cambios pendientes" : "Panel no cargado");
+      return;
+    }
+    if (!canSaveDraft) {
+      setAutosaveHint("Sin permisos para autosave");
+      return;
+    }
+    if (busy || autosaving) {
+      setAutosaveHint("Esperando fin de operación...");
+      return;
+    }
+    setAutosaveHint("Autosave en 1.8s...");
+    autosaveTimerRef.current = window.setTimeout(() => {
+      void saveDraftInternal({ silent: true, notes: "Autosave from v3 UX base" });
+    }, 1800);
+
+    return () => {
+      if (autosaveTimerRef.current) {
+        window.clearTimeout(autosaveTimerRef.current);
+        autosaveTimerRef.current = null;
+      }
+    };
+  }, [panelReady, dirty, canSaveDraft, busy, autosaving, saveDraftInternal]);
 
   const renderSectionEditor = () => {
     if (!settings) return <p className="wf-muted">Carga panel para editar secciones.</p>;
@@ -554,7 +624,12 @@ export default function StagingWorkflowPanel() {
               onDragStart={() => setDraggingItemOrder(key)}
               onDragOver={(event) => event.preventDefault()}
               onDrop={() => {
-                if (draggingItemOrder !== null) updateSettings((prev) => reorderItemsInSection(prev, section.id, draggingItemOrder, key));
+                if (draggingItemOrder !== null) {
+                  updateSettings(
+                    (prev) => reorderItemsInSection(prev, section.id, draggingItemOrder, key),
+                    { persistNow: true, note: `Autosave: item order updated (${section.id})` },
+                  );
+                }
                 setDraggingItemOrder(null);
               }}
               onDragEnd={() => setDraggingItemOrder(null)}
@@ -691,7 +766,18 @@ export default function StagingWorkflowPanel() {
             <button className="wf-btn wf-btn-soft" onClick={loadPanel} disabled={busy}>
               Cargar panel
             </button>
-            <span className="wf-muted">{panelReady ? autosaveHint : "Panel no cargado"}</span>
+            <span className="wf-muted">{autosaveHint}</span>
+          </div>
+
+          <div className="wf-status" style={{ marginBottom: 12 }}>
+            <span className="wf-badge">{dirty ? "DRAFT DIRTY" : "DRAFT GUARDADO"}</span>
+            <span className="wf-badge">
+              {latestDraftVersion ? `Draft v${latestDraftVersion.version_number}` : "Sin draft"}
+            </span>
+            <span className="wf-badge">
+              {latestPublishedVersion ? `Published v${latestPublishedVersion.version_number}` : "Sin published"}
+            </span>
+            {autosaving ? <span className="wf-badge wf-badge-role">Autosaving...</span> : null}
           </div>
 
           <div className="wf-steps">
