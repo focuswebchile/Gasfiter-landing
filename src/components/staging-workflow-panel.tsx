@@ -274,6 +274,8 @@ export default function StagingWorkflowPanel() {
   const canSaveDraft = membership?.permissions.canSaveDraft ?? false;
   const canPublish = membership?.permissions.canPublish ?? false;
   const canRollback = membership?.permissions.canRollback ?? false;
+  const publishedReadOnly = mode === "published";
+  const editingLocked = publishedReadOnly || busy || autosaving || flushingPublish || draftConflict.active;
   const latestPublishedVersion = versions.find((version) => version.status === "published") ?? null;
   const latestDraftVersion = versions.find((version) => version.status === "draft") ?? null;
 
@@ -341,12 +343,17 @@ export default function StagingWorkflowPanel() {
     const { response, payload } = await fetchWithJsonFallback(`/settings?mode=${nextMode}&t=${Date.now()}`);
     if (!response.ok) throw new Error(payload?.error || "Unable to fetch settings");
 
-    setSettings(normalizeSettings((payload?.settings ?? {}) as SettingsPayload));
+    const normalized = normalizeSettings((payload?.settings ?? {}) as SettingsPayload);
+    setSettings(normalized);
     setMode(nextMode);
     setDraftUpdatedAt(typeof payload?.draftUpdatedAt === "string" ? payload.draftUpdatedAt : null);
     setDraftConflict({ active: false, message: "", serverUpdatedAt: null });
     setDirty(false);
     if (!silent) setOk(`Settings cargados en modo ${nextMode}`);
+    return {
+      settings: normalized,
+      draftUpdatedAt: typeof payload?.draftUpdatedAt === "string" ? payload.draftUpdatedAt : null,
+    };
   }, [mode, fetchWithJsonFallback]);
 
   const fetchVersions = useCallback(async (silent = false) => {
@@ -488,6 +495,64 @@ export default function StagingWorkflowPanel() {
   const saveDraft = async () => {
     await saveDraftInternal({ silent: false, notes: "Saved from v2 UX panel" });
   };
+
+  const startDraftEditing = useCallback(async () => {
+    if (!userId.trim()) return setError("Ingresa userId para editar borrador");
+    if (!panelReady) return setError("Primero usa Cargar panel");
+    if (!canSaveDraft) return setError("Tu rol no puede editar borrador");
+
+    setBusy(true);
+    setMessage(null);
+    try {
+      const draftLoaded = await fetchSettings("draft", true);
+      const hasDraft = typeof draftLoaded?.draftUpdatedAt === "string" && !!draftLoaded.draftUpdatedAt;
+      if (!hasDraft) {
+        const response = await fetch(`${endpointBase}/save-draft`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-user-id": userId.trim(),
+          },
+          body: JSON.stringify({
+            userId: userId.trim(),
+            notes: "Draft created from published view",
+            settings: draftLoaded?.settings ?? settings ?? {},
+            expectedUpdatedAt: null,
+          }),
+        });
+        const payload = (await response.json().catch(() => ({}))) as
+          | {
+              error?: string;
+              message?: string;
+              draftUpdatedAt?: string | null;
+              settings?: SettingsPayload;
+              serverUpdatedAt?: string | null;
+            }
+          | DraftConflictPayload;
+        if (response.status === 409 && (payload as DraftConflictPayload)?.error === "DRAFT_OUTDATED") {
+          activateDraftConflict(payload as DraftConflictPayload);
+          setError((payload as DraftConflictPayload).message || "Conflicto de draft.");
+          return;
+        }
+        if (!response.ok) throw new Error((payload as { error?: string })?.error || "No se pudo crear draft");
+        setSettings(normalizeSettings(((payload as { settings?: SettingsPayload }).settings ?? {}) as SettingsPayload));
+        setDraftUpdatedAt(
+          typeof (payload as { draftUpdatedAt?: unknown }).draftUpdatedAt === "string"
+            ? ((payload as { draftUpdatedAt?: string }).draftUpdatedAt ?? null)
+            : null,
+        );
+      }
+      setMode("draft");
+      setDraftConflict({ active: false, message: "", serverUpdatedAt: null });
+      setDirty(false);
+      setOk("Modo borrador activado");
+      await fetchVersions(true);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "No se pudo activar modo borrador");
+    } finally {
+      setBusy(false);
+    }
+  }, [userId, panelReady, canSaveDraft, fetchSettings, endpointBase, settings, activateDraftConflict, fetchVersions]);
 
   const flushPendingAutosave = useCallback(async () => {
     if (!panelReady || !canSaveDraft) return;
@@ -679,6 +744,7 @@ export default function StagingWorkflowPanel() {
         <div className="wf-sections">
           <div className="wf-toggle">
             <input
+              disabled={editingLocked}
               type="checkbox"
               checked={section.enabled}
               onChange={(e) => updateSettings((prev) => upsertSection(prev, { ...section, enabled: e.target.checked }))}
@@ -687,12 +753,14 @@ export default function StagingWorkflowPanel() {
           </div>
           <input
             className="wf-input"
+            disabled={editingLocked}
             value={typeof section.data.title === "string" ? section.data.title : ""}
             placeholder="Hero title"
             onChange={(e) => updateSettings((prev) => upsertSection(prev, { ...section, data: { ...section.data, title: e.target.value } }))}
           />
           <textarea
             className="wf-textarea"
+            disabled={editingLocked}
             value={typeof section.data.subtitle === "string" ? section.data.subtitle : ""}
             placeholder="Hero subtitle"
             onChange={(e) => updateSettings((prev) => upsertSection(prev, { ...section, data: { ...section.data, subtitle: e.target.value } }))}
@@ -700,6 +768,7 @@ export default function StagingWorkflowPanel() {
           <div className="wf-grid2">
             <input
               className="wf-input"
+              disabled={editingLocked}
               value={typeof (section.data.cta_primary as { text?: unknown } | undefined)?.text === "string" ? ((section.data.cta_primary as { text: string }).text ?? "") : ""}
               placeholder="CTA text"
               onChange={(e) =>
@@ -719,6 +788,7 @@ export default function StagingWorkflowPanel() {
             />
             <input
               className="wf-input"
+              disabled={editingLocked}
               value={typeof (section.data.cta_primary as { url?: unknown } | undefined)?.url === "string" ? ((section.data.cta_primary as { url: string }).url ?? "") : ""}
               placeholder="CTA url"
               onChange={(e) =>
@@ -749,6 +819,7 @@ export default function StagingWorkflowPanel() {
       <div className="wf-items">
         <div className="wf-toggle">
           <input
+            disabled={editingLocked}
             type="checkbox"
             checked={section.enabled}
             onChange={(e) => updateSettings((prev) => upsertSection(prev, { ...section, enabled: e.target.checked }))}
@@ -763,11 +834,11 @@ export default function StagingWorkflowPanel() {
             <div
               key={key}
               className={`wf-row-item ${draggingItemOrder === key ? "dragging" : ""}`}
-              draggable
+              draggable={!editingLocked}
               onDragStart={() => setDraggingItemOrder(key)}
               onDragOver={(event) => event.preventDefault()}
               onDrop={() => {
-                if (draggingItemOrder !== null) {
+                if (!editingLocked && draggingItemOrder !== null) {
                   updateSettings(
                     (prev) => reorderItemsInSection(prev, section.id, draggingItemOrder, key),
                     { persistNow: true, note: `Autosave: item order updated (${section.id})` },
@@ -781,6 +852,7 @@ export default function StagingWorkflowPanel() {
               <div style={{ flex: 1, display: "grid", gap: 6 }}>
                 <input
                   className="wf-input"
+                  disabled={editingLocked}
                   value={typeof item[labelA] === "string" ? (item[labelA] as string) : ""}
                   placeholder={labelA}
                   onChange={(e) =>
@@ -794,6 +866,7 @@ export default function StagingWorkflowPanel() {
                 />
                 <textarea
                   className="wf-textarea"
+                  disabled={editingLocked}
                   value={typeof item[labelB] === "string" ? (item[labelB] as string) : ""}
                   placeholder={labelB}
                   onChange={(e) =>
@@ -808,6 +881,7 @@ export default function StagingWorkflowPanel() {
               </div>
               <div className="wf-toggle">
                 <input
+                  disabled={editingLocked}
                   type="checkbox"
                   checked={item.enabled !== false}
                   onChange={(e) =>
@@ -841,6 +915,7 @@ export default function StagingWorkflowPanel() {
             <input
               key={key}
               className="wf-input"
+              disabled={editingLocked}
               placeholder={key}
               value={colors[key] ?? ""}
               onChange={(e) => updateSettings((prev) => ({ ...prev, colors: { ...(prev.colors ?? {}), [key]: e.target.value } }))}
@@ -853,6 +928,7 @@ export default function StagingWorkflowPanel() {
             <input
               key={key}
               className="wf-input"
+              disabled={editingLocked}
               placeholder={key}
               value={typography[key] ?? ""}
               onChange={(e) => updateSettings((prev) => ({ ...prev, typography: { ...(prev.typography ?? {}), [key]: e.target.value } }))}
@@ -913,6 +989,7 @@ export default function StagingWorkflowPanel() {
           </div>
 
           <div className="wf-status" style={{ marginBottom: 12 }}>
+            {publishedReadOnly ? <span className="wf-badge wf-badge-env">Lectura: versión publicada</span> : null}
             <span className="wf-badge">{dirty ? "DRAFT DIRTY" : "DRAFT GUARDADO"}</span>
             <span className="wf-badge">
               {latestDraftVersion ? `Draft v${latestDraftVersion.version_number}` : "Sin draft"}
@@ -930,14 +1007,19 @@ export default function StagingWorkflowPanel() {
           </div>
 
           <div className="wf-row" style={{ marginBottom: 12 }}>
-            <button className="wf-btn wf-btn-primary" onClick={saveDraft} disabled={busy || !panelReady || !canSaveDraft}>Guardar Draft</button>
+            <button className="wf-btn wf-btn-primary" onClick={saveDraft} disabled={busy || publishedReadOnly || !panelReady || !canSaveDraft}>Guardar Draft</button>
             <button
               className="wf-btn wf-btn-primary"
               onClick={publish}
-              disabled={busy || autosaving || flushingPublish || draftConflict.active || !panelReady || !canPublish}
+              disabled={busy || autosaving || flushingPublish || publishedReadOnly || draftConflict.active || !panelReady || !canPublish}
             >
               {flushingPublish ? "Esperando guardado..." : "Publicar"}
             </button>
+            {publishedReadOnly ? (
+              <button className="wf-btn wf-btn-soft" onClick={startDraftEditing} disabled={busy || !panelReady || !canSaveDraft}>
+                Editar borrador
+              </button>
+            ) : null}
             {message ? <span className={`wf-msg ${message.type === "ok" ? "wf-ok" : "wf-err"}`}>{message.text}</span> : null}
             {draftConflict.active ? (
               <>
@@ -960,11 +1042,11 @@ export default function StagingWorkflowPanel() {
                   <div
                     key={section.id}
                     className={`wf-row-item ${draggingSectionId === section.id ? "dragging" : ""} ${editableSection === section.id ? "active" : ""}`}
-                    draggable
-                    onDragStart={() => setDraggingSectionId(section.id)}
-                    onDragOver={(event) => event.preventDefault()}
-                    onDrop={() => {
-                      if (draggingSectionId) reorderSections(draggingSectionId, section.id);
+                      draggable={!editingLocked}
+                      onDragStart={() => setDraggingSectionId(section.id)}
+                      onDragOver={(event) => event.preventDefault()}
+                      onDrop={() => {
+                      if (!editingLocked && draggingSectionId) reorderSections(draggingSectionId, section.id);
                       setDraggingSectionId(null);
                     }}
                     onDragEnd={() => setDraggingSectionId(null)}
@@ -975,7 +1057,7 @@ export default function StagingWorkflowPanel() {
                       <span className="wf-muted">order {section.order}</span>
                     </button>
                     <label className="wf-toggle">
-                      <input type="checkbox" checked={section.enabled} onChange={(e) => updateSettings((prev) => upsertSection(prev, { ...section, enabled: e.target.checked }))} />
+                      <input disabled={editingLocked} type="checkbox" checked={section.enabled} onChange={(e) => updateSettings((prev) => upsertSection(prev, { ...section, enabled: e.target.checked }))} />
                       enabled
                     </label>
                   </div>
