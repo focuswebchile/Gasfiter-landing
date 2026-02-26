@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 type Mode = "draft" | "published";
 type SidebarView = "sections" | "items" | "style" | "versions" | "members";
 type Role = "owner" | "admin" | "editor" | "viewer";
+type EditableSectionId = "hero" | "services" | "faq" | "urgency_banner" | "contact_banner" | "testimonials";
 
 type Section = {
   id: string;
@@ -268,7 +269,7 @@ export default function StagingWorkflowPanel() {
   const [userId, setUserId] = useState("");
   const [mode, setMode] = useState<Mode>("published");
   const [view, setView] = useState<SidebarView>("sections");
-  const [editableSection, setEditableSection] = useState<"hero" | "services" | "faq">("hero");
+  const [editableSection, setEditableSection] = useState<EditableSectionId>("hero");
   const [settings, setSettings] = useState<SettingsPayload | null>(null);
   const [versions, setVersions] = useState<VersionItem[]>([]);
   const [membership, setMembership] = useState<MembershipInfo | null>(null);
@@ -368,6 +369,21 @@ export default function StagingWorkflowPanel() {
   const heroSection = settings ? getSection(settings, "hero") : null;
   const servicesSection = settings ? getSection(settings, "services") : null;
   const faqSection = settings ? getSection(settings, "faq") : null;
+  const urgencyBannerSection = settings ? getSection(settings, "urgency_banner") : null;
+  const contactBannerSection = settings ? getSection(settings, "contact_banner") : null;
+  const testimonialsSection = settings ? getSection(settings, "testimonials") : null;
+
+  const toEditableSection = (sectionId: string): EditableSectionId => {
+    const supported: EditableSectionId[] = [
+      "hero",
+      "services",
+      "faq",
+      "urgency_banner",
+      "contact_banner",
+      "testimonials",
+    ];
+    return supported.includes(sectionId as EditableSectionId) ? (sectionId as EditableSectionId) : "hero";
+  };
 
   const handleModeChange = (nextMode: Mode) => {
     if (nextMode === mode) return;
@@ -1003,6 +1019,289 @@ export default function StagingWorkflowPanel() {
       );
     }
 
+    if (editableSection === "urgency_banner") {
+      const section = urgencyBannerSection ?? { id: "urgency_banner", enabled: true, order: 50, data: {} };
+      return (
+        <div className="wf-sections">
+          <div className="wf-toggle">
+            <input
+              disabled={editingLocked}
+              type="checkbox"
+              checked={section.enabled}
+              onChange={(e) => updateSettings((prev) => upsertSection(prev, { ...section, enabled: e.target.checked }))}
+            />
+            urgency_banner enabled
+          </div>
+          <input
+            className="wf-input"
+            disabled={editingLocked}
+            value={typeof section.data.title === "string" ? section.data.title : ""}
+            placeholder="Banner title"
+            onChange={(e) => updateSettings((prev) => upsertSection(prev, { ...section, data: { ...section.data, title: e.target.value } }))}
+          />
+          <textarea
+            className="wf-textarea"
+            disabled={editingLocked}
+            value={typeof section.data.description === "string" ? section.data.description : ""}
+            placeholder="Banner description"
+            onChange={(e) => updateSettings((prev) => upsertSection(prev, { ...section, data: { ...section.data, description: e.target.value } }))}
+          />
+          <div className="wf-grid2">
+            <input
+              className="wf-input"
+              disabled={editingLocked}
+              value={
+                typeof (section.data.cta_primary as { text?: unknown } | undefined)?.text === "string"
+                  ? ((section.data.cta_primary as { text: string }).text ?? "")
+                  : ""
+              }
+              placeholder="CTA text"
+              onChange={(e) =>
+                updateSettings((prev) =>
+                  upsertSection(prev, {
+                    ...section,
+                    data: {
+                      ...section.data,
+                      cta_primary: {
+                        ...((section.data.cta_primary as Record<string, unknown>) ?? {}),
+                        text: e.target.value,
+                      },
+                    },
+                  }),
+                )
+              }
+            />
+            <input
+              className="wf-input"
+              disabled={editingLocked}
+              value={
+                typeof (section.data.cta_primary as { url?: unknown } | undefined)?.url === "string"
+                  ? ((section.data.cta_primary as { url: string }).url ?? "")
+                  : ""
+              }
+              placeholder="CTA url"
+              onChange={(e) =>
+                updateSettings((prev) =>
+                  upsertSection(prev, {
+                    ...section,
+                    data: {
+                      ...section.data,
+                      cta_primary: {
+                        ...((section.data.cta_primary as Record<string, unknown>) ?? {}),
+                        url: e.target.value,
+                      },
+                    },
+                  }),
+                )
+              }
+            />
+          </div>
+        </div>
+      );
+    }
+
+    if (editableSection === "contact_banner") {
+      const section = contactBannerSection ?? { id: "contact_banner", enabled: true, order: 60, data: {} };
+      return (
+        <div className="wf-sections">
+          <div className="wf-toggle">
+            <input
+              disabled={editingLocked}
+              type="checkbox"
+              checked={section.enabled}
+              onChange={(e) => updateSettings((prev) => upsertSection(prev, { ...section, enabled: e.target.checked }))}
+            />
+            contact_banner enabled
+          </div>
+          <input
+            className="wf-input"
+            disabled={editingLocked}
+            value={typeof section.data.kicker === "string" ? section.data.kicker : ""}
+            placeholder="Kicker"
+            onChange={(e) => updateSettings((prev) => upsertSection(prev, { ...section, data: { ...section.data, kicker: e.target.value } }))}
+          />
+          <input
+            className="wf-input"
+            disabled={editingLocked}
+            value={typeof section.data.title === "string" ? section.data.title : ""}
+            placeholder="Title"
+            onChange={(e) => updateSettings((prev) => upsertSection(prev, { ...section, data: { ...section.data, title: e.target.value } }))}
+          />
+          <input
+            className="wf-input"
+            disabled={editingLocked}
+            value={typeof section.data.background_image === "string" ? section.data.background_image : ""}
+            placeholder="Background image URL/path"
+            onChange={(e) =>
+              updateSettings((prev) =>
+                upsertSection(prev, { ...section, data: { ...section.data, background_image: e.target.value } }),
+              )
+            }
+          />
+          <input
+            className="wf-input"
+            disabled={editingLocked}
+            value={typeof section.data.submit_text === "string" ? section.data.submit_text : ""}
+            placeholder="Submit button text"
+            onChange={(e) =>
+              updateSettings((prev) =>
+                upsertSection(prev, { ...section, data: { ...section.data, submit_text: e.target.value } }),
+              )
+            }
+          />
+        </div>
+      );
+    }
+
+    if (editableSection === "testimonials") {
+      const section = testimonialsSection;
+      if (!section) return <p className="wf-muted">No existe la sección seleccionada en este draft.</p>;
+      const items = toSectionItems(section);
+      return (
+        <div className="wf-items">
+          <div className="wf-toggle">
+            <input
+              disabled={editingLocked}
+              type="checkbox"
+              checked={section.enabled}
+              onChange={(e) => updateSettings((prev) => upsertSection(prev, { ...section, enabled: e.target.checked }))}
+            />
+            testimonials enabled
+          </div>
+          <input
+            className="wf-input"
+            disabled={editingLocked}
+            value={typeof section.data.kicker === "string" ? section.data.kicker : ""}
+            placeholder="Section kicker"
+            onChange={(e) =>
+              updateSettings((prev) =>
+                upsertSection(prev, { ...section, data: { ...section.data, kicker: e.target.value } }),
+              )
+            }
+          />
+          <input
+            className="wf-input"
+            disabled={editingLocked}
+            value={typeof section.data.title === "string" ? section.data.title : ""}
+            placeholder="Section title"
+            onChange={(e) =>
+              updateSettings((prev) =>
+                upsertSection(prev, { ...section, data: { ...section.data, title: e.target.value } }),
+              )
+            }
+          />
+          {items.map((item) => {
+            const key = Number(item.order);
+            return (
+              <div
+                key={key}
+                className={`wf-row-item ${draggingItemOrder === key ? "dragging" : ""}`}
+                draggable={!editingLocked}
+                onDragStart={() => setDraggingItemOrder(key)}
+                onDragOver={(event) => event.preventDefault()}
+                onDrop={() => {
+                  if (!editingLocked && draggingItemOrder !== null) {
+                    updateSettings(
+                      (prev) => reorderItemsInSection(prev, section.id, draggingItemOrder, key),
+                      { persistNow: true, note: "Autosave: item order updated (testimonials)" },
+                    );
+                  }
+                  setDraggingItemOrder(null);
+                }}
+                onDragEnd={() => setDraggingItemOrder(null)}
+              >
+                <span className="wf-drag">⋮⋮</span>
+                <div style={{ flex: 1, display: "grid", gap: 6 }}>
+                  <input
+                    className="wf-input"
+                    disabled={editingLocked}
+                    value={typeof item.name === "string" ? item.name : ""}
+                    placeholder="name"
+                    onChange={(e) =>
+                      updateSettings((prev) => {
+                        const sec = getSection(prev, section.id);
+                        if (!sec) return prev;
+                        const nextItems = toSectionItems(sec).map((nextItem) =>
+                          Number(nextItem.order) === key ? { ...nextItem, name: e.target.value } : nextItem,
+                        );
+                        return upsertSection(prev, { ...sec, data: { ...sec.data, items: nextItems } });
+                      })
+                    }
+                  />
+                  <input
+                    className="wf-input"
+                    disabled={editingLocked}
+                    value={typeof item.location === "string" ? item.location : ""}
+                    placeholder="location"
+                    onChange={(e) =>
+                      updateSettings((prev) => {
+                        const sec = getSection(prev, section.id);
+                        if (!sec) return prev;
+                        const nextItems = toSectionItems(sec).map((nextItem) =>
+                          Number(nextItem.order) === key ? { ...nextItem, location: e.target.value } : nextItem,
+                        );
+                        return upsertSection(prev, { ...sec, data: { ...sec.data, items: nextItems } });
+                      })
+                    }
+                  />
+                  <textarea
+                    className="wf-textarea"
+                    disabled={editingLocked}
+                    value={typeof item.quote === "string" ? item.quote : ""}
+                    placeholder="quote"
+                    onChange={(e) =>
+                      updateSettings((prev) => {
+                        const sec = getSection(prev, section.id);
+                        if (!sec) return prev;
+                        const nextItems = toSectionItems(sec).map((nextItem) =>
+                          Number(nextItem.order) === key ? { ...nextItem, quote: e.target.value } : nextItem,
+                        );
+                        return upsertSection(prev, { ...sec, data: { ...sec.data, items: nextItems } });
+                      })
+                    }
+                  />
+                  <input
+                    className="wf-input"
+                    disabled={editingLocked}
+                    value={typeof item.avatar === "string" ? item.avatar : ""}
+                    placeholder="avatar URL/path"
+                    onChange={(e) =>
+                      updateSettings((prev) => {
+                        const sec = getSection(prev, section.id);
+                        if (!sec) return prev;
+                        const nextItems = toSectionItems(sec).map((nextItem) =>
+                          Number(nextItem.order) === key ? { ...nextItem, avatar: e.target.value } : nextItem,
+                        );
+                        return upsertSection(prev, { ...sec, data: { ...sec.data, items: nextItems } });
+                      })
+                    }
+                  />
+                </div>
+                <div className="wf-toggle">
+                  <input
+                    disabled={editingLocked}
+                    type="checkbox"
+                    checked={item.enabled !== false}
+                    onChange={(e) =>
+                      updateSettings((prev) => {
+                        const sec = getSection(prev, section.id);
+                        if (!sec) return prev;
+                        const nextItems = toSectionItems(sec).map((nextItem) =>
+                          Number(nextItem.order) === key ? { ...nextItem, enabled: e.target.checked } : nextItem,
+                        );
+                        return upsertSection(prev, { ...sec, data: { ...sec.data, items: nextItems } });
+                      })
+                    }
+                  />
+                  enabled
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+
     const section = editableSection === "services" ? servicesSection : faqSection;
     if (!section) return <p className="wf-muted">No existe la sección seleccionada en este draft.</p>;
 
@@ -1321,7 +1620,7 @@ export default function StagingWorkflowPanel() {
                     onDragEnd={() => setDraggingSectionId(null)}
                   >
                     <span className="wf-drag">⋮⋮</span>
-                    <button className="wf-nav-btn" style={{ flex: 1, padding: "8px 10px" }} onClick={() => setEditableSection(section.id as typeof editableSection)}>
+                    <button className="wf-nav-btn" style={{ flex: 1, padding: "8px 10px" }} onClick={() => setEditableSection(toEditableSection(section.id))}>
                       <span>{section.id}</span>
                       <span className="wf-muted">order {section.order}</span>
                     </button>
@@ -1343,6 +1642,7 @@ export default function StagingWorkflowPanel() {
               <div className="wf-row" style={{ marginBottom: 10 }}>
                 <button className="wf-btn wf-btn-soft" onClick={() => setEditableSection("services")}>Servicios</button>
                 <button className="wf-btn wf-btn-soft" onClick={() => setEditableSection("faq")}>FAQ</button>
+                <button className="wf-btn wf-btn-soft" onClick={() => setEditableSection("testimonials")}>Testimonios</button>
               </div>
               {renderSectionEditor()}
             </>
