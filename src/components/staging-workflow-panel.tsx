@@ -60,6 +60,45 @@ type ToastState = {
   text: string;
 };
 
+type ActionLogItem = {
+  id: string;
+  action: "save" | "publish" | "rollback" | "diff";
+  at: string;
+  version: number | null;
+  note: string;
+};
+
+type HeroDiffField = {
+  path: string;
+  label: string;
+  from: string;
+  to: string;
+  changed: boolean;
+};
+
+type HeroDiffResult = {
+  from: {
+    mode: "draft" | "published";
+    versionNumber: number;
+    createdAt: string;
+  };
+  to: {
+    mode: "draft" | "published";
+    versionNumber: number;
+    createdAt: string;
+  };
+  summary: {
+    changedFields: number;
+    totalFields: number;
+    hasChanges: boolean;
+  };
+  sections: {
+    hero: {
+      fields: HeroDiffField[];
+    };
+  };
+};
+
 const STORAGE_KEY = "gasfiter_panel_v2_state";
 
 const panelStyles = String.raw`
@@ -121,6 +160,14 @@ const panelStyles = String.raw`
   .wf-toast-success{background:#dcfce7;border-color:#86efac;color:#166534}
   .wf-toast-error{background:#fee2e2;border-color:#fecaca;color:#991b1b}
   .wf-toast-info{background:#e0ebff;border-color:#bfd1f4;color:#1e3a8a}
+  .wf-log{display:grid;gap:8px}
+  .wf-log-item{display:flex;justify-content:space-between;gap:8px;border:1px solid #e2e8f0;border-radius:10px;padding:8px 10px;background:#fff}
+  .wf-diff{display:grid;gap:8px}
+  .wf-diff-row{display:grid;gap:8px;border:1px solid #e2e8f0;border-radius:10px;padding:10px;background:#fff}
+  .wf-diff-row.changed{border-color:#fde68a;background:#fffbeb}
+  .wf-diff-row.same{border-color:#bbf7d0;background:#f0fdf4}
+  .wf-diff-values{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .wf-diff-cell{border:1px solid #e2e8f0;border-radius:8px;padding:8px;background:#f8fafc;font-size:12px}
 `;
 
 function detectEnvBadge(slug: string): "DEV" | "STAGING" | "PROD" {
@@ -241,6 +288,9 @@ export default function StagingWorkflowPanel() {
   const autosaveTimerRef = useRef<number | null>(null);
   const autosaveInFlightRef = useRef(false);
   const autosavePromiseRef = useRef<Promise<void> | null>(null);
+  const [actionLog, setActionLog] = useState<ActionLogItem[]>([]);
+  const [heroDiff, setHeroDiff] = useState<HeroDiffResult | null>(null);
+  const [loadingDiff, setLoadingDiff] = useState(false);
 
   const baseUrl = useMemo(() => {
     if (typeof window === "undefined") {
@@ -380,6 +430,20 @@ export default function StagingWorkflowPanel() {
     throw lastError ?? new Error("No se pudo cargar respuesta JSON");
   }, [endpointBase, sameOriginEndpointBase, parseJsonResponse]);
 
+  const appendActionLog = useCallback(
+    (action: ActionLogItem["action"], version: number | null, note: string) => {
+      const row: ActionLogItem = {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        action,
+        at: new Date().toISOString(),
+        version,
+        note,
+      };
+      setActionLog((prev) => [row, ...prev].slice(0, 12));
+    },
+    [],
+  );
+
   const fetchSettings = useCallback(async (nextMode = mode, silent = false) => {
     const { response, payload } = await fetchWithJsonFallback(`/settings?mode=${nextMode}&t=${Date.now()}`);
     if (!response.ok) throw new Error(payload?.error || "Unable to fetch settings");
@@ -423,6 +487,7 @@ export default function StagingWorkflowPanel() {
     try {
       await Promise.all([fetchSettings(mode, true), fetchVersions(true)]);
       setPanelReady(true);
+      setHeroDiff(null);
       setOk(`Panel cargado (${mode})`);
     } catch (error) {
       setPanelReady(false);
@@ -431,6 +496,33 @@ export default function StagingWorkflowPanel() {
       setBusy(false);
     }
   }, [siteSlug, userId, mode, fetchSettings, fetchVersions, setError, setOk]);
+
+  const fetchHeroDiff = useCallback(async () => {
+    if (!siteSlug.trim()) return setError("Ingresa site slug");
+    if (!userId.trim()) return setError("Ingresa userId para ver cambios");
+    if (!panelReady) return setError("Primero usa Cargar panel");
+
+    setLoadingDiff(true);
+    try {
+      const { response, payload } = await fetchWithJsonFallback(
+        `/diff?userId=${encodeURIComponent(userId.trim())}&from=draft&to=published&t=${Date.now()}`,
+      );
+      if (!response.ok) {
+        throw new Error(payload?.error || "No se pudo calcular diff");
+      }
+      const result = payload as HeroDiffResult;
+      setHeroDiff(result);
+      const changed = result?.summary?.changedFields ?? 0;
+      const msg = changed > 0 ? `Diff listo: ${changed} cambio(s)` : "Diff listo: sin cambios";
+      setOk(msg);
+      appendActionLog("diff", null, `Ver cambios draft vs published (${changed})`);
+    } catch (error) {
+      setHeroDiff(null);
+      setError(error instanceof Error ? error.message : "Error generando diff");
+    } finally {
+      setLoadingDiff(false);
+    }
+  }, [siteSlug, userId, panelReady, fetchWithJsonFallback, setError, setOk, appendActionLog]);
 
   const activateDraftConflict = useCallback((payload?: DraftConflictPayload) => {
     setDraftConflict({
@@ -518,6 +610,7 @@ export default function StagingWorkflowPanel() {
           setAutosaveHint(`Autosave OK (v${payload.version?.number ?? "?"})`);
         } else {
           setOk(`Draft guardado (v${payload.version?.number ?? "?"})`);
+          appendActionLog("save", payload.version?.number ?? null, "Guardar draft manual");
         }
         await fetchVersions(true);
       } catch (error) {
@@ -538,7 +631,7 @@ export default function StagingWorkflowPanel() {
     autosavePromiseRef.current = run;
     await run;
     autosavePromiseRef.current = null;
-  }, [userId, settings, panelReady, canSaveDraft, draftConflict.active, endpointBase, fetchVersions, draftUpdatedAt, activateDraftConflict, setError, setOk, mode, latestDraftVersionToken]);
+  }, [userId, settings, panelReady, canSaveDraft, draftConflict.active, endpointBase, fetchVersions, draftUpdatedAt, activateDraftConflict, setError, setOk, mode, latestDraftVersionToken, appendActionLog]);
 
   const saveDraft = async () => {
     if (autosaveTimerRef.current) {
@@ -684,7 +777,16 @@ export default function StagingWorkflowPanel() {
       setMode("published");
       setDraftConflict({ active: false, message: "", serverUpdatedAt: null });
       setDirty(false);
-      setOk(`Publicado (v${payload.version?.number ?? "?"})`);
+      const publishedVersion = payload.version?.number ?? null;
+      const sourceDraftNumber =
+        typeof (payload.version as { sourceDraftNumber?: unknown } | undefined)?.sourceDraftNumber === "number"
+          ? ((payload.version as { sourceDraftNumber: number }).sourceDraftNumber as number)
+          : null;
+      const publishNote = sourceDraftNumber
+        ? `Publicado (v${publishedVersion ?? "?"}) desde draft v${sourceDraftNumber}`
+        : `Publicado (v${publishedVersion ?? "?"})`;
+      setOk(publishNote);
+      appendActionLog("publish", publishedVersion, publishNote);
       await fetchVersions(true);
     } catch (error) {
       setError(error instanceof Error ? error.message : "Error publicando");
@@ -733,12 +835,18 @@ export default function StagingWorkflowPanel() {
       setMode("published");
       setDirty(false);
       setOk(`Rollback aplicado a v${versionNumber}`);
+      appendActionLog("rollback", versionNumber, `Rollback a v${versionNumber}`);
       await fetchVersions(true);
     } catch (error) {
       setError(error instanceof Error ? error.message : "Error en rollback");
     } finally {
       setBusy(false);
     }
+  };
+
+  const openPublishedJson = () => {
+    const url = `${endpointBase}/settings?mode=published&t=${Date.now()}`;
+    if (typeof window !== "undefined") window.open(url, "_blank", "noopener,noreferrer");
   };
 
   const reorderSections = (draggedId: string, targetId: string) => {
@@ -1023,6 +1131,20 @@ export default function StagingWorkflowPanel() {
         detail: "Se guardará automáticamente o puedes usar Guardar Draft.",
       };
     }
+    if (panelReady && mode === "draft" && heroDiff) {
+      if (heroDiff.summary.hasChanges) {
+        return {
+          className: "wf-sticky wf-sticky-warn",
+          title: "Draft con cambios vs Published",
+          detail: `${heroDiff.summary.changedFields} campo(s) distinto(s) en Hero.`,
+        };
+      }
+      return {
+        className: "wf-sticky wf-sticky-ok",
+        title: "Sin diferencias con Published",
+        detail: "El draft coincide con la versión publicada.",
+      };
+    }
     return {
       className: "wf-sticky wf-sticky-ok",
       title: "Draft guardado",
@@ -1037,6 +1159,8 @@ export default function StagingWorkflowPanel() {
     flushingPublish,
     autosaveHint,
     dirty,
+    mode,
+    heroDiff,
   ]);
 
   return (
@@ -1119,6 +1243,16 @@ export default function StagingWorkflowPanel() {
               disabled={busy || autosaving || flushingPublish || publishedReadOnly || draftConflict.active || !panelReady || !canPublish}
             >
               {flushingPublish ? "Esperando guardado..." : "Publicar"}
+            </button>
+            <button className="wf-btn wf-btn-soft" onClick={openPublishedJson} disabled={!panelReady}>
+              Ver JSON publicado
+            </button>
+            <button
+              className="wf-btn wf-btn-soft"
+              onClick={fetchHeroDiff}
+              disabled={busy || loadingDiff || !panelReady || !userId.trim()}
+            >
+              {loadingDiff ? "Comparando..." : "Ver cambios"}
             </button>
             {publishedReadOnly ? (
               <button className="wf-btn wf-btn-soft" onClick={startDraftEditing} disabled={busy || !panelReady || !canSaveDraft}>
@@ -1247,6 +1381,56 @@ export default function StagingWorkflowPanel() {
                 2,
               )}
             </pre>
+          </div>
+
+          <div className="wf-preview-box">
+            <strong>Diff Hero (Draft vs Published)</strong>
+            {heroDiff ? (
+              <div className="wf-diff" style={{ marginTop: 8 }}>
+                <div className="wf-muted">
+                  Draft v{heroDiff.from.versionNumber} vs Published v{heroDiff.to.versionNumber} ·{" "}
+                  {heroDiff.summary.changedFields}/{heroDiff.summary.totalFields} cambios
+                </div>
+                {heroDiff.sections.hero.fields.map((field) => (
+                  <div key={field.path} className={`wf-diff-row ${field.changed ? "changed" : "same"}`}>
+                    <strong>{field.label}</strong>
+                    <div className="wf-diff-values">
+                      <div className="wf-diff-cell">
+                        <div className="wf-muted">Draft</div>
+                        <div>{field.from || "—"}</div>
+                      </div>
+                      <div className="wf-diff-cell">
+                        <div className="wf-muted">Published</div>
+                        <div>{field.to || "—"}</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="wf-muted" style={{ marginTop: 8 }}>
+                Usa “Ver cambios” para comparar Draft vs Published en Hero.
+              </p>
+            )}
+          </div>
+
+          <div className="wf-preview-box">
+            <strong>Actividad reciente</strong>
+            <div className="wf-log" style={{ marginTop: 8 }}>
+              {actionLog.map((entry) => (
+                <div className="wf-log-item" key={entry.id}>
+                  <div>
+                    <strong>{entry.action.toUpperCase()}</strong>
+                    <div className="wf-muted">{entry.note}</div>
+                  </div>
+                  <div className="wf-muted" style={{ textAlign: "right" }}>
+                    <div>{entry.version ? `v${entry.version}` : "-"}</div>
+                    <div>{new Date(entry.at).toLocaleTimeString()}</div>
+                  </div>
+                </div>
+              ))}
+              {!actionLog.length ? <p className="wf-muted">Sin actividad reciente.</p> : null}
+            </div>
           </div>
         </section>
       </div>
