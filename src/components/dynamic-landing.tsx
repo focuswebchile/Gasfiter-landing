@@ -2095,6 +2095,19 @@ export default function DynamicLanding() {
       return [];
     };
 
+    const toItemsArray = (items: unknown): Array<Record<string, unknown>> => {
+      if (!Array.isArray(items)) return [];
+      return items.filter((item): item is Record<string, unknown> => !!item && typeof item === "object");
+    };
+
+    const escapeHtml = (value: string) =>
+      value
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
     const ensureSwapFontLink = (fontUrl: string) => {
       const trimmed = fontUrl.trim();
       if (!trimmed) return;
@@ -2132,17 +2145,26 @@ export default function DynamicLanding() {
     const applySettings = (settings: Settings | null) => {
       if (!settings || typeof settings !== "object") return;
       const content = settings.content || {};
+      const findSection = (id: string) =>
+        Array.isArray(content.sections)
+          ? content.sections.find(
+              (section) =>
+                section &&
+                typeof section === "object" &&
+                section.id === id &&
+                section.enabled !== false &&
+                section.data &&
+                typeof section.data === "object",
+            )
+          : null;
       const sectionHero = Array.isArray(content.sections)
-        ? content.sections.find(
-            (section) =>
-              section &&
-              typeof section === "object" &&
-              section.id === "hero" &&
-              section.enabled !== false &&
-              section.data &&
-              typeof section.data === "object",
-          )
+        ? findSection("hero")
         : null;
+      const sectionServices = findSection("services");
+      const sectionFaq = findSection("faq");
+      const sectionTestimonials = findSection("testimonials");
+      const sectionUrgency = findSection("urgency_banner");
+      const sectionContact = findSection("contact_banner");
 
       const legacyHero = content.hero && typeof content.hero === "object" ? content.hero : {};
       const sectionHeroData = sectionHero && typeof sectionHero === "object" ? sectionHero.data : {};
@@ -2235,7 +2257,13 @@ export default function DynamicLanding() {
         secondaryBtn.textContent = heroSecondaryText;
       }
 
-      const services = content.services;
+      const services =
+        sectionServices &&
+        typeof sectionServices.data === "object" &&
+        sectionServices.data &&
+        (Array.isArray((sectionServices.data as { items?: unknown }).items) || typeof sectionServices.data === "object")
+          ? sectionServices.data
+          : content.services;
       const servicesTitleEl = document.querySelector("[data-services-title]");
       if (
         services &&
@@ -2273,11 +2301,17 @@ export default function DynamicLanding() {
         });
       }
 
-      const faqSection = document.getElementById("faq");
-      if (Array.isArray(content.faqs) && content.faqs.length) {
+      const faqSectionEl = document.getElementById("faq");
+      const sectionFaqItems = toItemsArray(sectionFaq && sectionFaq.data ? (sectionFaq.data as { items?: unknown }).items : []);
+      const faqItems = sectionFaqItems.length ? sectionFaqItems : Array.isArray(content.faqs) ? content.faqs : [];
+      if (Array.isArray(faqItems) && faqItems.length) {
         const faqList = document.querySelector("[data-faq-list]");
+        const faqTitle = document.querySelector("[data-faq-title]");
+        if (faqTitle && sectionFaq?.data && typeof sectionFaq.data.title === "string" && sectionFaq.data.title.trim()) {
+          faqTitle.textContent = sectionFaq.data.title.trim();
+        }
         if (faqList) {
-          faqList.innerHTML = content.faqs
+          faqList.innerHTML = faqItems
             .filter((faq) => faq && typeof faq === "object")
             .map((faq) => {
               const q = typeof faq.question === "string" ? faq.question.trim() : "";
@@ -2293,8 +2327,108 @@ export default function DynamicLanding() {
             .join("");
           bindFaqButtons();
         }
-      } else if (faqSection) {
-        faqSection.style.display = "none";
+      } else if (faqSectionEl) {
+        faqSectionEl.style.display = "none";
+      }
+
+      if (sectionUrgency?.data) {
+        const urgencyRoot = document.querySelector(".cta-dark");
+        const urgencyTitle = urgencyRoot?.querySelector("h2");
+        const urgencyDesc = urgencyRoot?.querySelector("p");
+        const urgencyCta = urgencyRoot?.querySelector("a");
+        if (urgencyTitle && typeof sectionUrgency.data.title === "string" && sectionUrgency.data.title.trim()) {
+          urgencyTitle.textContent = sectionUrgency.data.title.trim();
+        }
+        if (urgencyDesc && typeof sectionUrgency.data.description === "string" && sectionUrgency.data.description.trim()) {
+          urgencyDesc.textContent = sectionUrgency.data.description.trim();
+        }
+        const urgencyCtaData = (sectionUrgency.data as { cta_primary?: { text?: unknown; url?: unknown } }).cta_primary;
+        if (urgencyCta && urgencyCtaData) {
+          if (typeof urgencyCtaData.text === "string" && urgencyCtaData.text.trim()) {
+            urgencyCta.textContent = urgencyCtaData.text.trim();
+          }
+          if (typeof urgencyCtaData.url === "string" && urgencyCtaData.url.trim()) {
+            urgencyCta.setAttribute("href", urgencyCtaData.url.trim());
+          }
+        }
+      }
+
+      if (sectionContact?.data) {
+        const contactRoot = document.querySelector(".contact-section");
+        const contactKicker = contactRoot?.querySelector(".contact-kicker");
+        const contactTitle = contactRoot?.querySelector(".contact-title");
+        const contactSubmit = contactRoot?.querySelector(".contact-submit");
+        if (contactKicker && typeof sectionContact.data.kicker === "string" && sectionContact.data.kicker.trim()) {
+          contactKicker.textContent = sectionContact.data.kicker.trim();
+        }
+        if (contactTitle && typeof sectionContact.data.title === "string" && sectionContact.data.title.trim()) {
+          contactTitle.innerHTML = escapeHtml(sectionContact.data.title).replace(/\n/g, "<br />");
+        }
+        if (contactSubmit && typeof sectionContact.data.submit_text === "string" && sectionContact.data.submit_text.trim()) {
+          contactSubmit.textContent = sectionContact.data.submit_text.trim();
+        }
+      }
+
+      const testimonialsItems = toItemsArray(
+        sectionTestimonials && sectionTestimonials.data
+          ? (sectionTestimonials.data as { items?: unknown }).items
+          : undefined,
+      ).filter((item) => item.enabled !== false);
+      const testimonialsSectionEl = document.getElementById("testimonios");
+      if (testimonialsItems.length) {
+        const testimonialsTitle = document.querySelector(".clients-title");
+        const testimonialsKicker = document.querySelector(".clients-kicker");
+        if (
+          testimonialsTitle &&
+          sectionTestimonials?.data &&
+          typeof sectionTestimonials.data.title === "string" &&
+          sectionTestimonials.data.title.trim()
+        ) {
+          testimonialsTitle.textContent = sectionTestimonials.data.title.trim();
+        }
+        if (
+          testimonialsKicker &&
+          sectionTestimonials?.data &&
+          typeof sectionTestimonials.data.kicker === "string" &&
+          sectionTestimonials.data.kicker.trim()
+        ) {
+          testimonialsKicker.textContent = sectionTestimonials.data.kicker.trim();
+        }
+
+        const clientsTrack = document.querySelector("[data-clients-track]");
+        if (clientsTrack) {
+          clientsTrack.innerHTML = testimonialsItems
+            .map((item) => {
+              const quote = typeof item.quote === "string" ? item.quote.trim() : "";
+              const name = typeof item.name === "string" ? item.name.trim() : "";
+              const location = typeof item.location === "string" ? item.location.trim() : "";
+              const avatar = typeof item.avatar === "string" ? item.avatar.trim() : "";
+              if (!quote || !name) return "";
+              return `
+                <article class="client-card">
+                  <div class="client-quote">”</div>
+                  <p class="client-text">${escapeHtml(quote)}</p>
+                  <div class="client-person">
+                    <img src="${escapeHtml(avatar || "/images/gasfiter-testimonial.webp")}" alt="${escapeHtml(name)}" loading="lazy" />
+                    <div>
+                      <strong>${escapeHtml(name)}</strong>
+                      <span>${escapeHtml(location)}</span>
+                    </div>
+                  </div>
+                </article>
+              `;
+            })
+            .join("");
+        }
+
+        const dots = document.querySelector("[data-clients-dots]");
+        if (dots) {
+          dots.innerHTML = testimonialsItems
+            .map((_, idx) => `<span class="clients-dot${idx === 0 ? " active" : ""}"></span>`)
+            .join("");
+        }
+      } else if (testimonialsSectionEl) {
+        testimonialsSectionEl.style.display = "none";
       }
 
       const root = document.documentElement;
