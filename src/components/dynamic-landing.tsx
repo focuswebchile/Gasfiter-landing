@@ -652,24 +652,42 @@ const landingStyles = String.raw`
         align-items: stretch;
       }
 
+      [data-services-title] {
+        margin: 0;
+        max-width: 32ch;
+        line-height: 1.06;
+        letter-spacing: -0.01em;
+      }
+
+      .section-subtitle {
+        margin: 12px 0 24px;
+        max-width: 62ch;
+        color: #59677a;
+        font-size: clamp(1rem, 1.4vw, 1.16rem);
+        line-height: 1.45;
+        font-weight: 500;
+      }
+
       .service-card {
         height: 100%;
         display: flex;
         flex-direction: column;
         border-radius: 20px;
+        padding: 20px 20px 16px;
       }
 
       .service-card h3 {
         color: var(--navy);
-        font-size: 2rem;
-        line-height: 0.98;
-        min-height: 2.1em;
+        font-size: clamp(2rem, 2.7vw, 2.55rem);
+        line-height: 1.05;
+        min-height: 2.2em;
       }
 
       .service-card > p {
-        margin-top: 10px;
+        margin-top: 12px;
         color: #475569;
-        min-height: 4.8em;
+        line-height: 1.5;
+        min-height: 4.1em;
       }
 
       .service-icon {
