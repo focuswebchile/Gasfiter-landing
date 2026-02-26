@@ -113,10 +113,10 @@ async function getVersionedSettings(
   supabase: ReturnType<typeof createAdminSupabaseClient>,
   siteId: string,
   mode: "draft" | "published",
-): Promise<{ payload: SettingsPayload; status: "draft" | "published" } | null> {
+): Promise<{ payload: SettingsPayload; status: "draft" | "published"; updatedAt: string | null } | null> {
   const { data, error } = await supabase
     .from("site_versions")
-    .select("status, snapshot, version_number")
+    .select("status, snapshot, version_number, updated_at, created_at")
     .eq("site_id", siteId)
     .eq("status", mode)
     .order("version_number", { ascending: false })
@@ -134,7 +134,11 @@ async function getVersionedSettings(
 
   const parsed = extractSettingsFromSnapshot(data.snapshot as Record<string, unknown> | null);
   if (!parsed) return null;
-  return { payload: parsed, status: mode };
+  return {
+    payload: parsed,
+    status: mode,
+    updatedAt: (data.updated_at as string | null | undefined) ?? (data.created_at as string | null | undefined) ?? null,
+  };
 }
 
 export async function GET(request: Request, context: { params: Promise<{ slug: string }> }) {
@@ -167,10 +171,11 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
           site: {
             slug: site.slug,
             name: site.name,
-            status: versioned.status,
-          },
-          settings: versioned.payload,
+          status: versioned.status,
         },
+        settings: versioned.payload,
+        draftUpdatedAt: versioned.status === "draft" ? versioned.updatedAt : null,
+      },
         {
           headers: {
             "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",

@@ -50,6 +50,11 @@ type MembershipInfo = {
     readOnly: boolean;
   };
 };
+type DraftConflictPayload = {
+  error?: string;
+  message?: string;
+  serverUpdatedAt?: string | null;
+};
 
 const STORAGE_KEY = "gasfiter_panel_v2_state";
 
@@ -203,6 +208,16 @@ export default function StagingWorkflowPanel() {
   const [panelReady, setPanelReady] = useState(false);
   const [autosaving, setAutosaving] = useState(false);
   const [flushingPublish, setFlushingPublish] = useState(false);
+  const [draftUpdatedAt, setDraftUpdatedAt] = useState<string | null>(null);
+  const [draftConflict, setDraftConflict] = useState<{
+    active: boolean;
+    message: string;
+    serverUpdatedAt: string | null;
+  }>({
+    active: false,
+    message: "",
+    serverUpdatedAt: null,
+  });
   const autosaveTimerRef = useRef<number | null>(null);
   const autosaveInFlightRef = useRef(false);
   const autosavePromiseRef = useRef<Promise<void> | null>(null);
@@ -276,6 +291,9 @@ export default function StagingWorkflowPanel() {
       const next = normalizeSettings(updater(prev));
       nextSnapshot = next;
       setDirty(true);
+      if (draftConflict.active) {
+        setDraftConflict({ active: false, message: "", serverUpdatedAt: null });
+      }
       return next;
     });
     if (options?.persistNow && nextSnapshot) {
@@ -325,6 +343,8 @@ export default function StagingWorkflowPanel() {
 
     setSettings(normalizeSettings((payload?.settings ?? {}) as SettingsPayload));
     setMode(nextMode);
+    setDraftUpdatedAt(typeof payload?.draftUpdatedAt === "string" ? payload.draftUpdatedAt : null);
+    setDraftConflict({ active: false, message: "", serverUpdatedAt: null });
     setDirty(false);
     if (!silent) setOk(`Settings cargados en modo ${nextMode}`);
   }, [mode, fetchWithJsonFallback]);
@@ -357,6 +377,15 @@ export default function StagingWorkflowPanel() {
     }
   }, [siteSlug, userId, mode, fetchSettings, fetchVersions]);
 
+  const activateDraftConflict = useCallback((payload?: DraftConflictPayload) => {
+    setDraftConflict({
+      active: true,
+      message: payload?.message || "El draft fue modificado por otro usuario.",
+      serverUpdatedAt: payload?.serverUpdatedAt ?? null,
+    });
+    setAutosaveHint("Conflicto detectado. Recarga borrador.");
+  }, []);
+
   const saveDraftInternal = useCallback(async (options?: {
     silent?: boolean;
     notes?: string;
@@ -367,6 +396,10 @@ export default function StagingWorkflowPanel() {
     if (!snapshot) return setError("Primero usa Cargar panel");
     if (!panelReady) return setError("Primero usa Cargar panel");
     if (!canSaveDraft) return setError("Tu rol no puede guardar draft");
+    if (draftConflict.active) {
+      if (!options?.silent) setError("Conflicto de draft: recarga borrador antes de guardar.");
+      return;
+    }
     if (autosaveInFlightRef.current) {
       if (autosavePromiseRef.current) await autosavePromiseRef.current;
       return;
@@ -393,17 +426,43 @@ export default function StagingWorkflowPanel() {
             userId: userId.trim(),
             notes: options?.notes ?? "Saved from v2 UX panel",
             settings: snapshot,
+            expectedUpdatedAt: draftUpdatedAt ?? null,
           }),
         });
-        const payload = await response.json();
-        if (!response.ok) throw new Error(payload?.error || "Save draft failed");
-        setSettings(normalizeSettings((payload?.settings ?? {}) as SettingsPayload));
+        const payloadUnknown = (await response.json().catch(() => ({}))) as
+          | {
+              error?: string;
+              message?: string;
+              draftUpdatedAt?: string | null;
+              settings?: SettingsPayload;
+              version?: { number?: number };
+              serverUpdatedAt?: string | null;
+            }
+          | DraftConflictPayload;
+        if (response.status === 409 && (payloadUnknown as DraftConflictPayload)?.error === "DRAFT_OUTDATED") {
+          activateDraftConflict(payloadUnknown as DraftConflictPayload);
+          if (!silent) setError((payloadUnknown as DraftConflictPayload).message || "Conflicto de draft.");
+          return;
+        }
+        if (!response.ok) throw new Error((payloadUnknown as { error?: string })?.error || "Save draft failed");
+        const payload = payloadUnknown as {
+          settings?: SettingsPayload;
+          version?: { number?: number };
+          draftUpdatedAt?: string | null;
+        };
+        setSettings(normalizeSettings((payload.settings ?? {}) as SettingsPayload));
+        setDraftUpdatedAt(
+          typeof (payload as { draftUpdatedAt?: unknown }).draftUpdatedAt === "string"
+            ? ((payload as { draftUpdatedAt?: string }).draftUpdatedAt ?? null)
+            : null,
+        );
         setMode("draft");
+        setDraftConflict({ active: false, message: "", serverUpdatedAt: null });
         setDirty(false);
         if (silent) {
-          setAutosaveHint(`Autosave OK (v${payload?.version?.number ?? "?"})`);
+          setAutosaveHint(`Autosave OK (v${payload.version?.number ?? "?"})`);
         } else {
-          setOk(`Draft guardado (v${payload?.version?.number ?? "?"})`);
+          setOk(`Draft guardado (v${payload.version?.number ?? "?"})`);
         }
         await fetchVersions(true);
       } catch (error) {
@@ -424,7 +483,7 @@ export default function StagingWorkflowPanel() {
     autosavePromiseRef.current = run;
     await run;
     autosavePromiseRef.current = null;
-  }, [userId, settings, panelReady, canSaveDraft, endpointBase, fetchVersions]);
+  }, [userId, settings, panelReady, canSaveDraft, draftConflict.active, endpointBase, fetchVersions, draftUpdatedAt, activateDraftConflict]);
 
   const saveDraft = async () => {
     await saveDraftInternal({ silent: false, notes: "Saved from v2 UX panel" });
@@ -432,6 +491,7 @@ export default function StagingWorkflowPanel() {
 
   const flushPendingAutosave = useCallback(async () => {
     if (!panelReady || !canSaveDraft) return;
+    if (draftConflict.active) return;
     if (autosaveTimerRef.current) {
       window.clearTimeout(autosaveTimerRef.current);
       autosaveTimerRef.current = null;
@@ -442,16 +502,23 @@ export default function StagingWorkflowPanel() {
       setAutosaveHint("Esperando autosave en curso...");
       await autosavePromiseRef.current;
     }
-  }, [panelReady, canSaveDraft, saveDraftInternal]);
+  }, [panelReady, canSaveDraft, draftConflict.active, saveDraftInternal]);
 
   const publish = async () => {
     if (!userId.trim()) return setError("Ingresa userId para publicar");
     if (!panelReady) return setError("Primero usa Cargar panel");
     if (!canPublish) return setError("Tu rol no puede publicar");
+    if (draftConflict.active) return setError("Conflicto de draft: recarga borrador antes de publicar.");
 
-    setFlushingPublish(true);
-    setAutosaveHint("Esperando guardado...");
-    await flushPendingAutosave();
+    try {
+      setFlushingPublish(true);
+      setAutosaveHint("Esperando guardado...");
+      await flushPendingAutosave();
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "No se pudo completar autosave antes de publicar");
+      setFlushingPublish(false);
+      return;
+    }
     setFlushingPublish(false);
 
     setBusy(true);
@@ -463,14 +530,43 @@ export default function StagingWorkflowPanel() {
           "Content-Type": "application/json",
           "x-user-id": userId.trim(),
         },
-        body: JSON.stringify({ userId: userId.trim(), notes: "Published from v2 UX panel" }),
+        body: JSON.stringify({
+          userId: userId.trim(),
+          notes: "Published from v2 UX panel",
+          expectedUpdatedAt: draftUpdatedAt ?? null,
+        }),
       });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload?.error || "Publish failed");
-      setSettings(normalizeSettings((payload?.settings ?? {}) as SettingsPayload));
+      const payloadUnknown = (await response.json().catch(() => ({}))) as
+        | {
+            error?: string;
+            message?: string;
+            settings?: SettingsPayload;
+            version?: { number?: number };
+            draftUpdatedAt?: string | null;
+            serverUpdatedAt?: string | null;
+          }
+        | DraftConflictPayload;
+      if (response.status === 409 && (payloadUnknown as DraftConflictPayload)?.error === "DRAFT_OUTDATED") {
+        activateDraftConflict(payloadUnknown as DraftConflictPayload);
+        setError((payloadUnknown as DraftConflictPayload).message || "Conflicto de draft.");
+        return;
+      }
+      if (!response.ok) throw new Error((payloadUnknown as { error?: string })?.error || "Publish failed");
+      const payload = payloadUnknown as {
+        settings?: SettingsPayload;
+        version?: { number?: number };
+        draftUpdatedAt?: string | null;
+      };
+      setSettings(normalizeSettings((payload.settings ?? {}) as SettingsPayload));
+      setDraftUpdatedAt(
+        typeof (payload as { draftUpdatedAt?: unknown }).draftUpdatedAt === "string"
+          ? ((payload as { draftUpdatedAt?: string }).draftUpdatedAt ?? null)
+          : draftUpdatedAt,
+      );
       setMode("published");
+      setDraftConflict({ active: false, message: "", serverUpdatedAt: null });
       setDirty(false);
-      setOk(`Publicado (v${payload?.version?.number ?? "?"})`);
+      setOk(`Publicado (v${payload.version?.number ?? "?"})`);
       await fetchVersions(true);
     } catch (error) {
       setError(error instanceof Error ? error.message : "Error publicando");
@@ -478,6 +574,20 @@ export default function StagingWorkflowPanel() {
       setBusy(false);
     }
   };
+
+  const reloadDraftAfterConflict = useCallback(async () => {
+    if (!panelReady) return;
+    setBusy(true);
+    try {
+      await Promise.all([fetchSettings("draft", true), fetchVersions(true)]);
+      setDraftConflict({ active: false, message: "", serverUpdatedAt: null });
+      setOk("Borrador recargado");
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "No se pudo recargar borrador");
+    } finally {
+      setBusy(false);
+    }
+  }, [panelReady, fetchSettings, fetchVersions]);
 
   const rollback = async (versionNumber: number) => {
     if (!userId.trim()) return setError("Ingresa userId para rollback");
@@ -535,6 +645,10 @@ export default function StagingWorkflowPanel() {
       setAutosaveHint(panelReady ? "Sin cambios pendientes" : "Panel no cargado");
       return;
     }
+    if (draftConflict.active) {
+      setAutosaveHint("Autosave pausado por conflicto");
+      return;
+    }
     if (!canSaveDraft) {
       setAutosaveHint("Sin permisos para autosave");
       return;
@@ -554,7 +668,7 @@ export default function StagingWorkflowPanel() {
         autosaveTimerRef.current = null;
       }
     };
-  }, [panelReady, dirty, canSaveDraft, busy, autosaving, saveDraftInternal]);
+  }, [panelReady, dirty, canSaveDraft, busy, autosaving, draftConflict.active, saveDraftInternal]);
 
   const renderSectionEditor = () => {
     if (!settings) return <p className="wf-muted">Carga panel para editar secciones.</p>;
@@ -820,11 +934,22 @@ export default function StagingWorkflowPanel() {
             <button
               className="wf-btn wf-btn-primary"
               onClick={publish}
-              disabled={busy || autosaving || flushingPublish || !panelReady || !canPublish}
+              disabled={busy || autosaving || flushingPublish || draftConflict.active || !panelReady || !canPublish}
             >
               {flushingPublish ? "Esperando guardado..." : "Publicar"}
             </button>
             {message ? <span className={`wf-msg ${message.type === "ok" ? "wf-ok" : "wf-err"}`}>{message.text}</span> : null}
+            {draftConflict.active ? (
+              <>
+                <span className="wf-msg wf-err">
+                  {draftConflict.message}
+                  {draftConflict.serverUpdatedAt ? ` (Último guardado: ${draftConflict.serverUpdatedAt})` : ""}
+                </span>
+                <button className="wf-btn wf-btn-soft" onClick={reloadDraftAfterConflict} disabled={busy}>
+                  Recargar borrador
+                </button>
+              </>
+            ) : null}
           </div>
 
           {view === "sections" ? (
@@ -926,6 +1051,8 @@ export default function StagingWorkflowPanel() {
                   mode,
                   role: membership?.role ?? null,
                   panelReady,
+                  draftUpdatedAt,
+                  draftConflict: draftConflict.active,
                   heroTitle: typeof heroSection?.data?.title === "string" ? heroSection.data.title : "",
                   sections: settings?.content?.sections?.length ?? 0,
                   colors: settings?.colors ?? {},

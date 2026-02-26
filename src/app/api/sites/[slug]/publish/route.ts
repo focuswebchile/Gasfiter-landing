@@ -16,6 +16,7 @@ type PublishBody = {
   notes?: string;
   draftVersionId?: string;
   draftVersionNumber?: number;
+  expectedUpdatedAt?: string | null;
 };
 
 export async function POST(request: Request, context: { params: Promise<{ slug: string }> }) {
@@ -30,10 +31,14 @@ export async function POST(request: Request, context: { params: Promise<{ slug: 
     const supabase = createAdminSupabaseClient();
     const site = await getSiteBySlug(supabase, slug);
     await requireSiteRole(supabase, site.id, userId, ["owner", "admin"]);
+    const expectedUpdatedAt =
+      typeof body.expectedUpdatedAt === "string" && body.expectedUpdatedAt.trim()
+        ? body.expectedUpdatedAt.trim()
+        : null;
 
     let draftQuery = supabase
       .from("site_versions")
-      .select("id, version_number, snapshot, created_by")
+      .select("*")
       .eq("site_id", site.id)
       .eq("status", "draft");
 
@@ -50,7 +55,32 @@ export async function POST(request: Request, context: { params: Promise<{ slug: 
       return NextResponse.json({ error: "Unable to fetch draft version", details: sourceError.message }, { status: 500 });
     }
     if (!sourceDraft) {
+      if (expectedUpdatedAt !== null) {
+        return NextResponse.json(
+          {
+            error: "DRAFT_OUTDATED",
+            message: "El draft fue modificado por otro usuario.",
+            serverUpdatedAt: null,
+          },
+          { status: 409 },
+        );
+      }
       return NextResponse.json({ error: "No draft version found to publish" }, { status: 404 });
+    }
+
+    const serverUpdatedAt =
+      (sourceDraft as { updated_at?: string; created_at?: string }).updated_at ??
+      (sourceDraft as { updated_at?: string; created_at?: string }).created_at ??
+      null;
+    if ((expectedUpdatedAt ?? null) !== (serverUpdatedAt ?? null)) {
+      return NextResponse.json(
+        {
+          error: "DRAFT_OUTDATED",
+          message: "El draft fue modificado por otro usuario.",
+          serverUpdatedAt,
+        },
+        { status: 409 },
+      );
     }
 
     const { error: archiveError } = await supabase
@@ -102,6 +132,7 @@ export async function POST(request: Request, context: { params: Promise<{ slug: 
           number: published.version_number,
           sourceDraftNumber: sourceDraft.version_number,
         },
+        draftUpdatedAt: serverUpdatedAt,
       },
       {
         headers: {

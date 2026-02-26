@@ -17,6 +17,7 @@ type SaveDraftBody = {
   userId?: string;
   notes?: string;
   settings?: unknown;
+  expectedUpdatedAt?: string | null;
 };
 
 export async function POST(request: Request, context: { params: Promise<{ slug: string }> }) {
@@ -50,7 +51,7 @@ export async function POST(request: Request, context: { params: Promise<{ slug: 
 
     const { data: latestDraft, error: draftError } = await supabase
       .from("site_versions")
-      .select("id, version_number, snapshot")
+      .select("*")
       .eq("site_id", site.id)
       .eq("status", "draft")
       .order("version_number", { ascending: false })
@@ -61,9 +62,49 @@ export async function POST(request: Request, context: { params: Promise<{ slug: 
       return NextResponse.json({ error: "Unable to fetch latest draft", details: draftError.message }, { status: 500 });
     }
 
-    let persistedVersion: { id: string; version_number: number } | null = null;
+    let persistedVersion:
+      | {
+          id?: string;
+          version_number?: number;
+          updated_at?: string;
+          created_at?: string;
+        }
+      | null = null;
+
+    const expectedUpdatedAt =
+      typeof body.expectedUpdatedAt === "string" && body.expectedUpdatedAt.trim()
+        ? body.expectedUpdatedAt.trim()
+        : null;
+    const serverUpdatedAt =
+      latestDraft && typeof latestDraft === "object"
+        ? ((latestDraft as { updated_at?: string; created_at?: string }).updated_at ??
+          (latestDraft as { updated_at?: string; created_at?: string }).created_at ??
+          null)
+        : null;
+
+    if (!latestDraft?.id && expectedUpdatedAt !== null) {
+      return NextResponse.json(
+        {
+          error: "DRAFT_OUTDATED",
+          message: "El draft fue modificado por otro usuario.",
+          serverUpdatedAt: null,
+        },
+        { status: 409 },
+      );
+    }
 
     if (latestDraft?.id) {
+      if ((expectedUpdatedAt ?? null) !== (serverUpdatedAt ?? null)) {
+        return NextResponse.json(
+          {
+            error: "DRAFT_OUTDATED",
+            message: "El draft fue modificado por otro usuario.",
+            serverUpdatedAt,
+          },
+          { status: 409 },
+        );
+      }
+
       const { data, error } = await supabase
         .from("site_versions")
         .update({
@@ -72,7 +113,7 @@ export async function POST(request: Request, context: { params: Promise<{ slug: 
           notes: body.notes ?? "Draft updated",
         })
         .eq("id", latestDraft.id)
-        .select("id, version_number")
+        .select("*")
         .single();
 
       if (error) {
@@ -91,7 +132,7 @@ export async function POST(request: Request, context: { params: Promise<{ slug: 
           created_by: userId,
           notes: body.notes ?? "Draft created",
         })
-        .select("id, version_number")
+        .select("*")
         .single();
 
       if (error) {
@@ -115,9 +156,13 @@ export async function POST(request: Request, context: { params: Promise<{ slug: 
         },
         settings,
         version: {
-          id: persistedVersion?.id,
-          number: persistedVersion?.version_number,
+          id: (persistedVersion as { id?: string } | null)?.id,
+          number: (persistedVersion as { version_number?: number } | null)?.version_number,
         },
+        draftUpdatedAt:
+          (persistedVersion as { updated_at?: string; created_at?: string } | null)?.updated_at ??
+          (persistedVersion as { updated_at?: string; created_at?: string } | null)?.created_at ??
+          null,
       },
       {
         headers: {
