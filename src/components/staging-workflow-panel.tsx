@@ -55,6 +55,10 @@ type DraftConflictPayload = {
   message?: string;
   serverUpdatedAt?: string | null;
 };
+type ToastState = {
+  type: "success" | "error" | "info";
+  text: string;
+};
 
 const STORAGE_KEY = "gasfiter_panel_v2_state";
 
@@ -106,6 +110,17 @@ const panelStyles = String.raw`
   .wf-step{display:flex;gap:8px;align-items:flex-start;padding:8px 10px;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0}
   .wf-step-num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:999px;background:#dbeafe;color:#1d4ed8;font-size:12px;font-weight:800}
   .wf-status{display:flex;gap:8px;flex-wrap:wrap}
+  .wf-sticky{position:sticky;top:10px;z-index:30;border:1px solid #dbe3f0;background:#f8fafc;padding:10px 12px;border-radius:12px;margin-bottom:12px;display:flex;gap:8px;align-items:center;justify-content:space-between}
+  .wf-sticky strong{font-size:13px}
+  .wf-sticky small{color:#64748b}
+  .wf-sticky-ok{border-color:#bbf7d0;background:#f0fdf4}
+  .wf-sticky-warn{border-color:#fde68a;background:#fffbeb}
+  .wf-sticky-err{border-color:#fecaca;background:#fef2f2}
+  .wf-toast-stack{position:fixed;right:16px;bottom:16px;z-index:60;display:grid;gap:8px;max-width:min(420px,calc(100vw - 32px))}
+  .wf-toast{border-radius:10px;padding:10px 12px;font-size:13px;font-weight:700;border:1px solid}
+  .wf-toast-success{background:#dcfce7;border-color:#86efac;color:#166534}
+  .wf-toast-error{background:#fee2e2;border-color:#fecaca;color:#991b1b}
+  .wf-toast-info{background:#e0ebff;border-color:#bfd1f4;color:#1e3a8a}
 `;
 
 function detectEnvBadge(slug: string): "DEV" | "STAGING" | "PROD" {
@@ -199,7 +214,7 @@ export default function StagingWorkflowPanel() {
   const [settings, setSettings] = useState<SettingsPayload | null>(null);
   const [versions, setVersions] = useState<VersionItem[]>([]);
   const [membership, setMembership] = useState<MembershipInfo | null>(null);
-  const [message, setMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+  const [toast, setToast] = useState<ToastState | null>(null);
   const [busy, setBusy] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [autosaveHint, setAutosaveHint] = useState("Sin cambios pendientes");
@@ -268,8 +283,11 @@ export default function StagingWorkflowPanel() {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ siteSlug, userId, mode }));
   }, [siteSlug, userId, mode]);
 
-  const setError = (text: string) => setMessage({ type: "err", text });
-  const setOk = (text: string) => setMessage({ type: "ok", text });
+  const showToast = useCallback((nextToast: ToastState | null) => {
+    setToast(nextToast);
+  }, []);
+  const setError = useCallback((text: string) => showToast({ type: "error", text }), [showToast]);
+  const setOk = useCallback((text: string) => showToast({ type: "success", text }), [showToast]);
 
   const canSaveDraft = membership?.permissions.canSaveDraft ?? false;
   const canPublish = membership?.permissions.canPublish ?? false;
@@ -278,6 +296,12 @@ export default function StagingWorkflowPanel() {
   const editingLocked = publishedReadOnly || busy || autosaving || flushingPublish || draftConflict.active;
   const latestPublishedVersion = versions.find((version) => version.status === "published") ?? null;
   const latestDraftVersion = versions.find((version) => version.status === "draft") ?? null;
+
+  useEffect(() => {
+    if (!toast) return;
+    const timer = window.setTimeout(() => setToast(null), 3200);
+    return () => window.clearTimeout(timer);
+  }, [toast]);
 
   const heroSection = settings ? getSection(settings, "hero") : null;
   const servicesSection = settings ? getSection(settings, "services") : null;
@@ -354,7 +378,7 @@ export default function StagingWorkflowPanel() {
       settings: normalized,
       draftUpdatedAt: typeof payload?.draftUpdatedAt === "string" ? payload.draftUpdatedAt : null,
     };
-  }, [mode, fetchWithJsonFallback]);
+  }, [mode, fetchWithJsonFallback, setOk]);
 
   const fetchVersions = useCallback(async (silent = false) => {
     const { response, payload } = await fetchWithJsonFallback(
@@ -364,14 +388,14 @@ export default function StagingWorkflowPanel() {
     setVersions(Array.isArray(payload?.versions) ? payload.versions : []);
     setMembership((payload?.membership ?? null) as MembershipInfo | null);
     if (!silent) setOk("Versiones cargadas");
-  }, [fetchWithJsonFallback, userId]);
+  }, [fetchWithJsonFallback, userId, setOk]);
 
   const loadPanel = useCallback(async () => {
     if (!siteSlug.trim()) return setError("Ingresa site slug");
     if (!userId.trim()) return setError("Ingresa userId para cargar panel");
 
     setBusy(true);
-    setMessage(null);
+    setToast(null);
     try {
       await Promise.all([fetchSettings(mode, true), fetchVersions(true)]);
       setPanelReady(true);
@@ -382,7 +406,7 @@ export default function StagingWorkflowPanel() {
     } finally {
       setBusy(false);
     }
-  }, [siteSlug, userId, mode, fetchSettings, fetchVersions]);
+  }, [siteSlug, userId, mode, fetchSettings, fetchVersions, setError, setOk]);
 
   const activateDraftConflict = useCallback((payload?: DraftConflictPayload) => {
     setDraftConflict({
@@ -420,7 +444,7 @@ export default function StagingWorkflowPanel() {
         setAutosaveHint("Autosave guardando draft...");
       } else {
         setBusy(true);
-        setMessage(null);
+        setToast(null);
       }
       try {
         const response = await fetch(`${endpointBase}/save-draft`, {
@@ -490,7 +514,7 @@ export default function StagingWorkflowPanel() {
     autosavePromiseRef.current = run;
     await run;
     autosavePromiseRef.current = null;
-  }, [userId, settings, panelReady, canSaveDraft, draftConflict.active, endpointBase, fetchVersions, draftUpdatedAt, activateDraftConflict]);
+  }, [userId, settings, panelReady, canSaveDraft, draftConflict.active, endpointBase, fetchVersions, draftUpdatedAt, activateDraftConflict, setError, setOk]);
 
   const saveDraft = async () => {
     await saveDraftInternal({ silent: false, notes: "Saved from v2 UX panel" });
@@ -502,7 +526,7 @@ export default function StagingWorkflowPanel() {
     if (!canSaveDraft) return setError("Tu rol no puede editar borrador");
 
     setBusy(true);
-    setMessage(null);
+    setToast(null);
     try {
       const draftLoaded = await fetchSettings("draft", true);
       const hasDraft = typeof draftLoaded?.draftUpdatedAt === "string" && !!draftLoaded.draftUpdatedAt;
@@ -552,7 +576,7 @@ export default function StagingWorkflowPanel() {
     } finally {
       setBusy(false);
     }
-  }, [userId, panelReady, canSaveDraft, fetchSettings, endpointBase, settings, activateDraftConflict, fetchVersions]);
+  }, [userId, panelReady, canSaveDraft, fetchSettings, endpointBase, settings, activateDraftConflict, fetchVersions, setError, setOk]);
 
   const flushPendingAutosave = useCallback(async () => {
     if (!panelReady || !canSaveDraft) return;
@@ -587,7 +611,7 @@ export default function StagingWorkflowPanel() {
     setFlushingPublish(false);
 
     setBusy(true);
-    setMessage(null);
+    setToast(null);
     try {
       const response = await fetch(`${endpointBase}/publish`, {
         method: "POST",
@@ -652,7 +676,7 @@ export default function StagingWorkflowPanel() {
     } finally {
       setBusy(false);
     }
-  }, [panelReady, fetchSettings, fetchVersions]);
+  }, [panelReady, fetchSettings, fetchVersions, setError, setOk]);
 
   const rollback = async (versionNumber: number) => {
     if (!userId.trim()) return setError("Ingresa userId para rollback");
@@ -660,7 +684,7 @@ export default function StagingWorkflowPanel() {
     if (!canRollback) return setError("Tu rol no puede hacer rollback");
 
     setBusy(true);
-    setMessage(null);
+    setToast(null);
     try {
       const response = await fetch(`${endpointBase}/rollback`, {
         method: "POST",
@@ -939,6 +963,53 @@ export default function StagingWorkflowPanel() {
     );
   };
 
+  const stickyState = useMemo(() => {
+    if (draftConflict.active) {
+      return {
+        className: "wf-sticky wf-sticky-err",
+        title: "Conflicto de borrador",
+        detail: draftConflict.serverUpdatedAt
+          ? `Último guardado servidor: ${draftConflict.serverUpdatedAt}`
+          : draftConflict.message,
+      };
+    }
+    if (!panelReady) {
+      return {
+        className: "wf-sticky wf-sticky-warn",
+        title: "Panel no cargado",
+        detail: "Define slug + user UUID y haz click en Cargar panel.",
+      };
+    }
+    if (autosaving || flushingPublish) {
+      return {
+        className: "wf-sticky wf-sticky-warn",
+        title: flushingPublish ? "Esperando autosave para publicar..." : "Autosaving...",
+        detail: autosaveHint,
+      };
+    }
+    if (dirty) {
+      return {
+        className: "wf-sticky wf-sticky-warn",
+        title: "Draft con cambios pendientes",
+        detail: "Se guardará automáticamente o puedes usar Guardar Draft.",
+      };
+    }
+    return {
+      className: "wf-sticky wf-sticky-ok",
+      title: "Draft guardado",
+      detail: autosaveHint,
+    };
+  }, [
+    draftConflict.active,
+    draftConflict.message,
+    draftConflict.serverUpdatedAt,
+    panelReady,
+    autosaving,
+    flushingPublish,
+    autosaveHint,
+    dirty,
+  ]);
+
   return (
     <main className="wf-shell">
       <style dangerouslySetInnerHTML={{ __html: panelStyles }} />
@@ -954,6 +1025,11 @@ export default function StagingWorkflowPanel() {
           {membership?.role ? <span className="wf-badge wf-badge-role">ROLE: {membership.role.toUpperCase()}</span> : null}
         </div>
       </header>
+
+      <div className={stickyState.className}>
+        <strong>{stickyState.title}</strong>
+        <small>{stickyState.detail}</small>
+      </div>
 
       <div className="wf-layout">
         <aside className="wf-card wf-sidebar">
@@ -1020,7 +1096,6 @@ export default function StagingWorkflowPanel() {
                 Editar borrador
               </button>
             ) : null}
-            {message ? <span className={`wf-msg ${message.type === "ok" ? "wf-ok" : "wf-err"}`}>{message.text}</span> : null}
             {draftConflict.active ? (
               <>
                 <span className="wf-msg wf-err">
@@ -1146,6 +1221,22 @@ export default function StagingWorkflowPanel() {
           </div>
         </section>
       </div>
+
+      {toast ? (
+        <div className="wf-toast-stack" role="status" aria-live="polite">
+          <div
+            className={`wf-toast ${
+              toast.type === "success"
+                ? "wf-toast-success"
+                : toast.type === "error"
+                  ? "wf-toast-error"
+                  : "wf-toast-info"
+            }`}
+          >
+            {toast.text}
+          </div>
+        </div>
+      ) : null}
     </main>
   );
 }
