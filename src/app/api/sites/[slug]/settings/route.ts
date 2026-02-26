@@ -186,6 +186,27 @@ async function getVersionedSettings(
   };
 }
 
+async function hasAnyVersionedRows(
+  supabase: ReturnType<typeof createAdminSupabaseClient>,
+  siteId: string,
+): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("site_versions")
+    .select("id")
+    .eq("site_id", siteId)
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    const message = `${error.message ?? ""} ${error.details ?? ""} ${error.hint ?? ""}`.toLowerCase();
+    const tableMissing = error.code === "42P01" || message.includes("site_versions");
+    if (tableMissing) return false;
+    throw new Error(`Unable to inspect site_versions: ${error.message}`);
+  }
+
+  return Boolean(data?.id);
+}
+
 async function getLatestDraftUpdatedAt(
   supabase: ReturnType<typeof createAdminSupabaseClient>,
   siteId: string,
@@ -253,6 +274,24 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
           draftUpdatedAt: resolvedDraftUpdatedAt,
         },
         {
+          headers: {
+            "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+          },
+        },
+      );
+    }
+
+    // If a site already uses versioning, never silently fall back to legacy tables.
+    // This prevents serving stale content when snapshots exist but mode lookup fails.
+    const siteHasVersions = await hasAnyVersionedRows(supabase, site.id);
+    if (siteHasVersions) {
+      return NextResponse.json(
+        {
+          error: `No ${mode} snapshot found for this site`,
+          details: "site_versions exists; refusing legacy fallback to avoid stale content",
+        },
+        {
+          status: 409,
           headers: {
             "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
           },
