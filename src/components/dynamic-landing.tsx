@@ -1462,7 +1462,7 @@ const landingStyles = String.raw`
 const landingMarkup = String.raw`
     <nav class="top-nav">
       <div class="top-nav-inner">
-        <a class="brand" href="#inicio">Gasfiter 24/7</a>
+        <a class="brand" href="#inicio" data-default-brand="Gasfiter 24/7">Gasfiter 24/7</a>
         <div class="nav-links">
           <a href="#inicio">Inicio</a>
           <a href="#servicios">Servicios</a>
@@ -1895,6 +1895,15 @@ type Settings = {
     baseSize?: string;
     lineHeight?: string;
   };
+  branding?: {
+    logoUrl?: string;
+    faviconUrl?: string;
+    contact?: {
+      whatsapp?: string;
+      email?: string;
+      address?: string;
+    };
+  };
   content?: {
     sections?: Array<{
       id?: string;
@@ -2214,6 +2223,42 @@ export default function DynamicLanding() {
       const sectionTestimonials = findSection("testimonials");
       const sectionUrgency = findSection("urgency_banner");
       const sectionContact = findSection("contact_banner");
+      const branding = settings.branding && typeof settings.branding === "object" ? settings.branding : {};
+      const brandingContact =
+        branding.contact && typeof branding.contact === "object" ? branding.contact : {};
+
+      const brandLink = document.querySelector<HTMLAnchorElement>(".brand");
+      if (brandLink) {
+        const logoUrl = typeof branding.logoUrl === "string" ? branding.logoUrl.trim() : "";
+        if (logoUrl) {
+          brandLink.innerHTML = `<img src="${escapeHtml(logoUrl)}" alt="Logo" style="height:42px; width:auto; object-fit:contain;" />`;
+        } else {
+          const fallbackText = brandLink.getAttribute("data-default-brand") || "Gasfiter 24/7";
+          brandLink.textContent = fallbackText;
+        }
+      }
+
+      const faviconUrl = typeof branding.faviconUrl === "string" ? branding.faviconUrl.trim() : "";
+      if (faviconUrl) {
+        let faviconEl = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
+        if (!faviconEl) {
+          faviconEl = document.createElement("link");
+          faviconEl.rel = "icon";
+          document.head.appendChild(faviconEl);
+        }
+        faviconEl.href = faviconUrl;
+      }
+
+      const whatsappHref =
+        typeof brandingContact.whatsapp === "string" && brandingContact.whatsapp.trim()
+          ? brandingContact.whatsapp.trim()
+          : "";
+      if (whatsappHref) {
+        const waLinks = document.querySelectorAll<HTMLAnchorElement>('a[href*="wa.me"]');
+        waLinks.forEach((link) => {
+          link.href = whatsappHref;
+        });
+      }
 
       const legacyHero = content.hero && typeof content.hero === "object" ? content.hero : {};
       const sectionHeroData = sectionHero && typeof sectionHero === "object" ? sectionHero.data : {};

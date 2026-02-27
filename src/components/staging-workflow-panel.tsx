@@ -25,6 +25,15 @@ type Section = {
 type SettingsPayload = {
   colors?: Record<string, string | undefined>;
   typography?: Record<string, string | undefined>;
+  branding?: {
+    logoUrl?: string;
+    faviconUrl?: string;
+    contact?: {
+      whatsapp?: string;
+      email?: string;
+      address?: string;
+    };
+  };
   content?: {
     hero?: {
       title?: string;
@@ -198,6 +207,15 @@ function detectEnvBadge(slug: string): "DEV" | "STAGING" | "PROD" {
   return "DEV";
 }
 
+function isHexColor(value: string) {
+  return /^#([a-f0-9]{3}|[a-f0-9]{6})$/i.test(value.trim());
+}
+
+function normalizeColorValue(value: string) {
+  const trimmed = value.trim();
+  return trimmed.startsWith("#") ? trimmed : `#${trimmed}`;
+}
+
 function sortByOrder<T extends { order: number }>(items: T[]) {
   return [...items].sort((a, b) => a.order - b.order);
 }
@@ -351,6 +369,7 @@ export default function StagingWorkflowPanel() {
   const [actionLog, setActionLog] = useState<ActionLogItem[]>([]);
   const [heroDiff, setHeroDiff] = useState<HeroDiffResult | null>(null);
   const [loadingDiff, setLoadingDiff] = useState(false);
+  const [uploadingAsset, setUploadingAsset] = useState<"logo" | "favicon" | null>(null);
 
   const baseUrl = useMemo(() => {
     if (typeof window === "undefined") {
@@ -952,6 +971,54 @@ export default function StagingWorkflowPanel() {
     const url = `${endpointBase}/settings?mode=published&t=${Date.now()}`;
     if (typeof window !== "undefined") window.open(url, "_blank", "noopener,noreferrer");
   };
+
+  const uploadBrandingAsset = async (assetType: "logo" | "favicon", file: File | null) => {
+      if (!file) return;
+      if (!panelReady) return setError("Primero usa Cargar panel");
+      if (!userId.trim()) return setError("Ingresa userId para subir archivos");
+      if (!canSaveDraft) return setError("Tu rol no puede editar estilo");
+      if (publishedReadOnly) return setError("Activa modo draft para editar estilo");
+
+      setUploadingAsset(assetType);
+      try {
+        const form = new FormData();
+        form.append("userId", userId.trim());
+        form.append("assetType", assetType);
+        form.append("file", file);
+
+        const response = await fetch(`${endpointBase}/branding-upload`, {
+          method: "POST",
+          body: form,
+        });
+        const payload = (await response.json().catch(() => ({}))) as {
+          error?: string;
+          details?: string;
+          url?: string;
+        };
+        if (!response.ok || !payload.url) {
+          throw new Error(payload.error || payload.details || "No se pudo subir archivo");
+        }
+
+        updateSettings(
+          (prev) => ({
+            ...prev,
+            branding: {
+              ...(prev.branding ?? {}),
+              [assetType === "logo" ? "logoUrl" : "faviconUrl"]: payload.url,
+            },
+          }),
+          {
+            persistNow: true,
+            note: `Autosave: ${assetType} updated`,
+          },
+        );
+        setOk(`${assetType === "logo" ? "Logo" : "Favicon"} subido`);
+      } catch (error) {
+        setError(error instanceof Error ? error.message : "Upload failed");
+      } finally {
+        setUploadingAsset(null);
+      }
+    };
 
   const reorderSections = (draggedId: string, targetId: string) => {
     updateSettings((prev) => {
@@ -2350,34 +2417,246 @@ export default function StagingWorkflowPanel() {
     if (!settings) return <p className="wf-muted">Carga panel para editar estilo.</p>;
     const colors = settings.colors ?? {};
     const typography = settings.typography ?? {};
+    const branding = settings.branding ?? {};
+    const contact = branding.contact ?? {};
+
+    const updateColor = (key: "primary" | "secondary" | "background" | "text", value: string) => {
+      const normalized = normalizeColorValue(value);
+      if (!isHexColor(normalized)) {
+        setError(`Color inválido para ${key}. Usa formato #RRGGBB`);
+        return;
+      }
+      updateSettings((prev) => ({
+        ...prev,
+        colors: { ...(prev.colors ?? {}), [key]: normalized },
+      }));
+    };
 
     return (
       <div className="wf-sections">
         <h3 className="wf-h3">Colores</h3>
         <div className="wf-grid2">
           {(["primary", "secondary", "background", "text"] as const).map((key) => (
-            <input
-              key={key}
-              className="wf-input"
-              disabled={editingLocked}
-              placeholder={key}
-              value={colors[key] ?? ""}
-              onChange={(e) => updateSettings((prev) => ({ ...prev, colors: { ...(prev.colors ?? {}), [key]: e.target.value } }))}
-            />
+            <div key={key} className="wf-row">
+              <input
+                type="color"
+                className="wf-input"
+                disabled={editingLocked}
+                value={isHexColor(colors[key] ?? "") ? (colors[key] as string) : "#000000"}
+                onChange={(e) => updateColor(key, e.target.value)}
+                style={{ minWidth: 60, maxWidth: 72, padding: 4 }}
+              />
+              <input
+                className="wf-input"
+                disabled={editingLocked}
+                placeholder={`${key} (#RRGGBB)`}
+                value={colors[key] ?? ""}
+                onChange={(e) =>
+                  updateSettings((prev) => ({
+                    ...prev,
+                    colors: { ...(prev.colors ?? {}), [key]: e.target.value },
+                  }))
+                }
+                onBlur={(e) => {
+                  if (!e.target.value.trim()) return;
+                  updateColor(key, e.target.value);
+                }}
+              />
+            </div>
           ))}
         </div>
         <h3 className="wf-h3">Tipografía</h3>
         <div className="wf-grid2">
-          {(["font", "fontFamily", "baseSize", "lineHeight"] as const).map((key) => (
+          <select
+            className="wf-select"
+            disabled={editingLocked}
+            value={typography.fontFamily ?? ""}
+            onChange={(e) =>
+              updateSettings((prev) => ({
+                ...prev,
+                typography: {
+                  ...(prev.typography ?? {}),
+                  fontFamily: e.target.value,
+                  font: e.target.value,
+                },
+              }))
+            }
+          >
+            <option value="">Selecciona tipografía</option>
+            <option value="Inter">Inter</option>
+            <option value="Poppins">Poppins</option>
+            <option value="Roboto">Roboto</option>
+            <option value="Montserrat">Montserrat</option>
+            <option value="Barlow Condensed">Barlow Condensed</option>
+          </select>
+          <input
+            className="wf-input"
+            disabled={editingLocked}
+            placeholder="font URL u override"
+            value={typography.font ?? ""}
+            onChange={(e) =>
+              updateSettings((prev) => ({
+                ...prev,
+                typography: { ...(prev.typography ?? {}), font: e.target.value },
+              }))
+            }
+          />
+          <input
+            className="wf-input"
+            disabled={editingLocked}
+            placeholder="baseSize (ej: 16px)"
+            value={typography.baseSize ?? ""}
+            onChange={(e) =>
+              updateSettings((prev) => ({
+                ...prev,
+                typography: { ...(prev.typography ?? {}), baseSize: e.target.value },
+              }))
+            }
+            onBlur={(e) => {
+              const v = e.target.value.trim();
+              if (v && !/^\d+(\.\d+)?px$/i.test(v)) {
+                setError("baseSize debe ser en px, por ejemplo 16px");
+              }
+            }}
+          />
+          <input
+            className="wf-input"
+            disabled={editingLocked}
+            placeholder="lineHeight (ej: 1.5)"
+            value={typography.lineHeight ?? ""}
+            onChange={(e) =>
+              updateSettings((prev) => ({
+                ...prev,
+                typography: { ...(prev.typography ?? {}), lineHeight: e.target.value },
+              }))
+            }
+            onBlur={(e) => {
+              const v = Number(e.target.value);
+              if (e.target.value.trim() && (!Number.isFinite(v) || v < 1 || v > 2.4)) {
+                setError("lineHeight debe estar entre 1 y 2.4");
+              }
+            }}
+          />
+        </div>
+
+        <h3 className="wf-h3">Branding</h3>
+        <div className="wf-note" style={{ marginBottom: 10 }}>
+          <strong>Nota:</strong> logo recomendado en PNG/WebP/SVG (máx 2MB) y favicon en PNG/ICO (máx 1MB).
+          Si pegas URL manual, debe ser pública y apuntar a un archivo de imagen válido.
+        </div>
+        <div className="wf-grid2">
+          <input
+            className="wf-input"
+            disabled={editingLocked}
+            placeholder="Logo URL"
+            value={branding.logoUrl ?? ""}
+            onChange={(e) =>
+              updateSettings((prev) => ({
+                ...prev,
+                branding: { ...(prev.branding ?? {}), logoUrl: e.target.value },
+              }))
+            }
+          />
+          <div className="wf-row">
             <input
-              key={key}
               className="wf-input"
               disabled={editingLocked}
-              placeholder={key}
-              value={typography[key] ?? ""}
-              onChange={(e) => updateSettings((prev) => ({ ...prev, typography: { ...(prev.typography ?? {}), [key]: e.target.value } }))}
+              type="file"
+              accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
+              onChange={(e) => {
+                const file = e.target.files?.[0] ?? null;
+                void uploadBrandingAsset("logo", file);
+              }}
             />
-          ))}
+            {uploadingAsset === "logo" ? <span className="wf-muted">Subiendo logo...</span> : null}
+          </div>
+          {branding.logoUrl ? (
+            <img src={branding.logoUrl} alt="logo preview" style={{ maxHeight: 42, objectFit: "contain" }} />
+          ) : (
+            <span className="wf-muted">Sin logo</span>
+          )}
+          <span className="wf-muted">Máx 2MB (png/jpg/webp/svg)</span>
+
+          <input
+            className="wf-input"
+            disabled={editingLocked}
+            placeholder="Favicon URL"
+            value={branding.faviconUrl ?? ""}
+            onChange={(e) =>
+              updateSettings((prev) => ({
+                ...prev,
+                branding: { ...(prev.branding ?? {}), faviconUrl: e.target.value },
+              }))
+            }
+          />
+          <div className="wf-row">
+            <input
+              className="wf-input"
+              disabled={editingLocked}
+              type="file"
+              accept="image/png,image/x-icon,image/vnd.microsoft.icon"
+              onChange={(e) => {
+                const file = e.target.files?.[0] ?? null;
+                void uploadBrandingAsset("favicon", file);
+              }}
+            />
+            {uploadingAsset === "favicon" ? <span className="wf-muted">Subiendo favicon...</span> : null}
+          </div>
+          {branding.faviconUrl ? (
+            <img src={branding.faviconUrl} alt="favicon preview" style={{ width: 24, height: 24, objectFit: "contain" }} />
+          ) : (
+            <span className="wf-muted">Sin favicon</span>
+          )}
+          <span className="wf-muted">Máx 1MB (png/ico)</span>
+        </div>
+
+        <h3 className="wf-h3">Contacto básico (opcional)</h3>
+        <div className="wf-grid2">
+          <input
+            className="wf-input"
+            disabled={editingLocked}
+            placeholder="WhatsApp (https://wa.me/...)"
+            value={contact.whatsapp ?? ""}
+            onChange={(e) =>
+              updateSettings((prev) => ({
+                ...prev,
+                branding: {
+                  ...(prev.branding ?? {}),
+                  contact: { ...(prev.branding?.contact ?? {}), whatsapp: e.target.value },
+                },
+              }))
+            }
+          />
+          <input
+            className="wf-input"
+            disabled={editingLocked}
+            placeholder="Email"
+            value={contact.email ?? ""}
+            onChange={(e) =>
+              updateSettings((prev) => ({
+                ...prev,
+                branding: {
+                  ...(prev.branding ?? {}),
+                  contact: { ...(prev.branding?.contact ?? {}), email: e.target.value },
+                },
+              }))
+            }
+          />
+          <input
+            className="wf-input"
+            disabled={editingLocked}
+            placeholder="Dirección"
+            value={contact.address ?? ""}
+            onChange={(e) =>
+              updateSettings((prev) => ({
+                ...prev,
+                branding: {
+                  ...(prev.branding ?? {}),
+                  contact: { ...(prev.branding?.contact ?? {}), address: e.target.value },
+                },
+              }))
+            }
+          />
         </div>
       </div>
     );

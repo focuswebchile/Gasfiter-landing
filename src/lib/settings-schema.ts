@@ -61,6 +61,19 @@ export const settingsSchema = z
         lineHeight: z.string().optional(),
       })
       .default({}),
+    branding: z
+      .object({
+        logoUrl: z.string().url().optional(),
+        faviconUrl: z.string().url().optional(),
+        contact: z
+          .object({
+            whatsapp: z.string().trim().optional(),
+            email: z.string().trim().optional(),
+            address: z.string().trim().optional(),
+          })
+          .optional(),
+      })
+      .default({}),
     content: z.object({
       hero: z
         .object({
@@ -190,4 +203,3 @@ export const settingsSchema = z
   });
 
 export type SettingsPayload = z.infer<typeof settingsSchema>;
-

@@ -227,7 +227,7 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
     }
 
     const [{ data: colors }, { data: typography }, { data: sections }, { data: items }] = await Promise.all([
-      supabase.from("colors").select("primary, secondary, background, text").eq("site_id", site.id).single(),
+      supabase.from("colors").select("*").eq("site_id", site.id).single(),
       supabase
         .from("typography")
         .select("font, font_family, base_size, line_height")
@@ -254,7 +254,7 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
 
     const payload: SettingsPayload = {
       colors: {
-        primary: colors?.primary ?? undefined,
+        primary: colors?.primary ?? colors?.primary_color ?? undefined,
         secondary: colors?.secondary ?? undefined,
         background: colors?.background ?? undefined,
         text: colors?.text ?? undefined,
@@ -265,6 +265,7 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
         baseSize: typography?.base_size ?? undefined,
         lineHeight: typography?.line_height ?? undefined,
       },
+      branding: {},
       content: {
         hero: legacy.hero,
         services: legacy.services,
