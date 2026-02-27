@@ -252,8 +252,6 @@ function translateActionLabel(action: ActionLogItem["action"]) {
       return "ROLLBACK";
     case "diff":
       return "COMPARAR";
-    default:
-      return action.toUpperCase();
   }
 }
 
