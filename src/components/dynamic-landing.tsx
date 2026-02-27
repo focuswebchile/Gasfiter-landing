@@ -1980,6 +1980,27 @@ const DEFAULT_LANDING_VALUES = {
     secondaryUrl: "https://wa.me/569XXXXXXX",
     secondaryText: "WhatsApp",
   },
+  services: {
+    title: "¿Qué problema tienes ahora?",
+    subtitle: "Servicios más solicitados",
+    ctaText: "Llamar por esto",
+  },
+  projects: {
+    title: "Trabajos realizados en Santiago",
+    description:
+      "Casos reales de instalación, reparación y mantención. Haz click y arrastra para deslizar las imágenes hacia la izquierda o derecha.",
+    fallbackImage: "/images/gasfiter-destape.webp",
+  },
+  testimonials: {
+    title: "Comentarios de nuestros clientes",
+    kicker: "Testimonios",
+    fallbackAvatar: "/images/gasfiter-testimonial.webp",
+  },
+  contact: {
+    kicker: "CONTACTO",
+    title: "¿Tienes preguntas?\nEscríbenos ahora.",
+    submitText: "Enviar solicitud",
+  },
 } as const;
 
 export default function DynamicLanding() {
@@ -2442,26 +2463,24 @@ export default function DynamicLanding() {
           : content.services;
       const servicesTitleEl = document.querySelector("[data-services-title]");
       const servicesSubtitleEl = document.querySelector("[data-services-subtitle]");
-      if (
+      const servicesTitle =
         services &&
         typeof services === "object" &&
         !Array.isArray(services) &&
         typeof services.title === "string" &&
-        services.title.trim() &&
-        servicesTitleEl
-      ) {
-        servicesTitleEl.textContent = services.title.trim();
-      }
-      if (
+        services.title.trim()
+          ? services.title.trim()
+          : DEFAULT_LANDING_VALUES.services.title;
+      const servicesSubtitle =
         services &&
         typeof services === "object" &&
         !Array.isArray(services) &&
         typeof services.subtitle === "string" &&
-        services.subtitle.trim() &&
-        servicesSubtitleEl
-      ) {
-        servicesSubtitleEl.textContent = services.subtitle.trim();
-      }
+        services.subtitle.trim()
+          ? services.subtitle.trim()
+          : DEFAULT_LANDING_VALUES.services.subtitle;
+      if (servicesTitleEl) servicesTitleEl.textContent = servicesTitle;
+      if (servicesSubtitleEl) servicesSubtitleEl.textContent = servicesSubtitle;
 
       const serviceItems = toServicesArray(services);
       const servicesSection = document.getElementById("servicios");
@@ -2515,11 +2534,11 @@ export default function DynamicLanding() {
             const ctaText =
               ctaData && typeof ctaData.text === "string" && ctaData.text.trim()
                 ? ctaData.text.trim()
-                : "";
+                : DEFAULT_LANDING_VALUES.services.ctaText;
             const ctaUrl =
               ctaData && typeof ctaData.url === "string" && ctaData.url.trim()
                 ? ctaData.url.trim()
-                : "";
+                : heroPrimaryUrl;
             const ctaEnabled = ctaData?.enabled !== false;
             if (ctaText) ctaEl.textContent = ctaText;
             if (ctaUrl) ctaEl.setAttribute("href", ctaUrl);
@@ -2634,20 +2653,16 @@ export default function DynamicLanding() {
         const projectsTrack = projectsRoot?.querySelector("[data-projects-track]");
         const projectsControls = projectsRoot?.querySelector(".projects-controls");
 
-        if (
-          projectsTitle &&
-          typeof sectionProjects.data.title === "string" &&
-          sectionProjects.data.title.trim()
-        ) {
-          projectsTitle.textContent = sectionProjects.data.title.trim();
-        }
-        if (
-          projectsDescription &&
-          typeof sectionProjects.data.description === "string" &&
-          sectionProjects.data.description.trim()
-        ) {
-          projectsDescription.textContent = sectionProjects.data.description.trim();
-        }
+        const projectsTitleValue =
+          typeof sectionProjects.data.title === "string" && sectionProjects.data.title.trim()
+            ? sectionProjects.data.title.trim()
+            : DEFAULT_LANDING_VALUES.projects.title;
+        const projectsDescriptionValue =
+          typeof sectionProjects.data.description === "string" && sectionProjects.data.description.trim()
+            ? sectionProjects.data.description.trim()
+            : DEFAULT_LANDING_VALUES.projects.description;
+        if (projectsTitle) projectsTitle.textContent = projectsTitleValue;
+        if (projectsDescription) projectsDescription.textContent = projectsDescriptionValue;
 
         const controlsEnabled = (sectionProjects.data as { controls_enabled?: unknown }).controls_enabled;
         if (projectsControls) {
@@ -2669,7 +2684,7 @@ export default function DynamicLanding() {
               const size = typeof item.size === "string" ? item.size.trim() : "";
               const alt = typeof item.alt === "string" ? item.alt.trim() : title;
               if (!title) return "";
-              const imageUrl = image || "/images/gasfiter-destape.webp";
+              const imageUrl = image || DEFAULT_LANDING_VALUES.projects.fallbackImage;
               const wideClass = size === "wide" ? " project-card-wide" : "";
               return `
                 <figure class="project-card${wideClass}">
@@ -2751,15 +2766,21 @@ export default function DynamicLanding() {
             (contactRoot as HTMLElement).style.backgroundImage = "";
           }
         }
-        if (contactKicker && typeof sectionContact.data.kicker === "string" && sectionContact.data.kicker.trim()) {
-          contactKicker.textContent = sectionContact.data.kicker.trim();
-        }
-        if (contactTitle && typeof sectionContact.data.title === "string" && sectionContact.data.title.trim()) {
-          contactTitle.innerHTML = escapeHtml(sectionContact.data.title).replace(/\n/g, "<br />");
-        }
-        if (contactSubmit && typeof sectionContact.data.submit_text === "string" && sectionContact.data.submit_text.trim()) {
-          contactSubmit.textContent = sectionContact.data.submit_text.trim();
-        }
+        const contactKickerValue =
+          typeof sectionContact.data.kicker === "string" && sectionContact.data.kicker.trim()
+            ? sectionContact.data.kicker.trim()
+            : DEFAULT_LANDING_VALUES.contact.kicker;
+        const contactTitleValue =
+          typeof sectionContact.data.title === "string" && sectionContact.data.title.trim()
+            ? sectionContact.data.title
+            : DEFAULT_LANDING_VALUES.contact.title;
+        const contactSubmitValue =
+          typeof sectionContact.data.submit_text === "string" && sectionContact.data.submit_text.trim()
+            ? sectionContact.data.submit_text.trim()
+            : DEFAULT_LANDING_VALUES.contact.submitText;
+        if (contactKicker) contactKicker.textContent = contactKickerValue;
+        if (contactTitle) contactTitle.innerHTML = escapeHtml(contactTitleValue).replace(/\n/g, "<br />");
+        if (contactSubmit) contactSubmit.textContent = contactSubmitValue;
       }
 
       const testimonialsItems = toItemsArray(
@@ -2771,22 +2792,20 @@ export default function DynamicLanding() {
       if (testimonialsItems.length) {
         const testimonialsTitle = document.querySelector(".clients-title");
         const testimonialsKicker = document.querySelector(".clients-kicker");
-        if (
-          testimonialsTitle &&
+        const testimonialsTitleValue =
           sectionTestimonials?.data &&
           typeof sectionTestimonials.data.title === "string" &&
           sectionTestimonials.data.title.trim()
-        ) {
-          testimonialsTitle.textContent = sectionTestimonials.data.title.trim();
-        }
-        if (
-          testimonialsKicker &&
+            ? sectionTestimonials.data.title.trim()
+            : DEFAULT_LANDING_VALUES.testimonials.title;
+        const testimonialsKickerValue =
           sectionTestimonials?.data &&
           typeof sectionTestimonials.data.kicker === "string" &&
           sectionTestimonials.data.kicker.trim()
-        ) {
-          testimonialsKicker.textContent = sectionTestimonials.data.kicker.trim();
-        }
+            ? sectionTestimonials.data.kicker.trim()
+            : DEFAULT_LANDING_VALUES.testimonials.kicker;
+        if (testimonialsTitle) testimonialsTitle.textContent = testimonialsTitleValue;
+        if (testimonialsKicker) testimonialsKicker.textContent = testimonialsKickerValue;
 
         const clientsTrack = document.querySelector("[data-clients-track]");
         if (clientsTrack) {
@@ -2802,7 +2821,7 @@ export default function DynamicLanding() {
                   <div class="client-quote">”</div>
                   <p class="client-text">${escapeHtml(quote)}</p>
                   <div class="client-person">
-                    <img src="${escapeHtml(avatar || "/images/gasfiter-testimonial.webp")}" alt="${escapeHtml(name)}" loading="lazy" />
+                    <img src="${escapeHtml(avatar || DEFAULT_LANDING_VALUES.testimonials.fallbackAvatar)}" alt="${escapeHtml(name)}" loading="lazy" />
                     <div>
                       <strong>${escapeHtml(name)}</strong>
                       <span>${escapeHtml(location)}</span>
