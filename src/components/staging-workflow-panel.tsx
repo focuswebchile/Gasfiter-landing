@@ -529,6 +529,17 @@ function pickTimestamp(value: unknown, fallback: string | null = null): string |
   return fallback;
 }
 
+function mapPublishIssueToSection(
+  issue: string,
+): { section: EditableSectionId; view: SidebarView; label: string } | null {
+  const normalized = issue.toLowerCase();
+  if (normalized.includes("hero")) return { section: "hero", view: "sections", label: "Ir a Hero" };
+  if (normalized.includes("servicio")) return { section: "services", view: "items", label: "Ir a Servicios" };
+  if (normalized.includes("testimonio")) return { section: "testimonials", view: "items", label: "Ir a Testimonios" };
+  if (normalized.includes("contact")) return { section: "contact_banner", view: "sections", label: "Ir a Contacto" };
+  return null;
+}
+
 export default function StagingWorkflowPanel() {
   const defaultSlug = process.env.NEXT_PUBLIC_SITE_SLUG?.trim() || "gasfiter-staging";
   const configuredBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.trim() || "";
@@ -3280,6 +3291,15 @@ export default function StagingWorkflowPanel() {
     panelReady,
   ]);
 
+  const publishFixActions = useMemo(() => {
+    const mapped = publishValidationMissing
+      .map((item) => mapPublishIssueToSection(item))
+      .filter((item): item is { section: EditableSectionId; view: SidebarView; label: string } => item !== null);
+    const dedup = new Map<string, { section: EditableSectionId; view: SidebarView; label: string }>();
+    for (const item of mapped) dedup.set(item.section, item);
+    return Array.from(dedup.values());
+  }, [publishValidationMissing]);
+
   return (
     <main className="wf-shell">
       <style dangerouslySetInnerHTML={{ __html: panelStyles }} />
@@ -3434,6 +3454,23 @@ export default function StagingWorkflowPanel() {
                   <li key={item}>{item}</li>
                 ))}
               </ul>
+              {publishFixActions.length > 0 ? (
+                <div className="wf-row" style={{ marginTop: 8 }}>
+                  {publishFixActions.map((action) => (
+                    <button
+                      key={action.section}
+                      className="wf-btn wf-btn-soft"
+                      style={{ height: 32 }}
+                      onClick={() => {
+                        setView(action.view);
+                        setEditableSection(action.section);
+                      }}
+                    >
+                      {action.label}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
             </div>
           ) : null}
 
