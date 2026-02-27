@@ -543,6 +543,29 @@ function mapPublishIssueToSection(
   return null;
 }
 
+function getSectionDisplayName(sectionId: string): string {
+  switch (sectionId) {
+    case "hero":
+      return "Hero";
+    case "audience":
+      return "Audiencia";
+    case "services":
+      return "Servicios";
+    case "projects":
+      return "Proyectos";
+    case "urgency_banner":
+      return "Banner urgente";
+    case "contact_banner":
+      return "Banner de contacto";
+    case "testimonials":
+      return "Testimonios";
+    case "faq":
+      return "Preguntas frecuentes";
+    default:
+      return sectionId;
+  }
+}
+
 export default function StagingWorkflowPanel() {
   const defaultSlug = process.env.NEXT_PUBLIC_SITE_SLUG?.trim() || "gasfiter-staging";
   const configuredBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.trim() || "";
@@ -1521,7 +1544,7 @@ export default function StagingWorkflowPanel() {
               checked={section.enabled}
               onChange={(e) => updateSettings((prev) => upsertSection(prev, { ...section, enabled: e.target.checked }))}
             />
-            audience habilitada
+            {getSectionDisplayName(section.id)} habilitada
           </div>
           <input
             className="wf-input"
@@ -1748,7 +1771,7 @@ export default function StagingWorkflowPanel() {
               checked={section.enabled}
               onChange={(e) => updateSettings((prev) => upsertSection(prev, { ...section, enabled: e.target.checked }))}
             />
-            proyectos habilitada
+            {getSectionDisplayName(section.id)} habilitada
           </div>
           <input
             className="wf-input"
@@ -1989,7 +2012,7 @@ export default function StagingWorkflowPanel() {
               checked={section.enabled}
               onChange={(e) => updateSettings((prev) => upsertSection(prev, { ...section, enabled: e.target.checked }))}
             />
-            urgency_banner habilitada
+            {getSectionDisplayName(section.id)} habilitada
           </div>
           <input
             className="wf-input"
@@ -2070,7 +2093,7 @@ export default function StagingWorkflowPanel() {
               checked={section.enabled}
               onChange={(e) => updateSettings((prev) => upsertSection(prev, { ...section, enabled: e.target.checked }))}
             />
-            contact_banner habilitada
+            {getSectionDisplayName(section.id)} habilitada
           </div>
           <input
             className="wf-input"
@@ -2148,7 +2171,7 @@ export default function StagingWorkflowPanel() {
               checked={section.enabled}
               onChange={(e) => updateSettings((prev) => upsertSection(prev, { ...section, enabled: e.target.checked }))}
             />
-            testimonials habilitada
+            {getSectionDisplayName(section.id)} habilitada
           </div>
           <input
             className="wf-input"
@@ -2392,7 +2415,7 @@ export default function StagingWorkflowPanel() {
             checked={section.enabled}
             onChange={(e) => updateSettings((prev) => upsertSection(prev, { ...section, enabled: e.target.checked }))}
           />
-          {section.id} habilitada
+          {getSectionDisplayName(section.id)} habilitada
         </div>
         {section.id === "services" ? (
           <>
@@ -3240,7 +3263,7 @@ export default function StagingWorkflowPanel() {
       {
         id: 2,
         title: "Cargar panel",
-        detail: "Trae settings + versiones + permisos.",
+        detail: "Trae configuración + versiones + permisos.",
         state: "neutral" as const,
       },
       {
@@ -3509,7 +3532,7 @@ export default function StagingWorkflowPanel() {
                   >
                     <span className="wf-drag">⋮⋮</span>
                     <button className="wf-nav-btn" style={{ flex: 1, padding: "8px 10px" }} onClick={() => setEditableSection(toEditableSection(section.id))}>
-                      <span>{section.id}</span>
+                      <span>{getSectionDisplayName(section.id)}</span>
                       <span className="wf-muted">orden {section.order}</span>
                     </button>
                     <label className="wf-toggle">
