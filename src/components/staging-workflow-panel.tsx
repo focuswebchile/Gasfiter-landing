@@ -76,6 +76,12 @@ type DraftConflictPayload = {
   message?: string;
   serverUpdatedAt?: string | null;
 };
+type PublishValidationIssue = {
+  code?: string;
+  label?: string;
+  path?: string;
+  message?: string;
+};
 type ToastState = {
   type: "success" | "error" | "info";
   text: string;
@@ -884,11 +890,28 @@ export default function StagingWorkflowPanel() {
             version?: { number?: number };
             draftUpdatedAt?: string | null;
             serverUpdatedAt?: string | null;
+            missing?: PublishValidationIssue[];
           }
         | DraftConflictPayload;
       if (response.status === 409 && (payloadUnknown as DraftConflictPayload)?.error === "DRAFT_OUTDATED") {
         activateDraftConflict(payloadUnknown as DraftConflictPayload);
         setError((payloadUnknown as DraftConflictPayload).message || "Conflicto de draft.");
+        return;
+      }
+      if (
+        response.status === 422 &&
+        (payloadUnknown as { error?: string }).error === "PUBLISH_VALIDATION_FAILED"
+      ) {
+        const payload = payloadUnknown as {
+          message?: string;
+          missing?: PublishValidationIssue[];
+        };
+        const labels = (payload.missing ?? [])
+          .map((issue) => issue?.label || issue?.message)
+          .filter((value): value is string => typeof value === "string" && value.trim().length > 0);
+        const uniqueLabels = Array.from(new Set(labels));
+        const details = uniqueLabels.length > 0 ? `Falta: ${uniqueLabels.join(", ")}.` : "";
+        setError(`${payload.message || "No se puede publicar."} ${details}`.trim());
         return;
       }
       if (!response.ok) throw new Error((payloadUnknown as { error?: string })?.error || "Publish failed");

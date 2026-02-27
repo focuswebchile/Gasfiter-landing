@@ -7,6 +7,7 @@ import {
   parseOptionalUuid,
   requireSiteRole,
 } from "@/lib/site-versions";
+import { validatePublishRequirements } from "@/lib/publish-requirements";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -80,6 +81,23 @@ export async function POST(request: Request, context: { params: Promise<{ slug: 
           serverUpdatedAt,
         },
         { status: 409 },
+      );
+    }
+
+    const draftSettings = extractSettingsFromSnapshot(sourceDraft.snapshot as Record<string, unknown> | null);
+    if (!draftSettings) {
+      return NextResponse.json({ error: "Draft snapshot is invalid" }, { status: 422 });
+    }
+
+    const requirementIssues = validatePublishRequirements(draftSettings);
+    if (requirementIssues.length > 0) {
+      return NextResponse.json(
+        {
+          error: "PUBLISH_VALIDATION_FAILED",
+          message: "Completa el contenido mínimo obligatorio antes de publicar.",
+          missing: requirementIssues,
+        },
+        { status: 422 },
       );
     }
 
