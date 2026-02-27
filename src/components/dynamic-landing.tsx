@@ -2266,6 +2266,12 @@ export default function DynamicLanding() {
     const applySettings = (settings: Settings | null) => {
       if (!settings || typeof settings !== "object") return;
       const content = settings.content || {};
+      const findRawSection = (id: string) =>
+        Array.isArray(content.sections)
+          ? content.sections.find(
+              (section) => section && typeof section === "object" && section.id === id,
+            )
+          : null;
       const findSection = (id: string) =>
         Array.isArray(content.sections)
           ? content.sections.find(
@@ -2278,6 +2284,15 @@ export default function DynamicLanding() {
                 typeof section.data === "object",
             )
           : null;
+      const isExplicitlyDisabled = (id: string) => {
+        const section = findRawSection(id);
+        return !!section && section.enabled === false;
+      };
+      const setVisible = (selector: string, visible: boolean) => {
+        const el = document.querySelector<HTMLElement>(selector);
+        if (!el) return;
+        el.style.display = visible ? "" : "none";
+      };
       const sectionHero = Array.isArray(content.sections)
         ? findSection("hero")
         : null;
@@ -2288,6 +2303,14 @@ export default function DynamicLanding() {
       const sectionTestimonials = findSection("testimonials");
       const sectionUrgency = findSection("urgency_banner");
       const sectionContact = findSection("contact_banner");
+      setVisible("#inicio", !isExplicitlyDisabled("hero"));
+      setVisible(".band-dark", !isExplicitlyDisabled("audience"));
+      setVisible("#servicios", !isExplicitlyDisabled("services"));
+      setVisible("#trabajos", !isExplicitlyDisabled("projects"));
+      setVisible(".cta-dark", !isExplicitlyDisabled("urgency_banner"));
+      setVisible("#contacto", !isExplicitlyDisabled("contact_banner"));
+      setVisible("#testimonios", !isExplicitlyDisabled("testimonials"));
+      setVisible("#faq", !isExplicitlyDisabled("faq"));
       const branding = settings.branding && typeof settings.branding === "object" ? settings.branding : {};
       const brandingContact =
         branding.contact && typeof branding.contact === "object" ? branding.contact : {};
@@ -2503,7 +2526,8 @@ export default function DynamicLanding() {
 
       const serviceItems = toServicesArray(services);
       const servicesSection = document.getElementById("servicios");
-      if (Array.isArray(serviceItems) && serviceItems.length === 0 && servicesSection) {
+      const hasDynamicServicesSource = !!sectionServices || Array.isArray(content.services);
+      if (hasDynamicServicesSource && Array.isArray(serviceItems) && serviceItems.length === 0 && servicesSection) {
         servicesSection.style.display = "none";
       }
 
@@ -2748,7 +2772,7 @@ export default function DynamicLanding() {
             .join("");
           bindFaqButtons();
         }
-      } else if (faqSectionEl) {
+      } else if (faqSectionEl && (!!sectionFaq || Array.isArray(content.faqs))) {
         faqSectionEl.style.display = "none";
       }
 
@@ -2870,7 +2894,7 @@ export default function DynamicLanding() {
             .map((_, idx) => `<span class="clients-dot${idx === 0 ? " active" : ""}"></span>`)
             .join("");
         }
-      } else if (testimonialsSectionEl) {
+      } else if (testimonialsSectionEl && !!sectionTestimonials) {
         testimonialsSectionEl.style.display = "none";
       }
 
