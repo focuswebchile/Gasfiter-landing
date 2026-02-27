@@ -1908,6 +1908,8 @@ type Settings = {
   };
   branding?: {
     logoUrl?: string;
+    logoNavUrl?: string;
+    logoFooterUrl?: string;
     faviconUrl?: string;
     contact?: {
       whatsapp?: string;
@@ -2238,19 +2240,40 @@ export default function DynamicLanding() {
       const brandingContact =
         branding.contact && typeof branding.contact === "object" ? branding.contact : {};
 
-      const brandLinks = document.querySelectorAll<HTMLAnchorElement>(".brand[data-default-brand]");
-      const logoUrl = typeof branding.logoUrl === "string" ? branding.logoUrl.trim() : "";
-      brandLinks.forEach((brandLink) => {
-        if (logoUrl) {
-          const logoHeight = brandLink.getAttribute("data-logo-height") || "42";
-          brandLink.innerHTML = `<img src="${escapeHtml(logoUrl)}" alt="Logo" style="height:${escapeHtml(
+      const navLogoUrl =
+        (typeof branding.logoNavUrl === "string" && branding.logoNavUrl.trim()) ||
+        (typeof branding.logoUrl === "string" && branding.logoUrl.trim()) ||
+        "";
+      const footerLogoUrl =
+        (typeof branding.logoFooterUrl === "string" && branding.logoFooterUrl.trim()) || navLogoUrl || "";
+
+      const navBrandLink = document.querySelector<HTMLAnchorElement>(
+        '.top-nav .brand[data-default-brand], .top-nav-inner .brand[data-default-brand]'
+      );
+      if (navBrandLink) {
+        if (navLogoUrl) {
+          const logoHeight = navBrandLink.getAttribute("data-logo-height") || "42";
+          navBrandLink.innerHTML = `<img src="${escapeHtml(navLogoUrl)}" alt="Logo" style="height:${escapeHtml(
             logoHeight
           )}px; width:auto; object-fit:contain;" />`;
         } else {
-          const fallbackText = brandLink.getAttribute("data-default-brand") || "Gasfiter 24/7";
-          brandLink.textContent = fallbackText;
+          const fallbackText = navBrandLink.getAttribute("data-default-brand") || "Gasfiter 24/7";
+          navBrandLink.textContent = fallbackText;
         }
-      });
+      }
+
+      const footerBrandLink = document.querySelector<HTMLAnchorElement>(".footer .brand[data-default-brand]");
+      if (footerBrandLink) {
+        if (footerLogoUrl) {
+          const logoHeight = footerBrandLink.getAttribute("data-logo-height") || "34";
+          footerBrandLink.innerHTML = `<img src="${escapeHtml(footerLogoUrl)}" alt="Logo footer" style="height:${escapeHtml(
+            logoHeight
+          )}px; width:auto; object-fit:contain;" />`;
+        } else {
+          const fallbackText = footerBrandLink.getAttribute("data-default-brand") || "Gasfiter 24/7";
+          footerBrandLink.textContent = fallbackText;
+        }
+      }
 
       const faviconUrl = typeof branding.faviconUrl === "string" ? branding.faviconUrl.trim() : "";
       if (faviconUrl) {

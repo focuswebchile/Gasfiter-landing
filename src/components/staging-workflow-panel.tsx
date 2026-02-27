@@ -27,6 +27,8 @@ type SettingsPayload = {
   typography?: Record<string, string | undefined>;
   branding?: {
     logoUrl?: string;
+    logoNavUrl?: string;
+    logoFooterUrl?: string;
     faviconUrl?: string;
     contact?: {
       whatsapp?: string;
@@ -972,7 +974,11 @@ export default function StagingWorkflowPanel() {
     if (typeof window !== "undefined") window.open(url, "_blank", "noopener,noreferrer");
   };
 
-  const uploadBrandingAsset = async (assetType: "logo" | "favicon", file: File | null) => {
+  const uploadBrandingAsset = async (
+    assetType: "logo" | "favicon",
+    file: File | null,
+    targetKey: "logoNavUrl" | "logoFooterUrl" | "faviconUrl" = assetType === "logo" ? "logoNavUrl" : "faviconUrl",
+  ) => {
       if (!file) return;
       if (!panelReady) return setError("Primero usa Cargar panel");
       if (!userId.trim()) return setError("Ingresa userId para subir archivos");
@@ -1004,15 +1010,21 @@ export default function StagingWorkflowPanel() {
             ...prev,
             branding: {
               ...(prev.branding ?? {}),
-              [assetType === "logo" ? "logoUrl" : "faviconUrl"]: payload.url,
+              [targetKey]: payload.url,
             },
           }),
           {
             persistNow: true,
-            note: `Autosave: ${assetType} updated`,
+            note: `Autosave: ${targetKey} updated`,
           },
         );
-        setOk(`${assetType === "logo" ? "Logo" : "Favicon"} subido`);
+        setOk(
+          assetType === "logo"
+            ? targetKey === "logoFooterUrl"
+              ? "Logo footer subido"
+              : "Logo navbar subido"
+            : "Favicon subido",
+        );
       } catch (error) {
         setError(error instanceof Error ? error.message : "Upload failed");
       } finally {
@@ -2548,12 +2560,12 @@ export default function StagingWorkflowPanel() {
           <input
             className="wf-input"
             disabled={editingLocked}
-            placeholder="Logo URL"
-            value={branding.logoUrl ?? ""}
+            placeholder="Logo navbar URL"
+            value={branding.logoNavUrl ?? branding.logoUrl ?? ""}
             onChange={(e) =>
               updateSettings((prev) => ({
                 ...prev,
-                branding: { ...(prev.branding ?? {}), logoUrl: e.target.value },
+                branding: { ...(prev.branding ?? {}), logoNavUrl: e.target.value },
               }))
             }
           />
@@ -2565,17 +2577,53 @@ export default function StagingWorkflowPanel() {
               accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
               onChange={(e) => {
                 const file = e.target.files?.[0] ?? null;
-                void uploadBrandingAsset("logo", file);
+                void uploadBrandingAsset("logo", file, "logoNavUrl");
               }}
             />
             {uploadingAsset === "logo" ? <span className="wf-muted">Subiendo logo...</span> : null}
           </div>
-          {branding.logoUrl ? (
-            <img src={branding.logoUrl} alt="logo preview" style={{ maxHeight: 42, objectFit: "contain" }} />
+          {branding.logoNavUrl || branding.logoUrl ? (
+            <img
+              src={branding.logoNavUrl ?? branding.logoUrl}
+              alt="logo navbar preview"
+              style={{ maxHeight: 42, objectFit: "contain" }}
+            />
           ) : (
             <span className="wf-muted">Sin logo</span>
           )}
-          <span className="wf-muted">Máx 2MB (png/jpg/webp/svg)</span>
+          <span className="wf-muted">Logo navbar, máx 2MB (png/jpg/webp/svg)</span>
+
+          <input
+            className="wf-input"
+            disabled={editingLocked}
+            placeholder="Logo footer URL (opcional)"
+            value={branding.logoFooterUrl ?? ""}
+            onChange={(e) =>
+              updateSettings((prev) => ({
+                ...prev,
+                branding: { ...(prev.branding ?? {}), logoFooterUrl: e.target.value },
+              }))
+            }
+          />
+          <div className="wf-row">
+            <input
+              className="wf-input"
+              disabled={editingLocked}
+              type="file"
+              accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
+              onChange={(e) => {
+                const file = e.target.files?.[0] ?? null;
+                void uploadBrandingAsset("logo", file, "logoFooterUrl");
+              }}
+            />
+            {uploadingAsset === "logo" ? <span className="wf-muted">Subiendo logo...</span> : null}
+          </div>
+          {branding.logoFooterUrl ? (
+            <img src={branding.logoFooterUrl} alt="logo footer preview" style={{ maxHeight: 34, objectFit: "contain" }} />
+          ) : (
+            <span className="wf-muted">Sin logo footer (usa logo navbar por fallback)</span>
+          )}
+          <span className="wf-muted">Logo footer opcional, máx 2MB (png/jpg/webp/svg)</span>
 
           <input
             className="wf-input"

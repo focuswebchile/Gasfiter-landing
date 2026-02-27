@@ -64,6 +64,8 @@ export const settingsSchema = z
     branding: z
       .object({
         logoUrl: z.string().url().optional(),
+        logoNavUrl: z.string().url().optional(),
+        logoFooterUrl: z.string().url().optional(),
         faviconUrl: z.string().url().optional(),
         contact: z
           .object({
