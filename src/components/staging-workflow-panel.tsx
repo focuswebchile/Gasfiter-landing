@@ -563,7 +563,7 @@ export default function StagingWorkflowPanel() {
   const [actionLog, setActionLog] = useState<ActionLogItem[]>([]);
   const [heroDiff, setHeroDiff] = useState<HeroDiffResult | null>(null);
   const [loadingDiff, setLoadingDiff] = useState(false);
-  const [uploadingAsset, setUploadingAsset] = useState<"logo" | "favicon" | null>(null);
+  const [uploadingAsset, setUploadingAsset] = useState<"logoNav" | "logoFooter" | "favicon" | null>(null);
   const [uploadingContentAssetKey, setUploadingContentAssetKey] = useState<string | null>(null);
 
   const baseUrl = useMemo(() => {
@@ -1202,7 +1202,8 @@ export default function StagingWorkflowPanel() {
       if (!canSaveDraft) return setError("Tu rol no puede editar estilo");
       if (publishedReadOnly) return setError("Activa modo draft para editar estilo");
 
-      setUploadingAsset(assetType);
+      const uploadTarget = targetKey === "logoNavUrl" ? "logoNav" : targetKey === "logoFooterUrl" ? "logoFooter" : "favicon";
+      setUploadingAsset(uploadTarget);
       try {
         const form = new FormData();
         form.append("userId", userId.trim());
@@ -2970,9 +2971,9 @@ export default function StagingWorkflowPanel() {
           <ImageUploadField
             value={branding.logoNavUrl ?? branding.logoUrl ?? ""}
             placeholder="Logo navbar URL"
-            disabled={editingLocked}
+            disabled={editingLocked || uploadingAsset === "logoNav"}
             removeDisabled={editingLocked || !(branding.logoNavUrl ?? branding.logoUrl ?? "").trim()}
-            uploading={uploadingAsset === "logo"}
+            uploading={uploadingAsset === "logoNav"}
             uploadingText="Subiendo logo..."
             fallbackText="Sin logo navbar"
             guidanceText="Logo navbar recomendado: 320x80px. Formatos png, jpg, webp, svg. Máximo 2MB."
@@ -3006,9 +3007,9 @@ export default function StagingWorkflowPanel() {
           <ImageUploadField
             value={branding.logoFooterUrl ?? ""}
             placeholder="Logo footer URL (opcional)"
-            disabled={editingLocked}
+            disabled={editingLocked || uploadingAsset === "logoFooter"}
             removeDisabled={editingLocked || !(branding.logoFooterUrl ?? "").trim()}
-            uploading={uploadingAsset === "logo"}
+            uploading={uploadingAsset === "logoFooter"}
             uploadingText="Subiendo logo..."
             fallbackText="Sin logo footer (usa logo navbar por fallback)"
             guidanceText="Logo footer recomendado: 260x72px. Formatos png, jpg, webp, svg. Máximo 2MB."
@@ -3042,7 +3043,7 @@ export default function StagingWorkflowPanel() {
           <ImageUploadField
             value={branding.faviconUrl ?? ""}
             placeholder="Favicon URL"
-            disabled={editingLocked}
+            disabled={editingLocked || uploadingAsset === "favicon"}
             removeDisabled={editingLocked || !(branding.faviconUrl ?? "").trim()}
             uploading={uploadingAsset === "favicon"}
             uploadingText="Subiendo favicon..."
