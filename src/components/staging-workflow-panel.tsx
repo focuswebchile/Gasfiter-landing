@@ -1421,19 +1421,19 @@ export default function StagingWorkflowPanel() {
             className="wf-input"
             disabled={editingLocked}
             value={typeof section.data.title === "string" ? section.data.title : ""}
-            placeholder="Hero title"
+            placeholder="Título principal"
             onChange={(e) => updateSettings((prev) => upsertSection(prev, { ...section, data: { ...section.data, title: e.target.value } }))}
           />
           <textarea
             className="wf-textarea"
             disabled={editingLocked}
             value={typeof section.data.subtitle === "string" ? section.data.subtitle : ""}
-            placeholder="Hero subtitle"
+            placeholder="Subtítulo principal"
             onChange={(e) => updateSettings((prev) => upsertSection(prev, { ...section, data: { ...section.data, subtitle: e.target.value } }))}
           />
           <ImageUploadField
             value={typeof section.data.image === "string" ? section.data.image : ""}
-            placeholder="Hero image URL/path"
+            placeholder="URL/ruta imagen hero"
             disabled={editingLocked}
             removeDisabled={editingLocked || !(typeof section.data.image === "string" && section.data.image.trim())}
             uploading={uploadingContentAssetKey === "hero:section:image"}
@@ -1466,7 +1466,7 @@ export default function StagingWorkflowPanel() {
               className="wf-input"
               disabled={editingLocked}
               value={typeof (section.data.cta_primary as { text?: unknown } | undefined)?.text === "string" ? ((section.data.cta_primary as { text: string }).text ?? "") : ""}
-              placeholder="CTA text"
+              placeholder="Texto CTA"
               onChange={(e) =>
                 updateSettings((prev) =>
                   upsertSection(prev, {
@@ -1486,7 +1486,7 @@ export default function StagingWorkflowPanel() {
               className="wf-input"
               disabled={editingLocked}
               value={typeof (section.data.cta_primary as { url?: unknown } | undefined)?.url === "string" ? ((section.data.cta_primary as { url: string }).url ?? "") : ""}
-              placeholder="CTA url"
+              placeholder="URL CTA"
               onChange={(e) =>
                 updateSettings((prev) =>
                   upsertSection(prev, {
@@ -1527,7 +1527,7 @@ export default function StagingWorkflowPanel() {
             className="wf-input"
             disabled={editingLocked}
             value={typeof section.data.kicker === "string" ? section.data.kicker : ""}
-            placeholder="Audience kicker"
+            placeholder="Etiqueta audiencia"
             onChange={(e) =>
               updateSettings((prev) => upsertSection(prev, { ...section, data: { ...section.data, kicker: e.target.value } }))
             }
@@ -1536,7 +1536,7 @@ export default function StagingWorkflowPanel() {
             className="wf-input"
             disabled={editingLocked}
             value={typeof section.data.title === "string" ? section.data.title : ""}
-            placeholder="Audience title"
+            placeholder="Título audiencia"
             onChange={(e) =>
               updateSettings((prev) => upsertSection(prev, { ...section, data: { ...section.data, title: e.target.value } }))
             }
@@ -1545,7 +1545,7 @@ export default function StagingWorkflowPanel() {
             className="wf-textarea"
             disabled={editingLocked}
             value={typeof section.data.description === "string" ? section.data.description : ""}
-            placeholder="Audience description"
+            placeholder="Descripción audiencia"
             onChange={(e) =>
               updateSettings((prev) =>
                 upsertSection(prev, { ...section, data: { ...section.data, description: e.target.value } }),
@@ -1557,7 +1557,7 @@ export default function StagingWorkflowPanel() {
               className="wf-input"
               disabled={editingLocked}
               value={typeof (section.data.images as { back?: unknown } | undefined)?.back === "string" ? ((section.data.images as { back?: string }).back ?? "") : ""}
-              placeholder="Image back"
+              placeholder="Imagen fondo"
               onChange={(e) =>
                 updateSettings((prev) =>
                   upsertSection(prev, {
@@ -1574,7 +1574,7 @@ export default function StagingWorkflowPanel() {
               className="wf-input"
               disabled={editingLocked}
               value={typeof (section.data.images as { front?: unknown } | undefined)?.front === "string" ? ((section.data.images as { front?: string }).front ?? "") : ""}
-              placeholder="Image front"
+              placeholder="Imagen frontal"
               onChange={(e) =>
                 updateSettings((prev) =>
                   upsertSection(prev, {
@@ -1593,7 +1593,7 @@ export default function StagingWorkflowPanel() {
               className="wf-input"
               disabled={editingLocked}
               value={typeof (section.data.cta_primary as { text?: unknown } | undefined)?.text === "string" ? ((section.data.cta_primary as { text?: string }).text ?? "") : ""}
-              placeholder="Primary CTA text"
+              placeholder="Texto CTA principal"
               onChange={(e) =>
                 updateSettings((prev) =>
                   upsertSection(prev, {
@@ -1613,7 +1613,7 @@ export default function StagingWorkflowPanel() {
               className="wf-input"
               disabled={editingLocked}
               value={typeof (section.data.cta_primary as { url?: unknown } | undefined)?.url === "string" ? ((section.data.cta_primary as { url?: string }).url ?? "") : ""}
-              placeholder="Primary CTA url"
+              placeholder="URL CTA principal"
               onChange={(e) =>
                 updateSettings((prev) =>
                   upsertSection(prev, {
@@ -1635,7 +1635,7 @@ export default function StagingWorkflowPanel() {
               className="wf-input"
               disabled={editingLocked}
               value={typeof (section.data.cta_secondary as { text?: unknown } | undefined)?.text === "string" ? ((section.data.cta_secondary as { text?: string }).text ?? "") : ""}
-              placeholder="Secondary CTA text"
+              placeholder="Texto CTA secundario"
               onChange={(e) =>
                 updateSettings((prev) =>
                   upsertSection(prev, {
@@ -1655,7 +1655,7 @@ export default function StagingWorkflowPanel() {
               className="wf-input"
               disabled={editingLocked}
               value={typeof (section.data.cta_secondary as { url?: unknown } | undefined)?.url === "string" ? ((section.data.cta_secondary as { url?: string }).url ?? "") : ""}
-              placeholder="Secondary CTA url"
+              placeholder="URL CTA secundario"
               onChange={(e) =>
                 updateSettings((prev) =>
                   upsertSection(prev, {
@@ -1696,7 +1696,7 @@ export default function StagingWorkflowPanel() {
                   className="wf-input"
                   disabled={editingLocked}
                   value={typeof bullet.icon === "string" ? bullet.icon : ""}
-                  placeholder="Icon (ej: fa-circle-check)"
+                  placeholder="Ícono (ej: fa-circle-check)"
                   onChange={(e) =>
                     updateSettings((prev) => {
                       const sec = getSection(prev, section.id);
@@ -1748,13 +1748,13 @@ export default function StagingWorkflowPanel() {
               checked={section.enabled}
               onChange={(e) => updateSettings((prev) => upsertSection(prev, { ...section, enabled: e.target.checked }))}
             />
-            projects habilitada
+            proyectos habilitada
           </div>
           <input
             className="wf-input"
             disabled={editingLocked}
             value={typeof section.data.title === "string" ? section.data.title : ""}
-            placeholder="projects title"
+            placeholder="Título proyectos"
             onChange={(e) =>
               updateSettings((prev) => upsertSection(prev, { ...section, data: { ...section.data, title: e.target.value } }))
             }
@@ -1763,7 +1763,7 @@ export default function StagingWorkflowPanel() {
             className="wf-textarea"
             disabled={editingLocked}
             value={typeof section.data.description === "string" ? section.data.description : ""}
-            placeholder="projects description"
+            placeholder="Descripción proyectos"
             onChange={(e) =>
               updateSettings((prev) =>
                 upsertSection(prev, { ...section, data: { ...section.data, description: e.target.value } }),
@@ -1823,7 +1823,7 @@ export default function StagingWorkflowPanel() {
                     className="wf-input"
                     disabled={editingLocked}
                     value={typeof item.title === "string" ? item.title : ""}
-                    placeholder="title"
+                    placeholder="Título"
                     onChange={(e) =>
                       updateSettings((prev) => {
                         const sec = getSection(prev, section.id);
@@ -1839,7 +1839,7 @@ export default function StagingWorkflowPanel() {
                     className="wf-input"
                     disabled={editingLocked}
                     value={typeof item.location === "string" ? item.location : ""}
-                    placeholder="location"
+                    placeholder="Ubicación"
                     onChange={(e) =>
                       updateSettings((prev) => {
                         const sec = getSection(prev, section.id);
@@ -1853,7 +1853,7 @@ export default function StagingWorkflowPanel() {
                   />
                   <ImageUploadField
                     value={typeof item.image === "string" ? item.image : ""}
-                    placeholder="image URL/path"
+                    placeholder="URL/ruta imagen"
                     disabled={editingLocked}
                     removeDisabled={editingLocked || !(typeof item.image === "string" && item.image.trim())}
                     uploading={uploadingContentAssetKey === `projects:${itemId}:image`}
@@ -1995,14 +1995,14 @@ export default function StagingWorkflowPanel() {
             className="wf-input"
             disabled={editingLocked}
             value={typeof section.data.title === "string" ? section.data.title : ""}
-            placeholder="Banner title"
+            placeholder="Título banner"
             onChange={(e) => updateSettings((prev) => upsertSection(prev, { ...section, data: { ...section.data, title: e.target.value } }))}
           />
           <textarea
             className="wf-textarea"
             disabled={editingLocked}
             value={typeof section.data.description === "string" ? section.data.description : ""}
-            placeholder="Banner description"
+            placeholder="Descripción banner"
             onChange={(e) => updateSettings((prev) => upsertSection(prev, { ...section, data: { ...section.data, description: e.target.value } }))}
           />
           <div className="wf-grid2">
@@ -2014,7 +2014,7 @@ export default function StagingWorkflowPanel() {
                   ? ((section.data.cta_primary as { text: string }).text ?? "")
                   : ""
               }
-              placeholder="CTA text"
+              placeholder="Texto CTA"
               onChange={(e) =>
                 updateSettings((prev) =>
                   upsertSection(prev, {
@@ -2038,7 +2038,7 @@ export default function StagingWorkflowPanel() {
                   ? ((section.data.cta_primary as { url: string }).url ?? "")
                   : ""
               }
-              placeholder="CTA url"
+              placeholder="URL CTA"
               onChange={(e) =>
                 updateSettings((prev) =>
                   upsertSection(prev, {
@@ -2076,19 +2076,19 @@ export default function StagingWorkflowPanel() {
             className="wf-input"
             disabled={editingLocked}
             value={typeof section.data.kicker === "string" ? section.data.kicker : ""}
-            placeholder="Kicker"
+            placeholder="Etiqueta"
             onChange={(e) => updateSettings((prev) => upsertSection(prev, { ...section, data: { ...section.data, kicker: e.target.value } }))}
           />
           <input
             className="wf-input"
             disabled={editingLocked}
             value={typeof section.data.title === "string" ? section.data.title : ""}
-            placeholder="Title"
+            placeholder="Título"
             onChange={(e) => updateSettings((prev) => upsertSection(prev, { ...section, data: { ...section.data, title: e.target.value } }))}
           />
           <ImageUploadField
             value={typeof section.data.background_image === "string" ? section.data.background_image : ""}
-            placeholder="Background image URL/path"
+            placeholder="URL/ruta imagen fondo"
             disabled={editingLocked}
             removeDisabled={editingLocked || !(typeof section.data.background_image === "string" && section.data.background_image.trim())}
             uploading={uploadingContentAssetKey === "contact_banner:section:background_image"}
@@ -2124,7 +2124,7 @@ export default function StagingWorkflowPanel() {
             className="wf-input"
             disabled={editingLocked}
             value={typeof section.data.submit_text === "string" ? section.data.submit_text : ""}
-            placeholder="Submit button text"
+            placeholder="Texto botón enviar"
             onChange={(e) =>
               updateSettings((prev) =>
                 upsertSection(prev, { ...section, data: { ...section.data, submit_text: e.target.value } }),
@@ -2154,7 +2154,7 @@ export default function StagingWorkflowPanel() {
             className="wf-input"
             disabled={editingLocked}
             value={typeof section.data.kicker === "string" ? section.data.kicker : ""}
-            placeholder="Section kicker"
+            placeholder="Etiqueta sección"
             onChange={(e) =>
               updateSettings((prev) =>
                 upsertSection(prev, { ...section, data: { ...section.data, kicker: e.target.value } }),
@@ -2165,7 +2165,7 @@ export default function StagingWorkflowPanel() {
             className="wf-input"
             disabled={editingLocked}
             value={typeof section.data.title === "string" ? section.data.title : ""}
-            placeholder="Section title"
+            placeholder="Título sección"
             onChange={(e) =>
               updateSettings((prev) =>
                 upsertSection(prev, { ...section, data: { ...section.data, title: e.target.value } }),
@@ -2225,7 +2225,7 @@ export default function StagingWorkflowPanel() {
                     className="wf-input"
                     disabled={editingLocked}
                     value={typeof item.name === "string" ? item.name : ""}
-                    placeholder="name"
+                    placeholder="Nombre"
                     onChange={(e) =>
                       updateSettings((prev) => {
                         const sec = getSection(prev, section.id);
@@ -2241,7 +2241,7 @@ export default function StagingWorkflowPanel() {
                     className="wf-input"
                     disabled={editingLocked}
                     value={typeof item.location === "string" ? item.location : ""}
-                    placeholder="location"
+                    placeholder="Ubicación"
                     onChange={(e) =>
                       updateSettings((prev) => {
                         const sec = getSection(prev, section.id);
@@ -2257,7 +2257,7 @@ export default function StagingWorkflowPanel() {
                     className="wf-textarea"
                     disabled={editingLocked}
                     value={typeof item.quote === "string" ? item.quote : ""}
-                    placeholder="quote"
+                    placeholder="Comentario"
                     onChange={(e) =>
                       updateSettings((prev) => {
                         const sec = getSection(prev, section.id);
@@ -2271,7 +2271,7 @@ export default function StagingWorkflowPanel() {
                   />
                   <ImageUploadField
                     value={typeof item.avatar === "string" ? item.avatar : ""}
-                    placeholder="avatar URL/path"
+                    placeholder="URL/ruta avatar"
                     disabled={editingLocked}
                     removeDisabled={editingLocked || !(typeof item.avatar === "string" && item.avatar.trim())}
                     uploading={uploadingContentAssetKey === `testimonials:${itemId}:avatar`}
@@ -2400,7 +2400,7 @@ export default function StagingWorkflowPanel() {
               className="wf-input"
               disabled={editingLocked}
               value={typeof section.data.title === "string" ? section.data.title : ""}
-              placeholder="services title"
+              placeholder="Título servicios"
               onChange={(e) =>
                 updateSettings((prev) =>
                   upsertSection(prev, {
@@ -2414,7 +2414,7 @@ export default function StagingWorkflowPanel() {
               className="wf-textarea"
               disabled={editingLocked}
               value={typeof section.data.subtitle === "string" ? section.data.subtitle : ""}
-              placeholder="services subtitle"
+              placeholder="Subtítulo servicios"
               onChange={(e) =>
                 updateSettings((prev) =>
                   upsertSection(prev, {
@@ -2431,7 +2431,7 @@ export default function StagingWorkflowPanel() {
             className="wf-input"
             disabled={editingLocked}
             value={typeof section.data.title === "string" ? section.data.title : ""}
-            placeholder="faq title"
+            placeholder="Título FAQ"
             onChange={(e) =>
               updateSettings((prev) =>
                 upsertSection(prev, {
@@ -2942,7 +2942,7 @@ export default function StagingWorkflowPanel() {
           <input
             className="wf-input"
             disabled={editingLocked}
-            placeholder="font URL u override"
+            placeholder="URL de fuente u override"
             value={typography.font ?? ""}
             onChange={(e) =>
               updateSettings((prev) => ({
@@ -2954,7 +2954,7 @@ export default function StagingWorkflowPanel() {
           <input
             className="wf-input"
             disabled={editingLocked}
-            placeholder="baseSize (ej: 16px)"
+            placeholder="Tamaño base (ej: 16px)"
             value={typography.baseSize ?? ""}
             onChange={(e) =>
               updateSettings((prev) => ({
@@ -2972,7 +2972,7 @@ export default function StagingWorkflowPanel() {
           <input
             className="wf-input"
             disabled={editingLocked}
-            placeholder="lineHeight (ej: 1.5)"
+            placeholder="Interlineado (ej: 1.5)"
             value={typography.lineHeight ?? ""}
             onChange={(e) =>
               updateSettings((prev) => ({
