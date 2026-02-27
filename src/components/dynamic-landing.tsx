@@ -125,6 +125,14 @@ const landingStyles = String.raw`
         color: var(--navy);
       }
 
+      .footer-brand {
+        display: inline-flex;
+        align-items: center;
+        margin-bottom: 10px;
+        font-size: 1.15rem;
+        color: #f8fafc;
+      }
+
       .nav-links {
         display: none;
         align-items: center;
@@ -1462,7 +1470,7 @@ const landingStyles = String.raw`
 const landingMarkup = String.raw`
     <nav class="top-nav">
       <div class="top-nav-inner">
-        <a class="brand" href="#inicio" data-default-brand="Gasfiter 24/7">Gasfiter 24/7</a>
+        <a class="brand" href="#inicio" data-default-brand="Gasfiter 24/7" data-logo-height="42">Gasfiter 24/7</a>
         <div class="nav-links">
           <a href="#inicio">Inicio</a>
           <a href="#servicios">Servicios</a>
@@ -1838,6 +1846,9 @@ const landingMarkup = String.raw`
     <footer class="section footer">
       <div class="container footer-grid">
         <div>
+          <a class="brand footer-brand" href="#inicio" data-default-brand="Gasfiter 24/7" data-logo-height="34">
+            Gasfiter 24/7
+          </a>
           <h3>Gasfiter Urgencias Santiago</h3>
           <p style="margin-top: 8px">Respuesta técnica 24/7 para fugas, destapes e instalaciones.</p>
           <p style="margin-top: 14px"><a class="phone-big" href="tel:+569XXXXXXX">+56 9 XXXX XXXX</a></p>
@@ -2227,16 +2238,19 @@ export default function DynamicLanding() {
       const brandingContact =
         branding.contact && typeof branding.contact === "object" ? branding.contact : {};
 
-      const brandLink = document.querySelector<HTMLAnchorElement>(".brand");
-      if (brandLink) {
-        const logoUrl = typeof branding.logoUrl === "string" ? branding.logoUrl.trim() : "";
+      const brandLinks = document.querySelectorAll<HTMLAnchorElement>(".brand[data-default-brand]");
+      const logoUrl = typeof branding.logoUrl === "string" ? branding.logoUrl.trim() : "";
+      brandLinks.forEach((brandLink) => {
         if (logoUrl) {
-          brandLink.innerHTML = `<img src="${escapeHtml(logoUrl)}" alt="Logo" style="height:42px; width:auto; object-fit:contain;" />`;
+          const logoHeight = brandLink.getAttribute("data-logo-height") || "42";
+          brandLink.innerHTML = `<img src="${escapeHtml(logoUrl)}" alt="Logo" style="height:${escapeHtml(
+            logoHeight
+          )}px; width:auto; object-fit:contain;" />`;
         } else {
           const fallbackText = brandLink.getAttribute("data-default-brand") || "Gasfiter 24/7";
           brandLink.textContent = fallbackText;
         }
-      }
+      });
 
       const faviconUrl = typeof branding.faviconUrl === "string" ? branding.faviconUrl.trim() : "";
       if (faviconUrl) {
