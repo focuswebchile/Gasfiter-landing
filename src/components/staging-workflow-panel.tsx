@@ -3126,6 +3126,43 @@ export default function StagingWorkflowPanel() {
     return { currentStep, steps };
   }, [panelReady, siteSlug, userId]);
 
+  const actionContext = useMemo(() => {
+    const inDraft = mode === "draft";
+    const inPublished = mode === "published";
+    const canEditDraftNow = inDraft && canSaveDraft;
+    const canPublishNow = inDraft && canPublish;
+    const blockedByState = busy || autosaving || flushingPublish || draftConflict.active || !panelReady;
+
+    const message = !panelReady
+      ? "Carga el panel para habilitar acciones."
+      : inPublished
+        ? "Modo lectura publicado. Usa 'Editar borrador' para modificar."
+        : !canSaveDraft && !canPublish
+          ? "Tu rol es solo lectura en este sitio."
+          : autosaving || flushingPublish
+            ? "Esperando guardado automático antes de continuar."
+            : "Listo para editar y publicar.";
+
+    return {
+      showSave: canEditDraftNow,
+      showPublish: canPublishNow,
+      showEditDraft: inPublished && canSaveDraft,
+      saveDisabled: blockedByState || !canEditDraftNow,
+      publishDisabled: blockedByState || !canPublishNow,
+      editDraftDisabled: busy || !panelReady || !canSaveDraft,
+      message,
+    };
+  }, [
+    mode,
+    canSaveDraft,
+    canPublish,
+    busy,
+    autosaving,
+    flushingPublish,
+    draftConflict.active,
+    panelReady,
+  ]);
+
   return (
     <main className="wf-shell">
       <style dangerouslySetInnerHTML={{ __html: panelStyles }} />
@@ -3206,14 +3243,16 @@ export default function StagingWorkflowPanel() {
           </div>
 
           <div className="wf-row" style={{ marginBottom: 12 }}>
-            <button className="wf-btn wf-btn-primary" onClick={saveDraft} disabled={busy || publishedReadOnly || !panelReady || !canSaveDraft}>Guardar Draft</button>
-            <button
-              className="wf-btn wf-btn-primary"
-              onClick={publish}
-              disabled={busy || autosaving || flushingPublish || publishedReadOnly || draftConflict.active || !panelReady || !canPublish}
-            >
-              {flushingPublish ? "Esperando guardado..." : "Publicar"}
-            </button>
+            {actionContext.showSave ? (
+              <button className="wf-btn wf-btn-primary" onClick={saveDraft} disabled={actionContext.saveDisabled}>
+                Guardar Draft
+              </button>
+            ) : null}
+            {actionContext.showPublish ? (
+              <button className="wf-btn wf-btn-primary" onClick={publish} disabled={actionContext.publishDisabled}>
+                {flushingPublish ? "Esperando guardado..." : "Publicar"}
+              </button>
+            ) : null}
             <button className="wf-btn wf-btn-soft" onClick={openPublishedJson} disabled={!panelReady}>
               Ver JSON publicado
             </button>
@@ -3224,11 +3263,12 @@ export default function StagingWorkflowPanel() {
             >
               {loadingDiff ? "Comparando..." : "Ver cambios"}
             </button>
-            {publishedReadOnly ? (
-              <button className="wf-btn wf-btn-soft" onClick={startDraftEditing} disabled={busy || !panelReady || !canSaveDraft}>
+            {actionContext.showEditDraft ? (
+              <button className="wf-btn wf-btn-soft" onClick={startDraftEditing} disabled={actionContext.editDraftDisabled}>
                 Editar borrador
               </button>
             ) : null}
+            <span className="wf-muted">{actionContext.message}</span>
             {draftConflict.active ? (
               <>
                 <span className="wf-msg wf-err">
