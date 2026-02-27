@@ -3297,6 +3297,30 @@ export default function StagingWorkflowPanel() {
             ? "Esperando guardado automático antes de continuar."
             : "Listo para editar y publicar.";
 
+    const saveDisabledReason = !panelReady
+      ? "Primero carga el panel."
+      : draftConflict.active
+        ? "Conflicto detectado: recarga borrador."
+        : autosaving || flushingPublish
+          ? "Esperando guardado automático."
+          : busy
+            ? "Hay una operación en curso."
+            : !canEditDraftNow
+              ? "El rol o modo actual no permite guardar borrador."
+              : "";
+
+    const publishDisabledReason = !panelReady
+      ? "Primero carga el panel."
+      : draftConflict.active
+        ? "Conflicto detectado: recarga borrador."
+        : autosaving || flushingPublish
+          ? "Esperando guardado automático."
+          : busy
+            ? "Hay una operación en curso."
+            : !canPublishNow
+              ? "El rol o modo actual no permite publicar."
+              : "";
+
     return {
       showSave: canEditDraftNow,
       showPublish: canPublishNow,
@@ -3304,6 +3328,8 @@ export default function StagingWorkflowPanel() {
       saveDisabled: blockedByState || !canEditDraftNow,
       publishDisabled: blockedByState || !canPublishNow,
       editDraftDisabled: busy || !panelReady || !canSaveDraft,
+      saveDisabledReason,
+      publishDisabledReason,
       message,
     };
   }, [
@@ -3435,12 +3461,22 @@ export default function StagingWorkflowPanel() {
 
           <div className="wf-row" style={{ marginBottom: 12 }}>
             {actionContext.showSave ? (
-              <button className="wf-btn wf-btn-primary" onClick={saveDraft} disabled={actionContext.saveDisabled}>
+              <button
+                className="wf-btn wf-btn-primary"
+                onClick={saveDraft}
+                disabled={actionContext.saveDisabled}
+                title={actionContext.saveDisabled ? actionContext.saveDisabledReason : "Guardar cambios en borrador"}
+              >
                 Guardar borrador
               </button>
             ) : null}
             {actionContext.showPublish ? (
-              <button className="wf-btn wf-btn-primary" onClick={publish} disabled={actionContext.publishDisabled}>
+              <button
+                className="wf-btn wf-btn-primary"
+                onClick={publish}
+                disabled={actionContext.publishDisabled}
+                title={actionContext.publishDisabled ? actionContext.publishDisabledReason : "Publicar versión actual"}
+              >
                 {flushingPublish ? "Esperando guardado..." : "Publicar"}
               </button>
             ) : null}
@@ -3472,6 +3508,11 @@ export default function StagingWorkflowPanel() {
               </>
             ) : null}
           </div>
+          {(actionContext.saveDisabledReason || actionContext.publishDisabledReason) && (
+            <p className="wf-muted" style={{ marginTop: -6, marginBottom: 12 }}>
+              {actionContext.publishDisabledReason || actionContext.saveDisabledReason}
+            </p>
+          )}
           {publishValidationMissing.length > 0 ? (
             <div className="wf-alert" style={{ marginBottom: 12 }}>
               <div className="wf-alert-title">Falta contenido mínimo para publicar</div>
