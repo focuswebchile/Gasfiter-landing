@@ -146,14 +146,65 @@ type ImageUploadFieldProps = {
   uploading: boolean;
   uploadingText: string;
   fallbackText: string;
+  guidanceText?: string;
   previewAlt: string;
   previewWidth: number;
   previewHeight: number;
   previewStyle?: CSSProperties;
+  accept: string;
+  allowedMimeTypes: string[];
+  allowedExtensions?: string[];
+  maxSizeBytes: number;
   onValueChange: (nextValue: string) => void;
   onReplace: (file: File | null) => void;
   onRemove: () => void;
 };
+
+const CONTENT_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
+const LOGO_MAX_BYTES = 2 * 1024 * 1024;
+const FAVICON_MAX_BYTES = 1 * 1024 * 1024;
+const CONTENT_IMAGE_MIME_TYPES = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/svg+xml"];
+const LOGO_MIME_TYPES = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/svg+xml"];
+const FAVICON_MIME_TYPES = ["image/png", "image/x-icon", "image/vnd.microsoft.icon"];
+const FAVICON_EXTENSIONS = ["png", "ico"];
+
+function bytesToMbText(bytes: number): string {
+  return `${(bytes / (1024 * 1024)).toFixed(0)}MB`;
+}
+
+function validateImageFile(
+  file: File | null,
+  options: { allowedMimeTypes: string[]; maxSizeBytes: number; allowedExtensions?: string[] },
+): string | null {
+  if (!file) return null;
+
+  const mime = (file.type || "").toLowerCase();
+  const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
+  const mimeAllowed = options.allowedMimeTypes.includes(mime);
+  const extensionAllowed = options.allowedExtensions ? options.allowedExtensions.includes(extension) : false;
+
+  if (!mimeAllowed && !extensionAllowed) {
+    const allowed = options.allowedExtensions?.length
+      ? options.allowedExtensions.join(", ")
+      : options.allowedMimeTypes
+          .map((type) => {
+            if (type.includes("png")) return "png";
+            if (type.includes("jpeg") || type.includes("jpg")) return "jpg";
+            if (type.includes("webp")) return "webp";
+            if (type.includes("svg")) return "svg";
+            if (type.includes("icon")) return "ico";
+            return type;
+          })
+          .join(", ");
+    return `Formato no permitido. Usa: ${allowed}.`;
+  }
+
+  if (file.size > options.maxSizeBytes) {
+    return `Archivo muy pesado (${bytesToMbText(file.size)}). Máximo ${bytesToMbText(options.maxSizeBytes)}.`;
+  }
+
+  return null;
+}
 
 function ImageUploadField({
   value,
@@ -163,14 +214,21 @@ function ImageUploadField({
   uploading,
   uploadingText,
   fallbackText,
+  guidanceText,
   previewAlt,
   previewWidth,
   previewHeight,
   previewStyle,
+  accept,
+  allowedMimeTypes,
+  allowedExtensions,
+  maxSizeBytes,
   onValueChange,
   onReplace,
   onRemove,
 }: ImageUploadFieldProps) {
+  const [validationError, setValidationError] = useState<string | null>(null);
+
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <input
@@ -187,8 +245,17 @@ function ImageUploadField({
             type="file"
             hidden
             disabled={disabled}
-            accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
-            onChange={(e) => onReplace(e.target.files?.[0] ?? null)}
+            accept={accept}
+            onChange={(e) => {
+              const file = e.target.files?.[0] ?? null;
+              const validation = validateImageFile(file, { allowedMimeTypes, maxSizeBytes, allowedExtensions });
+              if (validation) {
+                setValidationError(validation);
+                return;
+              }
+              setValidationError(null);
+              onReplace(file);
+            }}
           />
         </label>
         <button className="wf-btn wf-btn-warn" disabled={removeDisabled} onClick={onRemove}>
@@ -196,6 +263,8 @@ function ImageUploadField({
         </button>
         {uploading ? <span className="wf-muted">{uploadingText}</span> : null}
       </div>
+      {validationError ? <span className="wf-upload-error">{validationError}</span> : null}
+      {guidanceText ? <span className="wf-muted">{guidanceText}</span> : null}
       {value.trim() ? (
         <Image
           src={value}
@@ -258,6 +327,7 @@ const panelStyles = String.raw`
   .wf-toggle{display:flex;gap:8px;align-items:center;font-size:13px}
   .wf-toggle input{width:16px;height:16px}
   .wf-code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;background:#f8fafc;padding:10px;border-radius:8px;overflow:auto;max-height:280px}
+  .wf-upload-error{font-size:12px;color:#991b1b;font-weight:600}
   .wf-preview{display:grid;gap:12px}
   .wf-preview-box{border:1px solid #dbe3f0;border-radius:10px;background:#f8fafc;padding:12px}
   .wf-kv{display:grid;gap:6px;font-size:13px}
@@ -492,6 +562,11 @@ export default function StagingWorkflowPanel() {
   const [heroDiff, setHeroDiff] = useState<HeroDiffResult | null>(null);
   const [loadingDiff, setLoadingDiff] = useState(false);
   const [uploadingAsset, setUploadingAsset] = useState<"logo" | "favicon" | null>(null);
+  const [brandingUploadErrors, setBrandingUploadErrors] = useState<{
+    logoNav?: string;
+    logoFooter?: string;
+    favicon?: string;
+  }>({});
   const [uploadingContentAssetKey, setUploadingContentAssetKey] = useState<string | null>(null);
 
   const baseUrl = useMemo(() => {
@@ -1119,6 +1194,20 @@ export default function StagingWorkflowPanel() {
     targetKey: "logoNavUrl" | "logoFooterUrl" | "faviconUrl" = assetType === "logo" ? "logoNavUrl" : "faviconUrl",
   ) => {
       if (!file) return;
+      const validationError = validateImageFile(file, {
+        allowedMimeTypes: assetType === "favicon" ? FAVICON_MIME_TYPES : LOGO_MIME_TYPES,
+        maxSizeBytes: assetType === "favicon" ? FAVICON_MAX_BYTES : LOGO_MAX_BYTES,
+        allowedExtensions: assetType === "favicon" ? FAVICON_EXTENSIONS : undefined,
+      });
+      if (validationError) {
+        const target = targetKey === "logoFooterUrl" ? "logoFooter" : targetKey === "logoNavUrl" ? "logoNav" : "favicon";
+        setBrandingUploadErrors((prev) => ({ ...prev, [target]: validationError }));
+        return setError(validationError);
+      }
+      setBrandingUploadErrors((prev) => ({
+        ...prev,
+        [targetKey === "logoFooterUrl" ? "logoFooter" : targetKey === "logoNavUrl" ? "logoNav" : "favicon"]: undefined,
+      }));
       if (!panelReady) return setError("Primero usa Cargar panel");
       if (!userId.trim()) return setError("Ingresa UUID de usuario para subir archivos");
       if (!canSaveDraft) return setError("Tu rol no puede editar estilo");
@@ -1179,6 +1268,11 @@ export default function StagingWorkflowPanel() {
   }) => {
     const { sectionId, field, file, itemId } = params;
     if (!file) return;
+    const validationError = validateImageFile(file, {
+      allowedMimeTypes: CONTENT_IMAGE_MIME_TYPES,
+      maxSizeBytes: CONTENT_IMAGE_MAX_BYTES,
+    });
+    if (validationError) return setError(validationError);
     if (!panelReady) return setError("Primero usa Cargar panel");
     if (!userId.trim()) return setError("Ingresa UUID de usuario para subir archivos");
     if (!canSaveDraft) return setError("Tu rol no puede editar contenido");
@@ -1328,9 +1422,13 @@ export default function StagingWorkflowPanel() {
             uploading={uploadingContentAssetKey === "hero:section:image"}
             uploadingText="Subiendo imagen..."
             fallbackText="Sin imagen hero (usa fallback del layout)"
+            guidanceText="Formatos: png, jpg, webp, svg. Máximo 5MB."
             previewAlt="hero preview"
             previewWidth={320}
             previewHeight={92}
+            accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
+            allowedMimeTypes={CONTENT_IMAGE_MIME_TYPES}
+            maxSizeBytes={CONTENT_IMAGE_MAX_BYTES}
             onValueChange={(nextValue) =>
               updateSettings((prev) =>
                 upsertSection(prev, { ...section, data: { ...section.data, image: nextValue } }),
@@ -1744,9 +1842,13 @@ export default function StagingWorkflowPanel() {
                     uploading={uploadingContentAssetKey === `projects:${itemId}:image`}
                     uploadingText="Subiendo imagen..."
                     fallbackText="Sin imagen (usa fallback del card)"
+                    guidanceText="Formatos: png, jpg, webp, svg. Máximo 5MB."
                     previewAlt="project preview"
                     previewWidth={280}
                     previewHeight={86}
+                    accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
+                    allowedMimeTypes={CONTENT_IMAGE_MIME_TYPES}
+                    maxSizeBytes={CONTENT_IMAGE_MAX_BYTES}
                     onValueChange={(nextValue) =>
                       updateSettings((prev) => {
                         const sec = getSection(prev, section.id);
@@ -1975,9 +2077,13 @@ export default function StagingWorkflowPanel() {
             uploading={uploadingContentAssetKey === "contact_banner:section:background_image"}
             uploadingText="Subiendo imagen..."
             fallbackText="Sin imagen (usa fallback del layout)"
+            guidanceText="Formatos: png, jpg, webp, svg. Máximo 5MB."
             previewAlt="contact banner preview"
             previewWidth={320}
             previewHeight={90}
+            accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
+            allowedMimeTypes={CONTENT_IMAGE_MIME_TYPES}
+            maxSizeBytes={CONTENT_IMAGE_MAX_BYTES}
             onValueChange={(nextValue) =>
               updateSettings((prev) =>
                 upsertSection(prev, { ...section, data: { ...section.data, background_image: nextValue } }),
@@ -2154,10 +2260,14 @@ export default function StagingWorkflowPanel() {
                     uploading={uploadingContentAssetKey === `testimonials:${itemId}:avatar`}
                     uploadingText="Subiendo avatar..."
                     fallbackText="Sin avatar (usa fallback del card)"
+                    guidanceText="Formatos: png, jpg, webp, svg. Máximo 5MB."
                     previewAlt="testimonial preview"
                     previewWidth={48}
                     previewHeight={48}
                     previewStyle={{ width: 48, height: 48, borderRadius: "999px", objectFit: "cover" }}
+                    accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
+                    allowedMimeTypes={CONTENT_IMAGE_MIME_TYPES}
+                    maxSizeBytes={CONTENT_IMAGE_MAX_BYTES}
                     onValueChange={(nextValue) =>
                       updateSettings((prev) => {
                         const sec = getSection(prev, section.id);
@@ -2891,11 +3001,21 @@ export default function StagingWorkflowPanel() {
               accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
               onChange={(e) => {
                 const file = e.target.files?.[0] ?? null;
+                const validationError = validateImageFile(file, {
+                  allowedMimeTypes: LOGO_MIME_TYPES,
+                  maxSizeBytes: LOGO_MAX_BYTES,
+                });
+                if (validationError) {
+                  setBrandingUploadErrors((prev) => ({ ...prev, logoNav: validationError }));
+                  return;
+                }
+                setBrandingUploadErrors((prev) => ({ ...prev, logoNav: undefined }));
                 void uploadBrandingAsset("logo", file, "logoNavUrl");
               }}
             />
             {uploadingAsset === "logo" ? <span className="wf-muted">Subiendo logo...</span> : null}
           </div>
+          {brandingUploadErrors.logoNav ? <span className="wf-upload-error">{brandingUploadErrors.logoNav}</span> : null}
           {logoNavPreviewSrc ? (
             <Image
               src={logoNavPreviewSrc}
@@ -2930,11 +3050,23 @@ export default function StagingWorkflowPanel() {
               accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
               onChange={(e) => {
                 const file = e.target.files?.[0] ?? null;
+                const validationError = validateImageFile(file, {
+                  allowedMimeTypes: LOGO_MIME_TYPES,
+                  maxSizeBytes: LOGO_MAX_BYTES,
+                });
+                if (validationError) {
+                  setBrandingUploadErrors((prev) => ({ ...prev, logoFooter: validationError }));
+                  return;
+                }
+                setBrandingUploadErrors((prev) => ({ ...prev, logoFooter: undefined }));
                 void uploadBrandingAsset("logo", file, "logoFooterUrl");
               }}
             />
             {uploadingAsset === "logo" ? <span className="wf-muted">Subiendo logo...</span> : null}
           </div>
+          {brandingUploadErrors.logoFooter ? (
+            <span className="wf-upload-error">{brandingUploadErrors.logoFooter}</span>
+          ) : null}
           {logoFooterPreviewSrc ? (
             <Image
               src={logoFooterPreviewSrc}
@@ -2969,11 +3101,22 @@ export default function StagingWorkflowPanel() {
               accept="image/png,image/x-icon,image/vnd.microsoft.icon"
               onChange={(e) => {
                 const file = e.target.files?.[0] ?? null;
+                const validationError = validateImageFile(file, {
+                  allowedMimeTypes: FAVICON_MIME_TYPES,
+                  maxSizeBytes: FAVICON_MAX_BYTES,
+                  allowedExtensions: FAVICON_EXTENSIONS,
+                });
+                if (validationError) {
+                  setBrandingUploadErrors((prev) => ({ ...prev, favicon: validationError }));
+                  return;
+                }
+                setBrandingUploadErrors((prev) => ({ ...prev, favicon: undefined }));
                 void uploadBrandingAsset("favicon", file);
               }}
             />
             {uploadingAsset === "favicon" ? <span className="wf-muted">Subiendo favicon...</span> : null}
           </div>
+          {brandingUploadErrors.favicon ? <span className="wf-upload-error">{brandingUploadErrors.favicon}</span> : null}
           {faviconPreviewSrc ? (
             <Image
               src={faviconPreviewSrc}
