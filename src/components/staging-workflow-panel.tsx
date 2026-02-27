@@ -138,6 +138,15 @@ type HeroDiffResult = {
   };
 };
 
+type PublishChecklistItem = {
+  key: "hero_cta" | "services" | "testimonials" | "contact";
+  label: string;
+  completed: boolean;
+  description: string;
+  section?: EditableSectionId;
+  view?: SidebarView;
+};
+
 type ImageUploadFieldProps = {
   value: string;
   placeholder: string;
@@ -376,6 +385,19 @@ const panelStyles = String.raw`
   .wf-diff-row.same{border-color:#bbf7d0;background:#f0fdf4}
   .wf-diff-values{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   .wf-diff-cell{border:1px solid #e2e8f0;border-radius:8px;padding:8px;background:#f8fafc;font-size:12px}
+  .wf-checklist{display:grid;gap:8px;border:1px solid #dbe3f0;border-radius:12px;padding:10px;background:#f8fafc;margin-bottom:12px}
+  .wf-checklist-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .wf-checklist-head strong{font-size:13px}
+  .wf-checklist-list{display:grid;gap:6px}
+  .wf-checklist-item{display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid #e2e8f0;background:#fff;padding:8px 10px;border-radius:10px}
+  .wf-checklist-item.ok{border-color:#86efac;background:#f0fdf4}
+  .wf-checklist-item.warn{border-color:#fde68a;background:#fffbeb}
+  .wf-checklist-left{display:grid;gap:2px}
+  .wf-checklist-left strong{font-size:13px}
+  .wf-checklist-left span{font-size:12px;color:#64748b}
+  .wf-check-icon{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:999px;font-size:12px;font-weight:800}
+  .wf-check-icon.ok{background:#166534;color:#fff}
+  .wf-check-icon.warn{background:#b45309;color:#fff}
   .wf-action-help{min-height:18px;margin-top:-6px;margin-bottom:12px;font-size:12px;color:#64748b;display:flex;align-items:center}
   .wf-action-help.err{color:#991b1b}
   .wf-sr-only{
@@ -435,6 +457,10 @@ function normalizeColorValue(value: string) {
 
 function sortByOrder<T extends { order: number }>(items: T[]) {
   return [...items].sort((a, b) => a.order - b.order);
+}
+
+function asNonEmptyString(value: unknown): string {
+  return typeof value === "string" ? value.trim() : "";
 }
 
 function createPanelItemId() {
@@ -3369,6 +3395,82 @@ export default function StagingWorkflowPanel() {
     return Array.from(dedup.values());
   }, [publishValidationMissing]);
 
+  const publishChecklist = useMemo<PublishChecklistItem[]>(() => {
+    if (!settings) return [];
+
+    const hero = getSection(settings, "hero");
+    const services = getSection(settings, "services");
+    const testimonials = getSection(settings, "testimonials");
+    const contact = getSection(settings, "contact_banner");
+
+    const heroTitle = asNonEmptyString(hero?.data?.title);
+    const heroCtaText = asNonEmptyString(
+      (hero?.data as { cta_primary?: { text?: unknown } } | undefined)?.cta_primary?.text,
+    );
+    const heroCtaUrl = asNonEmptyString(
+      (hero?.data as { cta_primary?: { url?: unknown } } | undefined)?.cta_primary?.url,
+    );
+    const heroOk = Boolean(hero?.enabled && heroTitle && heroCtaText && heroCtaUrl);
+
+    const serviceItems = services ? toSectionItems(services) : [];
+    const serviceOk = Boolean(
+      services?.enabled &&
+        serviceItems.some((item) => item.enabled !== false && asNonEmptyString(item.title)),
+    );
+
+    const testimonialItems = testimonials ? toSectionItems(testimonials) : [];
+    const testimonialOk = Boolean(
+      testimonials?.enabled &&
+        testimonialItems.some(
+          (item) =>
+            item.enabled !== false && asNonEmptyString(item.name) && asNonEmptyString(item.quote),
+        ),
+    );
+
+    const contactTitle = asNonEmptyString(contact?.data?.title);
+    const contactOk = Boolean(contact?.enabled && contactTitle);
+
+    return [
+      {
+        key: "hero_cta",
+        label: "Hero con CTA activo",
+        description: heroOk ? "Completo" : "Falta título o CTA (texto/url)",
+        completed: heroOk,
+        section: "hero",
+        view: "sections",
+      },
+      {
+        key: "services",
+        label: "Al menos un servicio",
+        description: serviceOk ? "Completo" : "Activa y completa un servicio",
+        completed: serviceOk,
+        section: "services",
+        view: "items",
+      },
+      {
+        key: "testimonials",
+        label: "Al menos un testimonio",
+        description: testimonialOk ? "Completo" : "Activa y completa un testimonio",
+        completed: testimonialOk,
+        section: "testimonials",
+        view: "items",
+      },
+      {
+        key: "contact",
+        label: "Sección de contacto",
+        description: contactOk ? "Completo" : "Activa contacto y completa título",
+        completed: contactOk,
+        section: "contact_banner",
+        view: "sections",
+      },
+    ];
+  }, [settings]);
+
+  const checklistCompleted = useMemo(
+    () => publishChecklist.filter((item) => item.completed).length,
+    [publishChecklist],
+  );
+
   const actionHelpText = useMemo(() => {
     if (actionContext.publishDisabledReason) return actionContext.publishDisabledReason;
     if (actionContext.saveDisabledReason) return actionContext.saveDisabledReason;
@@ -3551,6 +3653,45 @@ export default function StagingWorkflowPanel() {
           <div className={`wf-action-help ${actionHelpIsError ? "err" : ""}`} aria-live="polite">
             {actionHelpText}
           </div>
+          {publishChecklist.length > 0 ? (
+            <div className="wf-checklist">
+              <div className="wf-checklist-head">
+                <strong>Checklist de publicación ({checklistCompleted}/{publishChecklist.length})</strong>
+                <span className="wf-muted">
+                  {checklistCompleted === publishChecklist.length
+                    ? "Listo para publicar"
+                    : "Completa mínimos antes de publicar"}
+                </span>
+              </div>
+              <div className="wf-checklist-list">
+                {publishChecklist.map((item) => (
+                  <div key={item.key} className={`wf-checklist-item ${item.completed ? "ok" : "warn"}`}>
+                    <div className="wf-checklist-left">
+                      <strong>
+                        <span className={`wf-check-icon ${item.completed ? "ok" : "warn"}`}>
+                          {item.completed ? "✓" : "!"}
+                        </span>{" "}
+                        {item.label}
+                      </strong>
+                      <span>{item.description}</span>
+                    </div>
+                    {!item.completed && item.section && item.view ? (
+                      <button
+                        className="wf-btn wf-btn-soft"
+                        style={{ height: 30 }}
+                        onClick={() => {
+                          setView(item.view);
+                          setEditableSection(item.section);
+                        }}
+                      >
+                        Ir a completar
+                      </button>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
           {publishValidationMissing.length > 0 ? (
             <div className="wf-alert" style={{ marginBottom: 12 }}>
               <div className="wf-alert-title">Falta contenido mínimo para publicar</div>
