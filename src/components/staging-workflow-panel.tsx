@@ -2706,10 +2706,13 @@ export default function StagingWorkflowPanel() {
 
   const renderStyleEditor = () => {
     if (!settings) return <p className="wf-muted">Carga panel para editar estilo.</p>;
-    const colors = settings.colors ?? {};
-    const typography = settings.typography ?? {};
-    const branding = settings.branding ?? {};
-    const contact = branding.contact ?? {};
+  const colors = settings.colors ?? {};
+  const typography = settings.typography ?? {};
+  const branding = settings.branding ?? {};
+  const logoNavPreviewSrc = (branding.logoNavUrl ?? branding.logoUrl ?? "").trim();
+  const logoFooterPreviewSrc = (branding.logoFooterUrl ?? "").trim();
+  const faviconPreviewSrc = (branding.faviconUrl ?? "").trim();
+  const contact = branding.contact ?? {};
 
     const updateColor = (key: "primary" | "secondary" | "background" | "text", value: string) => {
       const normalized = normalizeColorValue(value);
@@ -2861,9 +2864,9 @@ export default function StagingWorkflowPanel() {
             />
             {uploadingAsset === "logo" ? <span className="wf-muted">Subiendo logo...</span> : null}
           </div>
-          {branding.logoNavUrl || branding.logoUrl ? (
+          {logoNavPreviewSrc ? (
             <Image
-              src={branding.logoNavUrl ?? branding.logoUrl}
+              src={logoNavPreviewSrc}
               alt="logo navbar preview"
               width={240}
               height={42}
@@ -2900,9 +2903,9 @@ export default function StagingWorkflowPanel() {
             />
             {uploadingAsset === "logo" ? <span className="wf-muted">Subiendo logo...</span> : null}
           </div>
-          {branding.logoFooterUrl ? (
+          {logoFooterPreviewSrc ? (
             <Image
-              src={branding.logoFooterUrl}
+              src={logoFooterPreviewSrc}
               alt="logo footer preview"
               width={220}
               height={34}
@@ -2939,9 +2942,9 @@ export default function StagingWorkflowPanel() {
             />
             {uploadingAsset === "favicon" ? <span className="wf-muted">Subiendo favicon...</span> : null}
           </div>
-          {branding.faviconUrl ? (
+          {faviconPreviewSrc ? (
             <Image
-              src={branding.faviconUrl}
+              src={faviconPreviewSrc}
               alt="favicon preview"
               width={24}
               height={24}
