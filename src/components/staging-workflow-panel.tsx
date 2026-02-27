@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type Mode = "draft" | "published";
@@ -1222,7 +1223,14 @@ export default function StagingWorkflowPanel() {
             </div>
           </div>
           {typeof section.data.image === "string" && section.data.image.trim() ? (
-            <img src={section.data.image} alt="hero preview" style={{ maxHeight: 92, objectFit: "contain" }} />
+            <Image
+              src={section.data.image}
+              alt="hero preview"
+              width={320}
+              height={92}
+              unoptimized
+              style={{ maxHeight: 92, width: "auto", objectFit: "contain" }}
+            />
           ) : (
             <span className="wf-muted">Sin imagen hero (usa fallback del layout)</span>
           )}
@@ -1675,7 +1683,14 @@ export default function StagingWorkflowPanel() {
                     ) : null}
                   </div>
                   {typeof item.image === "string" && item.image.trim() ? (
-                    <img src={item.image} alt="project preview" style={{ maxHeight: 86, objectFit: "contain" }} />
+                    <Image
+                      src={item.image}
+                      alt="project preview"
+                      width={280}
+                      height={86}
+                      unoptimized
+                      style={{ maxHeight: 86, width: "auto", objectFit: "contain" }}
+                    />
                   ) : (
                     <span className="wf-muted">Sin imagen (usa fallback del card)</span>
                   )}
@@ -1913,7 +1928,14 @@ export default function StagingWorkflowPanel() {
             ) : null}
           </div>
           {typeof section.data.background_image === "string" && section.data.background_image.trim() ? (
-            <img src={section.data.background_image} alt="contact banner preview" style={{ maxHeight: 90, objectFit: "contain" }} />
+            <Image
+              src={section.data.background_image}
+              alt="contact banner preview"
+              width={320}
+              height={90}
+              unoptimized
+              style={{ maxHeight: 90, width: "auto", objectFit: "contain" }}
+            />
           ) : (
             <span className="wf-muted">Sin imagen (usa fallback del layout)</span>
           )}
@@ -2125,7 +2147,14 @@ export default function StagingWorkflowPanel() {
                     ) : null}
                   </div>
                   {typeof item.avatar === "string" && item.avatar.trim() ? (
-                    <img src={item.avatar} alt="testimonial preview" style={{ width: 48, height: 48, borderRadius: "999px", objectFit: "cover" }} />
+                    <Image
+                      src={item.avatar}
+                      alt="testimonial preview"
+                      width={48}
+                      height={48}
+                      unoptimized
+                      style={{ width: 48, height: 48, borderRadius: "999px", objectFit: "cover" }}
+                    />
                   ) : (
                     <span className="wf-muted">Sin avatar (usa fallback del card)</span>
                   )}
@@ -2833,10 +2862,13 @@ export default function StagingWorkflowPanel() {
             {uploadingAsset === "logo" ? <span className="wf-muted">Subiendo logo...</span> : null}
           </div>
           {branding.logoNavUrl || branding.logoUrl ? (
-            <img
+            <Image
               src={branding.logoNavUrl ?? branding.logoUrl}
               alt="logo navbar preview"
-              style={{ maxHeight: 42, objectFit: "contain" }}
+              width={240}
+              height={42}
+              unoptimized
+              style={{ maxHeight: 42, width: "auto", objectFit: "contain" }}
             />
           ) : (
             <span className="wf-muted">Sin logo</span>
@@ -2869,7 +2901,14 @@ export default function StagingWorkflowPanel() {
             {uploadingAsset === "logo" ? <span className="wf-muted">Subiendo logo...</span> : null}
           </div>
           {branding.logoFooterUrl ? (
-            <img src={branding.logoFooterUrl} alt="logo footer preview" style={{ maxHeight: 34, objectFit: "contain" }} />
+            <Image
+              src={branding.logoFooterUrl}
+              alt="logo footer preview"
+              width={220}
+              height={34}
+              unoptimized
+              style={{ maxHeight: 34, width: "auto", objectFit: "contain" }}
+            />
           ) : (
             <span className="wf-muted">Sin logo footer (usa logo navbar por fallback)</span>
           )}
@@ -2901,7 +2940,14 @@ export default function StagingWorkflowPanel() {
             {uploadingAsset === "favicon" ? <span className="wf-muted">Subiendo favicon...</span> : null}
           </div>
           {branding.faviconUrl ? (
-            <img src={branding.faviconUrl} alt="favicon preview" style={{ width: 24, height: 24, objectFit: "contain" }} />
+            <Image
+              src={branding.faviconUrl}
+              alt="favicon preview"
+              width={24}
+              height={24}
+              unoptimized
+              style={{ width: 24, height: 24, objectFit: "contain" }}
+            />
           ) : (
             <span className="wf-muted">Sin favicon</span>
           )}
