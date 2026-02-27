@@ -187,6 +187,10 @@ const panelStyles = String.raw`
   .wf-steps{display:grid;gap:8px;margin-bottom:12px}
   .wf-step{display:flex;gap:8px;align-items:flex-start;padding:8px 10px;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0}
   .wf-step-num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:999px;background:#dbeafe;color:#1d4ed8;font-size:12px;font-weight:800}
+  .wf-step.active{border-color:#93c5fd;background:#eff6ff}
+  .wf-step.completed{border-color:#86efac;background:#f0fdf4}
+  .wf-step.completed .wf-step-num{background:#166534;color:#fff}
+  .wf-progress{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;background:#eef2ff;color:#1e3a8a;font-size:12px;font-weight:700}
   .wf-status{display:flex;gap:8px;flex-wrap:wrap}
   .wf-sticky{position:sticky;top:10px;z-index:30;border:1px solid #dbe3f0;background:#f8fafc;padding:10px 12px;border-radius:12px;margin-bottom:12px;display:flex;gap:8px;align-items:center;justify-content:space-between}
   .wf-sticky strong{font-size:13px}
@@ -3095,6 +3099,33 @@ export default function StagingWorkflowPanel() {
     heroDiff,
   ]);
 
+  const workflowProgress = useMemo(() => {
+    const hasIdentity = Boolean(siteSlug.trim() && userId.trim());
+    const currentStep = !hasIdentity ? 1 : !panelReady ? 2 : 3;
+    const steps = [
+      {
+        id: 1,
+        title: "Identidad",
+        detail: "Slug y user UUID con membership.",
+      },
+      {
+        id: 2,
+        title: "Cargar panel",
+        detail: "Trae settings + versiones + permisos.",
+      },
+      {
+        id: 3,
+        title: "Editar/Publicar",
+        detail: "Guardar draft, publicar o rollback según rol.",
+      },
+    ].map((step) => ({
+      ...step,
+      active: step.id === currentStep,
+      completed: step.id < currentStep,
+    }));
+    return { currentStep, steps };
+  }, [panelReady, siteSlug, userId]);
+
   return (
     <main className="wf-shell">
       <style dangerouslySetInnerHTML={{ __html: panelStyles }} />
@@ -3147,6 +3178,7 @@ export default function StagingWorkflowPanel() {
               Cargar panel
             </button>
             <span className="wf-muted">{autosaveHint}</span>
+            <span className="wf-progress">Paso {workflowProgress.currentStep} de 3</span>
           </div>
 
           <div className="wf-status" style={{ marginBottom: 12 }}>
@@ -3162,9 +3194,15 @@ export default function StagingWorkflowPanel() {
           </div>
 
           <div className="wf-steps">
-            <div className="wf-step"><span className="wf-step-num">1</span><div><strong>Identidad</strong><div className="wf-muted">Slug y user UUID con membership.</div></div></div>
-            <div className="wf-step"><span className="wf-step-num">2</span><div><strong>Cargar panel</strong><div className="wf-muted">Trae settings + versiones + permisos.</div></div></div>
-            <div className="wf-step"><span className="wf-step-num">3</span><div><strong>Editar/Publicar</strong><div className="wf-muted">Guardar draft, publicar o rollback según rol.</div></div></div>
+            {workflowProgress.steps.map((step) => (
+              <div key={step.id} className={`wf-step ${step.active ? "active" : ""} ${step.completed ? "completed" : ""}`}>
+                <span className="wf-step-num">{step.completed ? "✓" : step.id}</span>
+                <div>
+                  <strong>{step.title}</strong>
+                  <div className="wf-muted">{step.detail}</div>
+                </div>
+              </div>
+            ))}
           </div>
 
           <div className="wf-row" style={{ marginBottom: 12 }}>
