@@ -1806,7 +1806,7 @@ const landingMarkup = String.raw`
 
     <section class="section reveal" id="faq" style="background: #f7fbff">
       <div class="container">
-        <h2 style="font-size: clamp(2rem, 6vw, 3.3rem); color: var(--navy); max-width: 760px; margin: 0 auto">
+        <h2 style="font-size: clamp(2rem, 6vw, 3.3rem); color: var(--navy); max-width: 760px; margin: 0 auto" data-faq-title>
           Preguntas frecuentes
         </h2>
         <div class="faq-list" data-faq-list>
@@ -2000,6 +2000,25 @@ const DEFAULT_LANDING_VALUES = {
     kicker: "CONTACTO",
     title: "¿Tienes preguntas?\nEscríbenos ahora.",
     submitText: "Enviar solicitud",
+  },
+  audience: {
+    kicker: "¿Para quién es este servicio?",
+    title: "Atención urgente para hogares y negocios en Santiago",
+    description:
+      "Atendemos dueños de casa, arrendatarios, pymes y administradores de edificios en Santiago que necesitan solución hoy, no mañana.",
+    ctaPrimaryText: "+56 9 XXXX XXXX",
+    ctaPrimaryUrl: "tel:+569XXXXXXX",
+    ctaSecondaryText: "Agendar visita",
+    ctaSecondaryUrl: "#contacto",
+  },
+  urgency: {
+    title: "¿Tienes una urgencia ahora?",
+    description: "Te atendemos hoy, en tu comuna, con respuesta rápida y técnica.",
+    ctaText: "Llamar ahora",
+    ctaUrl: "tel:+569XXXXXXX",
+  },
+  faq: {
+    title: "Preguntas frecuentes",
   },
 } as const;
 
@@ -2558,27 +2577,21 @@ export default function DynamicLanding() {
         const audienceBackImage = audienceRoot?.querySelector(".audience-image-back");
         const audienceFrontImage = audienceRoot?.querySelector(".audience-image-front");
 
-        if (
-          audienceKicker &&
-          typeof sectionAudience.data.kicker === "string" &&
-          sectionAudience.data.kicker.trim()
-        ) {
-          audienceKicker.textContent = sectionAudience.data.kicker.trim();
-        }
-        if (
-          audienceTitle &&
-          typeof sectionAudience.data.title === "string" &&
-          sectionAudience.data.title.trim()
-        ) {
-          audienceTitle.textContent = sectionAudience.data.title.trim();
-        }
-        if (
-          audienceDescription &&
-          typeof sectionAudience.data.description === "string" &&
-          sectionAudience.data.description.trim()
-        ) {
-          audienceDescription.textContent = sectionAudience.data.description.trim();
-        }
+        const audienceKickerValue =
+          typeof sectionAudience.data.kicker === "string" && sectionAudience.data.kicker.trim()
+            ? sectionAudience.data.kicker.trim()
+            : DEFAULT_LANDING_VALUES.audience.kicker;
+        const audienceTitleValue =
+          typeof sectionAudience.data.title === "string" && sectionAudience.data.title.trim()
+            ? sectionAudience.data.title.trim()
+            : DEFAULT_LANDING_VALUES.audience.title;
+        const audienceDescriptionValue =
+          typeof sectionAudience.data.description === "string" && sectionAudience.data.description.trim()
+            ? sectionAudience.data.description.trim()
+            : DEFAULT_LANDING_VALUES.audience.description;
+        if (audienceKicker) audienceKicker.textContent = audienceKickerValue;
+        if (audienceTitle) audienceTitle.textContent = audienceTitleValue;
+        if (audienceDescription) audienceDescription.textContent = audienceDescriptionValue;
 
         const audienceBulletsRaw = Array.isArray(
           (sectionAudience.data as { bullets?: unknown }).bullets,
@@ -2612,21 +2625,29 @@ export default function DynamicLanding() {
         const audienceSecondary = (
           sectionAudience.data as { cta_secondary?: { text?: unknown; url?: unknown } }
         ).cta_secondary;
-        if (audiencePrimaryBtn && audiencePrimary) {
-          if (typeof audiencePrimary.text === "string" && audiencePrimary.text.trim()) {
-            audiencePrimaryBtn.textContent = audiencePrimary.text.trim();
-          }
-          if (typeof audiencePrimary.url === "string" && audiencePrimary.url.trim()) {
-            audiencePrimaryBtn.setAttribute("href", audiencePrimary.url.trim());
-          }
+        if (audiencePrimaryBtn) {
+          const primaryText =
+            typeof audiencePrimary?.text === "string" && audiencePrimary.text.trim()
+              ? audiencePrimary.text.trim()
+              : DEFAULT_LANDING_VALUES.audience.ctaPrimaryText;
+          const primaryUrl =
+            typeof audiencePrimary?.url === "string" && audiencePrimary.url.trim()
+              ? audiencePrimary.url.trim()
+              : heroPrimaryUrl || DEFAULT_LANDING_VALUES.audience.ctaPrimaryUrl;
+          audiencePrimaryBtn.textContent = primaryText;
+          audiencePrimaryBtn.setAttribute("href", primaryUrl);
         }
-        if (audienceSecondaryBtn && audienceSecondary) {
-          if (typeof audienceSecondary.text === "string" && audienceSecondary.text.trim()) {
-            audienceSecondaryBtn.textContent = audienceSecondary.text.trim();
-          }
-          if (typeof audienceSecondary.url === "string" && audienceSecondary.url.trim()) {
-            audienceSecondaryBtn.setAttribute("href", audienceSecondary.url.trim());
-          }
+        if (audienceSecondaryBtn) {
+          const secondaryText =
+            typeof audienceSecondary?.text === "string" && audienceSecondary.text.trim()
+              ? audienceSecondary.text.trim()
+              : DEFAULT_LANDING_VALUES.audience.ctaSecondaryText;
+          const secondaryUrl =
+            typeof audienceSecondary?.url === "string" && audienceSecondary.url.trim()
+              ? audienceSecondary.url.trim()
+              : DEFAULT_LANDING_VALUES.audience.ctaSecondaryUrl;
+          audienceSecondaryBtn.textContent = secondaryText;
+          audienceSecondaryBtn.setAttribute("href", secondaryUrl);
         }
 
         const audienceImages = (sectionAudience.data as { images?: { back?: unknown; front?: unknown } }).images;
@@ -2702,12 +2723,14 @@ export default function DynamicLanding() {
       const faqSectionEl = document.getElementById("faq");
       const sectionFaqItems = toItemsArray(sectionFaq && sectionFaq.data ? (sectionFaq.data as { items?: unknown }).items : []);
       const faqItems = sectionFaqItems.length ? sectionFaqItems : Array.isArray(content.faqs) ? content.faqs : [];
+      const faqTitle = document.querySelector("[data-faq-title]");
+      const faqTitleValue =
+        sectionFaq?.data && typeof sectionFaq.data.title === "string" && sectionFaq.data.title.trim()
+          ? sectionFaq.data.title.trim()
+          : DEFAULT_LANDING_VALUES.faq.title;
+      if (faqTitle) faqTitle.textContent = faqTitleValue;
       if (Array.isArray(faqItems) && faqItems.length) {
         const faqList = document.querySelector("[data-faq-list]");
-        const faqTitle = document.querySelector("[data-faq-title]");
-        if (faqTitle && sectionFaq?.data && typeof sectionFaq.data.title === "string" && sectionFaq.data.title.trim()) {
-          faqTitle.textContent = sectionFaq.data.title.trim();
-        }
         if (faqList) {
           faqList.innerHTML = faqItems
             .filter((faq) => faq && typeof faq === "object")
@@ -2734,20 +2757,28 @@ export default function DynamicLanding() {
         const urgencyTitle = urgencyRoot?.querySelector("h2");
         const urgencyDesc = urgencyRoot?.querySelector("p");
         const urgencyCta = urgencyRoot?.querySelector("a");
-        if (urgencyTitle && typeof sectionUrgency.data.title === "string" && sectionUrgency.data.title.trim()) {
-          urgencyTitle.textContent = sectionUrgency.data.title.trim();
-        }
-        if (urgencyDesc && typeof sectionUrgency.data.description === "string" && sectionUrgency.data.description.trim()) {
-          urgencyDesc.textContent = sectionUrgency.data.description.trim();
-        }
+        const urgencyTitleValue =
+          typeof sectionUrgency.data.title === "string" && sectionUrgency.data.title.trim()
+            ? sectionUrgency.data.title.trim()
+            : DEFAULT_LANDING_VALUES.urgency.title;
+        const urgencyDescriptionValue =
+          typeof sectionUrgency.data.description === "string" && sectionUrgency.data.description.trim()
+            ? sectionUrgency.data.description.trim()
+            : DEFAULT_LANDING_VALUES.urgency.description;
+        if (urgencyTitle) urgencyTitle.textContent = urgencyTitleValue;
+        if (urgencyDesc) urgencyDesc.textContent = urgencyDescriptionValue;
         const urgencyCtaData = (sectionUrgency.data as { cta_primary?: { text?: unknown; url?: unknown } }).cta_primary;
-        if (urgencyCta && urgencyCtaData) {
-          if (typeof urgencyCtaData.text === "string" && urgencyCtaData.text.trim()) {
-            urgencyCta.textContent = urgencyCtaData.text.trim();
-          }
-          if (typeof urgencyCtaData.url === "string" && urgencyCtaData.url.trim()) {
-            urgencyCta.setAttribute("href", urgencyCtaData.url.trim());
-          }
+        if (urgencyCta) {
+          const urgencyCtaText =
+            typeof urgencyCtaData?.text === "string" && urgencyCtaData.text.trim()
+              ? urgencyCtaData.text.trim()
+              : DEFAULT_LANDING_VALUES.urgency.ctaText;
+          const urgencyCtaUrl =
+            typeof urgencyCtaData?.url === "string" && urgencyCtaData.url.trim()
+              ? urgencyCtaData.url.trim()
+              : heroPrimaryUrl || DEFAULT_LANDING_VALUES.urgency.ctaUrl;
+          urgencyCta.textContent = urgencyCtaText;
+          urgencyCta.setAttribute("href", urgencyCtaUrl);
         }
       }
 
