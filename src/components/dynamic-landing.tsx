@@ -1479,7 +1479,7 @@ const landingMarkup = String.raw`
           <a href="#faq">FAQ</a>
           <a href="#contacto">Contacto</a>
         </div>
-        <a class="btn btn-primary" href="tel:+569XXXXXXX" style="padding: 10px 14px; font-size: 13px">Llamar</a>
+        <a class="btn btn-primary" href="tel:+569XXXXXXX" data-quick-call style="padding: 10px 14px; font-size: 13px">Llamar</a>
       </div>
     </nav>
 
@@ -1496,7 +1496,7 @@ const landingMarkup = String.raw`
 
         <div class="hero-content">
           <div class="hero-content-inner">
-            <span class="eyebrow">SERVICIO 24/7 · SANTIAGO</span>
+            <span class="eyebrow" data-hero-eyebrow>SERVICIO 24/7 · SANTIAGO</span>
             <h1 data-hero-title>
               <span class="hero-line">Gasfiter urgente en Santiago</span>
               <span class="hero-line">Llegamos en menos de 40 minutos</span>
@@ -1887,8 +1887,8 @@ const landingMarkup = String.raw`
     </footer>
 
     <div class="mobile-sticky" aria-label="acciones rápidas móviles">
-      <a class="mobile-call" href="tel:+569XXXXXXX">Llamar</a>
-      <a class="mobile-wa" href="https://wa.me/569XXXXXXX" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+      <a class="mobile-call" href="tel:+569XXXXXXX" data-quick-call>Llamar</a>
+      <a class="mobile-wa" href="https://wa.me/569XXXXXXX" data-quick-wa target="_blank" rel="noopener noreferrer">WhatsApp</a>
     </div>
 
 `;
@@ -1970,6 +1970,17 @@ type Settings = {
     faqs?: Array<{ question?: string; answer?: string }>;
   };
 };
+
+const DEFAULT_LANDING_VALUES = {
+  hero: {
+    eyebrow: "SERVICIO 24/7 · SANTIAGO",
+    image: "/images/heroseccion.webp",
+    primaryUrl: "tel:+569XXXXXXX",
+    primaryText: "LLAMAR AHORA +56 9 XXXX XXXX",
+    secondaryUrl: "https://wa.me/569XXXXXXX",
+    secondaryText: "WhatsApp",
+  },
+} as const;
 
 export default function DynamicLanding() {
   useEffect(() => {
@@ -2306,6 +2317,10 @@ export default function DynamicLanding() {
           : typeof legacyHero?.title === "string" && legacyHero.title.trim()
             ? legacyHero.title.trim()
             : "";
+      const heroEyebrow =
+        typeof sectionHeroData?.eyebrow === "string" && sectionHeroData.eyebrow.trim()
+          ? sectionHeroData.eyebrow.trim()
+          : DEFAULT_LANDING_VALUES.hero.eyebrow;
       const heroSubtitle =
         typeof sectionHeroData?.subtitle === "string" && sectionHeroData.subtitle.trim()
           ? sectionHeroData.subtitle.trim()
@@ -2317,31 +2332,31 @@ export default function DynamicLanding() {
           ? sectionHeroData.image.trim()
           : typeof legacyHero?.image === "string" && legacyHero.image.trim()
             ? legacyHero.image.trim()
-            : "";
+            : DEFAULT_LANDING_VALUES.hero.image;
       const heroPrimaryUrl =
         typeof sectionHeroData?.cta_primary?.url === "string" && sectionHeroData.cta_primary.url.trim()
           ? sectionHeroData.cta_primary.url.trim()
           : typeof legacyHero?.cta?.primary_url === "string" && legacyHero.cta.primary_url.trim()
             ? legacyHero.cta.primary_url.trim()
-            : "";
+            : DEFAULT_LANDING_VALUES.hero.primaryUrl;
       const heroPrimaryText =
         typeof sectionHeroData?.cta_primary?.text === "string" && sectionHeroData.cta_primary.text.trim()
           ? sectionHeroData.cta_primary.text.trim()
           : typeof legacyHero?.cta?.primary_text === "string" && legacyHero.cta.primary_text.trim()
             ? legacyHero.cta.primary_text.trim()
-            : "";
+            : DEFAULT_LANDING_VALUES.hero.primaryText;
       const heroSecondaryUrl =
         typeof sectionHeroData?.cta_secondary?.url === "string" && sectionHeroData.cta_secondary.url.trim()
           ? sectionHeroData.cta_secondary.url.trim()
           : typeof legacyHero?.cta?.secondary_url === "string" && legacyHero.cta.secondary_url.trim()
             ? legacyHero.cta.secondary_url.trim()
-            : "";
+            : whatsappHref || DEFAULT_LANDING_VALUES.hero.secondaryUrl;
       const heroSecondaryText =
         typeof sectionHeroData?.cta_secondary?.text === "string" && sectionHeroData.cta_secondary.text.trim()
           ? sectionHeroData.cta_secondary.text.trim()
           : typeof legacyHero?.cta?.secondary_text === "string" && legacyHero.cta.secondary_text.trim()
             ? legacyHero.cta.secondary_text.trim()
-            : "";
+            : DEFAULT_LANDING_VALUES.hero.secondaryText;
 
       if (heroTitle) {
         const titleEl = document.querySelector("[data-hero-title]");
@@ -2374,6 +2389,10 @@ export default function DynamicLanding() {
         const subtitleEl = document.querySelector("[data-hero-subtitle]");
         if (subtitleEl) subtitleEl.textContent = heroSubtitle;
       }
+      const eyebrowEl = document.querySelector("[data-hero-eyebrow]");
+      if (eyebrowEl && heroEyebrow) {
+        eyebrowEl.textContent = heroEyebrow;
+      }
       if (heroImage) {
         const heroImg = document.querySelector<HTMLImageElement>(".hero-media img");
         if (heroImg) heroImg.src = heroImage;
@@ -2396,8 +2415,23 @@ export default function DynamicLanding() {
         secondaryBtn.setAttribute("href", heroSecondaryUrl);
       }
       if (secondaryBtn && heroSecondaryText) {
+        const icon = secondaryBtn.querySelector("i");
         secondaryBtn.textContent = heroSecondaryText;
+        if (icon) {
+          secondaryBtn.prepend(icon);
+          secondaryBtn.insertBefore(document.createTextNode(" "), icon.nextSibling);
+        }
       }
+
+      const quickCallLinks = document.querySelectorAll<HTMLAnchorElement>("[data-quick-call]");
+      quickCallLinks.forEach((link) => {
+        link.href = heroPrimaryUrl;
+      });
+
+      const quickWaLinks = document.querySelectorAll<HTMLAnchorElement>("[data-quick-wa]");
+      quickWaLinks.forEach((link) => {
+        link.href = heroSecondaryUrl;
+      });
 
       const services =
         sectionServices &&
