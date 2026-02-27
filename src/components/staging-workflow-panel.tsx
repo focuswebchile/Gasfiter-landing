@@ -229,6 +229,34 @@ function detectEnvBadge(slug: string): "DEV" | "STAGING" | "PROD" {
   return "DEV";
 }
 
+function translateVersionStatus(status: VersionItem["status"]) {
+  switch (status) {
+    case "draft":
+      return "borrador";
+    case "published":
+      return "publicado";
+    case "archived":
+      return "archivado";
+    default:
+      return status;
+  }
+}
+
+function translateActionLabel(action: ActionLogItem["action"]) {
+  switch (action) {
+    case "save":
+      return "GUARDAR";
+    case "publish":
+      return "PUBLICAR";
+    case "rollback":
+      return "ROLLBACK";
+    case "diff":
+      return "COMPARAR";
+    default:
+      return action.toUpperCase();
+  }
+}
+
 function isHexColor(value: string) {
   return /^#([a-f0-9]{3}|[a-f0-9]{6})$/i.test(value.trim());
 }
@@ -491,8 +519,9 @@ export default function StagingWorkflowPanel() {
     setDirty(false);
     setDraftUpdatedAt(null);
     setDraftConflict({ active: false, message: "", serverUpdatedAt: null });
-    setAutosaveHint(`Modo ${nextMode} seleccionado. Presiona Cargar panel.`);
-    setOk(`Modo ${nextMode} seleccionado. Recarga panel para sincronizar.`);
+    const modeLabel = nextMode === "draft" ? "borrador" : "publicado";
+    setAutosaveHint(`Modo ${modeLabel} seleccionado. Presiona Cargar panel.`);
+    setOk(`Modo ${modeLabel} seleccionado. Recarga panel para sincronizar.`);
   };
 
   const updateSettings = (
@@ -600,8 +629,8 @@ export default function StagingWorkflowPanel() {
   }, [fetchWithJsonFallback, userId, setOk, mode]);
 
   const loadPanel = useCallback(async () => {
-    if (!siteSlug.trim()) return setError("Ingresa site slug");
-    if (!userId.trim()) return setError("Ingresa userId para cargar panel");
+    if (!siteSlug.trim()) return setError("Ingresa slug del sitio");
+    if (!userId.trim()) return setError("Ingresa UUID de usuario para cargar panel");
 
     setBusy(true);
     setToast(null);
@@ -609,7 +638,7 @@ export default function StagingWorkflowPanel() {
       await Promise.all([fetchSettings(mode, true), fetchVersions(true)]);
       setPanelReady(true);
       setHeroDiff(null);
-      setOk(`Panel cargado (${mode})`);
+      setOk(`Panel cargado (${mode === "draft" ? "borrador" : "publicado"})`);
     } catch (error) {
       setPanelReady(false);
       setError(error instanceof Error ? error.message : "Error cargando panel");
@@ -619,8 +648,8 @@ export default function StagingWorkflowPanel() {
   }, [siteSlug, userId, mode, fetchSettings, fetchVersions, setError, setOk]);
 
   const fetchHeroDiff = useCallback(async () => {
-    if (!siteSlug.trim()) return setError("Ingresa site slug");
-    if (!userId.trim()) return setError("Ingresa userId para ver cambios");
+    if (!siteSlug.trim()) return setError("Ingresa slug del sitio");
+    if (!userId.trim()) return setError("Ingresa UUID de usuario para ver cambios");
     if (!panelReady) return setError("Primero usa Cargar panel");
 
     setLoadingDiff(true);
@@ -636,7 +665,7 @@ export default function StagingWorkflowPanel() {
       const changed = result?.summary?.changedFields ?? 0;
       const msg = changed > 0 ? `Diff listo: ${changed} cambio(s)` : "Diff listo: sin cambios";
       setOk(msg);
-      appendActionLog("diff", null, `Ver cambios draft vs published (${changed})`);
+      appendActionLog("diff", null, `Ver cambios borrador vs publicado (${changed})`);
     } catch (error) {
       setHeroDiff(null);
       setError(error instanceof Error ? error.message : "Error generando diff");
@@ -654,11 +683,11 @@ export default function StagingWorkflowPanel() {
             <strong>{field.label}</strong>
             <div className="wf-diff-values">
               <div className="wf-diff-cell">
-                <div className="wf-muted">Draft</div>
+                <div className="wf-muted">Borrador</div>
                 <div>{field.from || "—"}</div>
               </div>
               <div className="wf-diff-cell">
-                <div className="wf-muted">Published</div>
+                <div className="wf-muted">Publicado</div>
                 <div>{field.to || "—"}</div>
               </div>
             </div>
@@ -684,7 +713,7 @@ export default function StagingWorkflowPanel() {
     notes?: string;
     settingsOverride?: SettingsPayload;
   }) => {
-    if (!userId.trim()) return setError("Ingresa userId para guardar draft");
+    if (!userId.trim()) return setError("Ingresa UUID de usuario para guardar borrador");
     const snapshot = options?.settingsOverride ?? settings;
     if (!snapshot) return setError("Primero usa Cargar panel");
     if (!panelReady) return setError("Primero usa Cargar panel");
@@ -707,7 +736,7 @@ export default function StagingWorkflowPanel() {
     const run = (async () => {
       if (silent) {
         setAutosaving(true);
-        setAutosaveHint("Autosave guardando draft...");
+        setAutosaveHint("Autoguardado: guardando borrador...");
       } else {
         setBusy(true);
         setToast(null);
@@ -741,7 +770,7 @@ export default function StagingWorkflowPanel() {
           if (!silent) setError((payloadUnknown as DraftConflictPayload).message || "Conflicto de draft.");
           return;
         }
-        if (!response.ok) throw new Error((payloadUnknown as { error?: string })?.error || "Save draft failed");
+        if (!response.ok) throw new Error((payloadUnknown as { error?: string })?.error || "Falló el guardado de borrador");
         const payload = payloadUnknown as {
           settings?: SettingsPayload;
           version?: { number?: number };
@@ -753,7 +782,7 @@ export default function StagingWorkflowPanel() {
         setDraftConflict({ active: false, message: "", serverUpdatedAt: null });
         setDirty(false);
         if (silent) {
-          setAutosaveHint(`Autosave OK (v${payload.version?.number ?? "?"})`);
+          setAutosaveHint(`Autoguardado OK (v${payload.version?.number ?? "?"})`);
         } else {
           setOk(`Draft guardado (v${payload.version?.number ?? "?"})`);
           appendActionLog("save", payload.version?.number ?? null, "Guardar draft manual");
@@ -788,7 +817,7 @@ export default function StagingWorkflowPanel() {
   };
 
   const startDraftEditing = useCallback(async () => {
-    if (!userId.trim()) return setError("Ingresa userId para editar borrador");
+    if (!userId.trim()) return setError("Ingresa UUID de usuario para editar borrador");
     if (!panelReady) return setError("Primero usa Cargar panel");
     if (!canSaveDraft) return setError("Tu rol no puede editar borrador");
 
@@ -859,7 +888,7 @@ export default function StagingWorkflowPanel() {
   }, [panelReady, canSaveDraft, draftConflict.active, saveDraftInternal]);
 
   const publish = async () => {
-    if (!userId.trim()) return setError("Ingresa userId para publicar");
+    if (!userId.trim()) return setError("Ingresa UUID de usuario para publicar");
     if (!panelReady) return setError("Primero usa Cargar panel");
     if (!canPublish) return setError("Tu rol no puede publicar");
     if (draftConflict.active) return setError("Conflicto de draft: recarga borrador antes de publicar.");
@@ -927,7 +956,7 @@ export default function StagingWorkflowPanel() {
         setError(`${payload.message || "No se puede publicar."} ${details}`.trim());
         return;
       }
-      if (!response.ok) throw new Error((payloadUnknown as { error?: string })?.error || "Publish failed");
+      if (!response.ok) throw new Error((payloadUnknown as { error?: string })?.error || "Falló la publicación");
       const payload = payloadUnknown as {
         settings?: SettingsPayload;
         version?: { number?: number };
@@ -973,7 +1002,7 @@ export default function StagingWorkflowPanel() {
   }, [panelReady, fetchSettings, fetchVersions, setError, setOk]);
 
   const rollback = async (versionNumber: number) => {
-    if (!userId.trim()) return setError("Ingresa userId para rollback");
+    if (!userId.trim()) return setError("Ingresa UUID de usuario para rollback");
     if (!panelReady) return setError("Primero usa Cargar panel");
     if (!canRollback) return setError("Tu rol no puede hacer rollback");
 
@@ -1019,7 +1048,7 @@ export default function StagingWorkflowPanel() {
   ) => {
       if (!file) return;
       if (!panelReady) return setError("Primero usa Cargar panel");
-      if (!userId.trim()) return setError("Ingresa userId para subir archivos");
+      if (!userId.trim()) return setError("Ingresa UUID de usuario para subir archivos");
       if (!canSaveDraft) return setError("Tu rol no puede editar estilo");
       if (publishedReadOnly) return setError("Activa modo draft para editar estilo");
 
@@ -1064,7 +1093,7 @@ export default function StagingWorkflowPanel() {
             : "Favicon subido",
         );
       } catch (error) {
-        setError(error instanceof Error ? error.message : "Upload failed");
+        setError(error instanceof Error ? error.message : "Falló la subida del archivo");
       } finally {
         setUploadingAsset(null);
       }
@@ -1079,7 +1108,7 @@ export default function StagingWorkflowPanel() {
     const { sectionId, field, file, itemId } = params;
     if (!file) return;
     if (!panelReady) return setError("Primero usa Cargar panel");
-    if (!userId.trim()) return setError("Ingresa userId para subir archivos");
+    if (!userId.trim()) return setError("Ingresa UUID de usuario para subir archivos");
     if (!canSaveDraft) return setError("Tu rol no puede editar contenido");
     if (publishedReadOnly) return setError("Activa modo draft para editar contenido");
 
@@ -1136,7 +1165,7 @@ export default function StagingWorkflowPanel() {
       }
       setOk("Imagen subida");
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Upload failed");
+      setError(error instanceof Error ? error.message : "Falló la subida de la imagen");
     } finally {
       setUploadingContentAssetKey(null);
     }
@@ -1203,7 +1232,7 @@ export default function StagingWorkflowPanel() {
               checked={section.enabled}
               onChange={(e) => updateSettings((prev) => upsertSection(prev, { ...section, enabled: e.target.checked }))}
             />
-            Hero enabled
+            Hero habilitado
           </div>
           <input
             className="wf-input"
@@ -1330,7 +1359,7 @@ export default function StagingWorkflowPanel() {
               checked={section.enabled}
               onChange={(e) => updateSettings((prev) => upsertSection(prev, { ...section, enabled: e.target.checked }))}
             />
-            audience enabled
+            audience habilitada
           </div>
           <input
             className="wf-input"
@@ -1536,7 +1565,7 @@ export default function StagingWorkflowPanel() {
                     })
                   }
                 />
-                enabled
+                habilitada
               </label>
             </div>
           ))}
@@ -1557,7 +1586,7 @@ export default function StagingWorkflowPanel() {
               checked={section.enabled}
               onChange={(e) => updateSettings((prev) => upsertSection(prev, { ...section, enabled: e.target.checked }))}
             />
-            projects enabled
+            projects habilitada
           </div>
           <input
             className="wf-input"
@@ -1765,7 +1794,7 @@ export default function StagingWorkflowPanel() {
                       })
                     }
                   />
-                  enabled
+                  habilitada
                 </div>
                 <div className="wf-row">
                   <button
@@ -1821,7 +1850,7 @@ export default function StagingWorkflowPanel() {
               checked={section.enabled}
               onChange={(e) => updateSettings((prev) => upsertSection(prev, { ...section, enabled: e.target.checked }))}
             />
-            urgency_banner enabled
+            urgency_banner habilitada
           </div>
           <input
             className="wf-input"
@@ -1902,7 +1931,7 @@ export default function StagingWorkflowPanel() {
               checked={section.enabled}
               onChange={(e) => updateSettings((prev) => upsertSection(prev, { ...section, enabled: e.target.checked }))}
             />
-            contact_banner enabled
+            contact_banner habilitada
           </div>
           <input
             className="wf-input"
@@ -2003,7 +2032,7 @@ export default function StagingWorkflowPanel() {
               checked={section.enabled}
               onChange={(e) => updateSettings((prev) => upsertSection(prev, { ...section, enabled: e.target.checked }))}
             />
-            testimonials enabled
+            testimonials habilitada
           </div>
           <input
             className="wf-input"
@@ -2211,7 +2240,7 @@ export default function StagingWorkflowPanel() {
                       })
                     }
                   />
-                  enabled
+                  habilitada
                 </div>
                 <div className="wf-row">
                   <button
@@ -2269,7 +2298,7 @@ export default function StagingWorkflowPanel() {
             checked={section.enabled}
             onChange={(e) => updateSettings((prev) => upsertSection(prev, { ...section, enabled: e.target.checked }))}
           />
-          {section.id} enabled
+          {section.id} habilitada
         </div>
         {section.id === "services" ? (
           <>
@@ -2552,7 +2581,7 @@ export default function StagingWorkflowPanel() {
                           })
                         }
                       />
-                      CTA enabled
+                      CTA habilitada
                     </label>
                   </div>
                   <div className="wf-row-item" style={{ marginTop: 8 }}>
@@ -2695,7 +2724,7 @@ export default function StagingWorkflowPanel() {
                     })
                   }
                 />
-                enabled
+                habilitada
               </div>
               <div className="wf-row">
                 <button
@@ -3059,40 +3088,40 @@ export default function StagingWorkflowPanel() {
       return {
         className: "wf-sticky wf-sticky-warn",
         title: "Panel no cargado",
-        detail: "Define slug + user UUID y haz click en Cargar panel.",
+        detail: "Define slug + UUID de usuario y haz click en Cargar panel.",
       };
     }
     if (autosaving || flushingPublish) {
       return {
         className: "wf-sticky wf-sticky-warn",
-        title: flushingPublish ? "Esperando autosave para publicar..." : "Autosaving...",
+        title: flushingPublish ? "Esperando autoguardado para publicar..." : "Autoguardando...",
         detail: autosaveHint,
       };
     }
     if (dirty) {
       return {
         className: "wf-sticky wf-sticky-warn",
-        title: "Draft con cambios pendientes",
-        detail: "Se guardará automáticamente o puedes usar Guardar Draft.",
+        title: "Borrador con cambios pendientes",
+        detail: "Se guardará automáticamente o puedes usar Guardar borrador.",
       };
     }
     if (panelReady && mode === "draft" && heroDiff) {
       if (heroDiff.summary.hasChanges) {
         return {
           className: "wf-sticky wf-sticky-warn",
-          title: "Draft con cambios vs Published",
+          title: "Borrador con cambios vs publicado",
           detail: `${heroDiff.summary.changedFields} campo(s) distinto(s) en Hero/Servicios/FAQ.`,
         };
       }
       return {
         className: "wf-sticky wf-sticky-ok",
-        title: "Sin diferencias con Published",
-        detail: "El draft coincide con la versión publicada.",
+        title: "Sin diferencias con publicado",
+        detail: "El borrador coincide con la versión publicada.",
       };
     }
     return {
       className: "wf-sticky wf-sticky-ok",
-      title: "Draft guardado",
+      title: "Borrador guardado",
       detail: autosaveHint,
     };
   }, [
@@ -3122,7 +3151,7 @@ export default function StagingWorkflowPanel() {
       {
         id: 1,
         title: "Identidad",
-        detail: "Slug y user UUID con membership.",
+        detail: "Slug y UUID de usuario con membresía.",
         state: "neutral" as const,
       },
       {
@@ -3134,7 +3163,7 @@ export default function StagingWorkflowPanel() {
       {
         id: 3,
         title: "Editar/Publicar",
-        detail: "Guardar draft, publicar o rollback según rol.",
+        detail: "Guardar borrador, publicar o rollback según rol.",
         state: editState,
       },
     ].map((step) => ({
@@ -3189,12 +3218,12 @@ export default function StagingWorkflowPanel() {
       <header className="wf-head">
         <div>
           <h1 className="wf-title">Gasfiter Admin - Panel v2</h1>
-          <p className="wf-sub">Flujo guiado para Draft/Published, versiones y permisos.</p>
+          <p className="wf-sub">Flujo guiado para borrador/publicado, versiones y permisos.</p>
         </div>
         <div className="wf-badges">
           <span className="wf-badge wf-badge-env">{envBadge}</span>
           <span className="wf-badge">{mode.toUpperCase()}</span>
-          {membership?.role ? <span className="wf-badge wf-badge-role">ROLE: {membership.role.toUpperCase()}</span> : null}
+          {membership?.role ? <span className="wf-badge wf-badge-role">ROL: {membership.role.toUpperCase()}</span> : null}
         </div>
       </header>
 
@@ -3238,14 +3267,14 @@ export default function StagingWorkflowPanel() {
 
         <section className="wf-card">
           <div className="wf-row" style={{ marginBottom: 10 }}>
-            <input className="wf-input" value={siteSlug} onChange={(e) => setSiteSlug(e.target.value)} placeholder="site slug" />
-            <input className="wf-input" value={userId} onChange={(e) => setUserId(e.target.value)} placeholder="user UUID" />
+            <input className="wf-input" value={siteSlug} onChange={(e) => setSiteSlug(e.target.value)} placeholder="slug del sitio" />
+            <input className="wf-input" value={userId} onChange={(e) => setUserId(e.target.value)} placeholder="UUID de usuario" />
           </div>
 
           <div className="wf-row" style={{ marginBottom: 12 }}>
             <select className="wf-select" value={mode} onChange={(e) => handleModeChange(e.target.value as Mode)}>
-              <option value="published">Published</option>
-              <option value="draft">Draft</option>
+              <option value="published">Publicado</option>
+              <option value="draft">Borrador</option>
             </select>
             <button className="wf-btn wf-btn-soft" onClick={loadPanel} disabled={busy}>
               Cargar panel
@@ -3256,14 +3285,14 @@ export default function StagingWorkflowPanel() {
 
           <div className="wf-status" style={{ marginBottom: 12 }}>
             {publishedReadOnly ? <span className="wf-badge wf-badge-env">Lectura: versión publicada</span> : null}
-            <span className="wf-badge">{dirty ? "DRAFT DIRTY" : "DRAFT GUARDADO"}</span>
+            <span className="wf-badge">{dirty ? "BORRADOR CON CAMBIOS" : "BORRADOR GUARDADO"}</span>
             <span className="wf-badge">
-              {latestDraftVersion ? `Draft v${latestDraftVersion.version_number}` : "Sin draft"}
+              {latestDraftVersion ? `Borrador v${latestDraftVersion.version_number}` : "Sin borrador"}
             </span>
             <span className="wf-badge">
-              {latestPublishedVersion ? `Published v${latestPublishedVersion.version_number}` : "Sin published"}
+              {latestPublishedVersion ? `Publicado v${latestPublishedVersion.version_number}` : "Sin publicado"}
             </span>
-            {autosaving ? <span className="wf-badge wf-badge-role">Autosaving...</span> : null}
+            {autosaving ? <span className="wf-badge wf-badge-role">Autoguardando...</span> : null}
           </div>
 
           <div className="wf-steps">
@@ -3292,7 +3321,7 @@ export default function StagingWorkflowPanel() {
           <div className="wf-row" style={{ marginBottom: 12 }}>
             {actionContext.showSave ? (
               <button className="wf-btn wf-btn-primary" onClick={saveDraft} disabled={actionContext.saveDisabled}>
-                Guardar Draft
+                Guardar borrador
               </button>
             ) : null}
             {actionContext.showPublish ? (
@@ -3349,15 +3378,15 @@ export default function StagingWorkflowPanel() {
                     <span className="wf-drag">⋮⋮</span>
                     <button className="wf-nav-btn" style={{ flex: 1, padding: "8px 10px" }} onClick={() => setEditableSection(toEditableSection(section.id))}>
                       <span>{section.id}</span>
-                      <span className="wf-muted">order {section.order}</span>
+                      <span className="wf-muted">orden {section.order}</span>
                     </button>
                     <label className="wf-toggle">
                       <input disabled={editingLocked} type="checkbox" checked={section.enabled} onChange={(e) => updateSettings((prev) => upsertSection(prev, { ...section, enabled: e.target.checked }))} />
-                      enabled
+                      habilitada
                     </label>
                   </div>
                 ))}
-                {!settings?.content?.sections?.length ? <p className="wf-muted">Carga panel para editar secciones.</p> : null}
+                {!settings?.content?.sections?.length ? <p className="wf-muted">Carga el panel para editar secciones.</p> : null}
               </div>
               {renderSectionEditor()}
             </>
@@ -3365,7 +3394,7 @@ export default function StagingWorkflowPanel() {
 
           {view === "items" ? (
             <>
-              <h2 className="wf-h3">Items</h2>
+              <h2 className="wf-h3">Elementos</h2>
               <div className="wf-row" style={{ marginBottom: 10 }}>
                 <button className="wf-btn wf-btn-soft" onClick={() => setEditableSection("services")}>Servicios</button>
                 <button className="wf-btn wf-btn-soft" onClick={() => setEditableSection("faq")}>FAQ</button>
@@ -3384,8 +3413,8 @@ export default function StagingWorkflowPanel() {
               <div className="wf-versions">
                 {versions.map((version) => (
                   <div className="wf-row-item" key={version.id}>
-                    <div><strong>v{version.version_number}</strong> · {version.status}<div className="wf-muted">{version.notes ?? "Sin nota"}</div></div>
-                    <button className="wf-btn wf-btn-warn" disabled={busy || !panelReady || version.status === "published" || !canRollback} onClick={() => rollback(version.version_number)}>Rollback</button>
+                    <div><strong>v{version.version_number}</strong> · {translateVersionStatus(version.status)}<div className="wf-muted">{version.notes ?? "Sin nota"}</div></div>
+                    <button className="wf-btn wf-btn-warn" disabled={busy || !panelReady || version.status === "published" || !canRollback} onClick={() => rollback(version.version_number)}>Revertir</button>
                   </div>
                 ))}
                 {!versions.length ? <p className="wf-muted">No hay versiones cargadas.</p> : null}
@@ -3400,9 +3429,9 @@ export default function StagingWorkflowPanel() {
               <div className="wf-preview-box">
                 {membership ? (
                   <div className="wf-kv">
-                    <div><strong>User:</strong> {membership.userId}</div>
-                    <div><strong>Role:</strong> {membership.role}</div>
-                    <div><strong>Permisos:</strong> saveDraft={String(membership.permissions.canSaveDraft)} publish={String(membership.permissions.canPublish)} rollback={String(membership.permissions.canRollback)}</div>
+                    <div><strong>Usuario:</strong> {membership.userId}</div>
+                    <div><strong>Rol:</strong> {membership.role}</div>
+                    <div><strong>Permisos:</strong> guardar_borrador={String(membership.permissions.canSaveDraft)} publicar={String(membership.permissions.canPublish)} rollback={String(membership.permissions.canRollback)}</div>
                   </div>
                 ) : (
                   <p className="wf-muted">Carga panel para ver permisos.</p>
@@ -3413,12 +3442,12 @@ export default function StagingWorkflowPanel() {
         </section>
 
         <section className="wf-card wf-preview">
-          <h2 className="wf-h3">Preview</h2>
+          <h2 className="wf-h3">Vista previa</h2>
           <div className="wf-preview-box">
             <div className="wf-kv">
-              <div><strong>Hero title:</strong> {typeof heroSection?.data?.title === "string" ? heroSection.data.title : "-"}</div>
-              <div><strong>Hero subtitle:</strong> {typeof heroSection?.data?.subtitle === "string" ? heroSection.data.subtitle : "-"}</div>
-              <div><strong>Sections:</strong> {settings?.content?.sections?.length ?? 0}</div>
+              <div><strong>Título hero:</strong> {typeof heroSection?.data?.title === "string" ? heroSection.data.title : "-"}</div>
+              <div><strong>Subtítulo hero:</strong> {typeof heroSection?.data?.subtitle === "string" ? heroSection.data.subtitle : "-"}</div>
+              <div><strong>Secciones:</strong> {settings?.content?.sections?.length ?? 0}</div>
             </div>
           </div>
 
@@ -3443,11 +3472,11 @@ export default function StagingWorkflowPanel() {
           </div>
 
           <div className="wf-preview-box">
-            <strong>Diff (Draft vs Published)</strong>
+            <strong>Diferencias (Borrador vs Publicado)</strong>
             {heroDiff ? (
               <div className="wf-diff" style={{ marginTop: 8 }}>
                 <div className="wf-muted">
-                  Draft v{heroDiff.from.versionNumber} vs Published v{heroDiff.to.versionNumber} ·{" "}
+                  Borrador v{heroDiff.from.versionNumber} vs Publicado v{heroDiff.to.versionNumber} ·{" "}
                   {heroDiff.summary.changedFields}/{heroDiff.summary.totalFields} cambios
                 </div>
                 {renderDiffSection("Hero", heroDiff.sections.hero.fields)}
@@ -3458,7 +3487,7 @@ export default function StagingWorkflowPanel() {
               </div>
             ) : (
               <p className="wf-muted" style={{ marginTop: 8 }}>
-                Usa “Ver cambios” para comparar Draft vs Published.
+                Usa “Ver cambios” para comparar borrador vs publicado.
               </p>
             )}
           </div>
@@ -3469,7 +3498,7 @@ export default function StagingWorkflowPanel() {
               {actionLog.map((entry) => (
                 <div className="wf-log-item" key={entry.id}>
                   <div>
-                    <strong>{entry.action.toUpperCase()}</strong>
+                    <strong>{translateActionLabel(entry.action)}</strong>
                     <div className="wf-muted">{entry.note}</div>
                   </div>
                   <div className="wf-muted" style={{ textAlign: "right" }}>
