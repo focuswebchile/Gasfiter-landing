@@ -154,6 +154,9 @@ const panelStyles = String.raw`
   @media(min-width:1080px){.wf-layout{grid-template-columns:220px 1.25fr 1fr}}
   .wf-card{border:1px solid #dbe3f0;border-radius:14px;background:#fff;padding:14px}
   .wf-sidebar{display:grid;gap:8px;align-content:start}
+  .wf-nav-group{display:grid;gap:6px}
+  .wf-nav-group + .wf-nav-group{margin-top:6px;padding-top:10px;border-top:1px solid #e2e8f0}
+  .wf-nav-group-title{font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:#64748b;font-weight:800;padding:0 4px}
   .wf-nav-btn{display:flex;justify-content:space-between;align-items:center;border:1px solid #dbe3f0;background:#f8fafc;border-radius:10px;padding:10px 12px;font-weight:700;color:#334155;cursor:pointer}
   .wf-nav-btn.active{background:#e0ebff;border-color:#9db4ee;color:#1e3a8a}
   .wf-grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -3202,17 +3205,34 @@ export default function StagingWorkflowPanel() {
 
       <div className="wf-layout">
         <aside className="wf-card wf-sidebar">
-          {([
-            ["sections", "Secciones"],
-            ["items", "Items"],
-            ["style", "Estilo"],
-            ["versions", "Versiones"],
-            ["members", "Miembros"],
-          ] as Array<[SidebarView, string]>).map(([key, label]) => (
-            <button key={key} className={`wf-nav-btn ${view === key ? "active" : ""}`} onClick={() => setView(key)}>
-              <span>{label}</span>
-              <span className="wf-muted">›</span>
-            </button>
+          {(
+            [
+              {
+                title: "Contenido",
+                items: [
+                  ["sections", "Inicio y secciones"],
+                  ["items", "Servicios y social"],
+                ],
+              },
+              {
+                title: "Configuración",
+                items: [
+                  ["style", "Estilo y branding"],
+                  ["versions", "Versiones"],
+                  ["members", "Miembros"],
+                ],
+              },
+            ] as Array<{ title: string; items: Array<[SidebarView, string]> }>
+          ).map((group) => (
+            <div key={group.title} className="wf-nav-group">
+              <span className="wf-nav-group-title">{group.title}</span>
+              {group.items.map(([key, label]) => (
+                <button key={key} className={`wf-nav-btn ${view === key ? "active" : ""}`} onClick={() => setView(key)}>
+                  <span>{label}</span>
+                  <span className="wf-muted">›</span>
+                </button>
+              ))}
+            </div>
           ))}
         </aside>
 
