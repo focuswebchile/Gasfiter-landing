@@ -1034,8 +1034,8 @@ export default function StagingWorkflowPanel() {
     };
 
   const uploadContentAsset = async (params: {
-    sectionId: "hero" | "projects" | "testimonials";
-    field: "image" | "avatar";
+    sectionId: "hero" | "projects" | "testimonials" | "contact_banner";
+    field: "image" | "avatar" | "background_image";
     file: File | null;
     itemId?: string;
   }) => {
@@ -1878,6 +1878,45 @@ export default function StagingWorkflowPanel() {
               )
             }
           />
+          <div className="wf-row" style={{ gap: 8, flexWrap: "wrap" }}>
+            <label className="wf-btn wf-btn-soft" style={{ cursor: editingLocked ? "default" : "pointer" }}>
+              Reemplazar
+              <input
+                type="file"
+                hidden
+                disabled={editingLocked}
+                accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
+                onChange={(e) => {
+                  const file = e.target.files?.[0] ?? null;
+                  void uploadContentAsset({
+                    sectionId: "contact_banner",
+                    field: "background_image",
+                    file,
+                  });
+                }}
+              />
+            </label>
+            <button
+              className="wf-btn wf-btn-warn"
+              disabled={editingLocked || !(typeof section.data.background_image === "string" && section.data.background_image.trim())}
+              onClick={() =>
+                updateSettings(
+                  (prev) => upsertSection(prev, { ...section, data: { ...section.data, background_image: "" } }),
+                  { persistNow: true, note: "Autosave: contact background image removed" },
+                )
+              }
+            >
+              Eliminar
+            </button>
+            {uploadingContentAssetKey === "contact_banner:section:background_image" ? (
+              <span className="wf-muted">Subiendo imagen...</span>
+            ) : null}
+          </div>
+          {typeof section.data.background_image === "string" && section.data.background_image.trim() ? (
+            <img src={section.data.background_image} alt="contact banner preview" style={{ maxHeight: 90, objectFit: "contain" }} />
+          ) : (
+            <span className="wf-muted">Sin imagen (usa fallback del layout)</span>
+          )}
           <input
             className="wf-input"
             disabled={editingLocked}

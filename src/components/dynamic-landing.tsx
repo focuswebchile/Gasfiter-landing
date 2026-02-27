@@ -2707,6 +2707,16 @@ export default function DynamicLanding() {
         const contactKicker = contactRoot?.querySelector(".contact-kicker");
         const contactTitle = contactRoot?.querySelector(".contact-title");
         const contactSubmit = contactRoot?.querySelector(".contact-submit");
+        if (contactRoot) {
+          if (
+            typeof sectionContact.data.background_image === "string" &&
+            sectionContact.data.background_image.trim()
+          ) {
+            (contactRoot as HTMLElement).style.backgroundImage = `url("${sectionContact.data.background_image.trim()}")`;
+          } else {
+            (contactRoot as HTMLElement).style.backgroundImage = "";
+          }
+        }
         if (contactKicker && typeof sectionContact.data.kicker === "string" && sectionContact.data.kicker.trim()) {
           contactKicker.textContent = sectionContact.data.kicker.trim();
         }
