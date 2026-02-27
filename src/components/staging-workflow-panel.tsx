@@ -251,10 +251,12 @@ function ImageUploadField({
               const validation = validateImageFile(file, { allowedMimeTypes, maxSizeBytes, allowedExtensions });
               if (validation) {
                 setValidationError(validation);
+                e.currentTarget.value = "";
                 return;
               }
               setValidationError(null);
               onReplace(file);
+              e.currentTarget.value = "";
             }}
           />
         </label>
@@ -562,11 +564,6 @@ export default function StagingWorkflowPanel() {
   const [heroDiff, setHeroDiff] = useState<HeroDiffResult | null>(null);
   const [loadingDiff, setLoadingDiff] = useState(false);
   const [uploadingAsset, setUploadingAsset] = useState<"logo" | "favicon" | null>(null);
-  const [brandingUploadErrors, setBrandingUploadErrors] = useState<{
-    logoNav?: string;
-    logoFooter?: string;
-    favicon?: string;
-  }>({});
   const [uploadingContentAssetKey, setUploadingContentAssetKey] = useState<string | null>(null);
 
   const baseUrl = useMemo(() => {
@@ -1199,15 +1196,7 @@ export default function StagingWorkflowPanel() {
         maxSizeBytes: assetType === "favicon" ? FAVICON_MAX_BYTES : LOGO_MAX_BYTES,
         allowedExtensions: assetType === "favicon" ? FAVICON_EXTENSIONS : undefined,
       });
-      if (validationError) {
-        const target = targetKey === "logoFooterUrl" ? "logoFooter" : targetKey === "logoNavUrl" ? "logoNav" : "favicon";
-        setBrandingUploadErrors((prev) => ({ ...prev, [target]: validationError }));
-        return setError(validationError);
-      }
-      setBrandingUploadErrors((prev) => ({
-        ...prev,
-        [targetKey === "logoFooterUrl" ? "logoFooter" : targetKey === "logoNavUrl" ? "logoNav" : "favicon"]: undefined,
-      }));
+      if (validationError) return setError(validationError);
       if (!panelReady) return setError("Primero usa Cargar panel");
       if (!userId.trim()) return setError("Ingresa UUID de usuario para subir archivos");
       if (!canSaveDraft) return setError("Tu rol no puede editar estilo");
@@ -2851,9 +2840,6 @@ export default function StagingWorkflowPanel() {
   const colors = settings.colors ?? {};
   const typography = settings.typography ?? {};
   const branding = settings.branding ?? {};
-  const logoNavPreviewSrc = (branding.logoNavUrl ?? branding.logoUrl ?? "").trim();
-  const logoFooterPreviewSrc = (branding.logoFooterUrl ?? "").trim();
-  const faviconPreviewSrc = (branding.faviconUrl ?? "").trim();
   const contact = branding.contact ?? {};
 
     const updateColor = (key: "primary" | "secondary" | "background" | "text", value: string) => {
@@ -2981,155 +2967,114 @@ export default function StagingWorkflowPanel() {
           Si pegas URL manual, debe ser pública y apuntar a un archivo de imagen válido.
         </div>
         <div className="wf-grid2">
-          <input
-            className="wf-input"
-            disabled={editingLocked}
-            placeholder="Logo navbar URL"
+          <ImageUploadField
             value={branding.logoNavUrl ?? branding.logoUrl ?? ""}
-            onChange={(e) =>
+            placeholder="Logo navbar URL"
+            disabled={editingLocked}
+            removeDisabled={editingLocked || !(branding.logoNavUrl ?? branding.logoUrl ?? "").trim()}
+            uploading={uploadingAsset === "logo"}
+            uploadingText="Subiendo logo..."
+            fallbackText="Sin logo navbar"
+            guidanceText="Logo navbar recomendado: 320x80px. Formatos png, jpg, webp, svg. Máximo 2MB."
+            previewAlt="logo navbar preview"
+            previewWidth={240}
+            previewHeight={42}
+            previewStyle={{ maxHeight: 42, width: "auto", objectFit: "contain" }}
+            accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
+            allowedMimeTypes={LOGO_MIME_TYPES}
+            maxSizeBytes={LOGO_MAX_BYTES}
+            onValueChange={(nextValue) =>
               updateSettings((prev) => ({
                 ...prev,
-                branding: { ...(prev.branding ?? {}), logoNavUrl: e.target.value },
+                branding: { ...(prev.branding ?? {}), logoNavUrl: nextValue },
               }))
             }
+            onReplace={(file) => {
+              void uploadBrandingAsset("logo", file, "logoNavUrl");
+            }}
+            onRemove={() =>
+              updateSettings(
+                (prev) => ({
+                  ...prev,
+                  branding: { ...(prev.branding ?? {}), logoNavUrl: "" },
+                }),
+                { persistNow: true, note: "Autosave: logo navbar removed" },
+              )
+            }
           />
-          <div className="wf-row">
-            <input
-              className="wf-input"
-              disabled={editingLocked}
-              type="file"
-              accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
-              onChange={(e) => {
-                const file = e.target.files?.[0] ?? null;
-                const validationError = validateImageFile(file, {
-                  allowedMimeTypes: LOGO_MIME_TYPES,
-                  maxSizeBytes: LOGO_MAX_BYTES,
-                });
-                if (validationError) {
-                  setBrandingUploadErrors((prev) => ({ ...prev, logoNav: validationError }));
-                  return;
-                }
-                setBrandingUploadErrors((prev) => ({ ...prev, logoNav: undefined }));
-                void uploadBrandingAsset("logo", file, "logoNavUrl");
-              }}
-            />
-            {uploadingAsset === "logo" ? <span className="wf-muted">Subiendo logo...</span> : null}
-          </div>
-          {brandingUploadErrors.logoNav ? <span className="wf-upload-error">{brandingUploadErrors.logoNav}</span> : null}
-          {logoNavPreviewSrc ? (
-            <Image
-              src={logoNavPreviewSrc}
-              alt="logo navbar preview"
-              width={240}
-              height={42}
-              unoptimized
-              style={{ maxHeight: 42, width: "auto", objectFit: "contain" }}
-            />
-          ) : (
-            <span className="wf-muted">Sin logo</span>
-          )}
-          <span className="wf-muted">Logo navbar, máx 2MB (png/jpg/webp/svg)</span>
 
-          <input
-            className="wf-input"
-            disabled={editingLocked}
-            placeholder="Logo footer URL (opcional)"
+          <ImageUploadField
             value={branding.logoFooterUrl ?? ""}
-            onChange={(e) =>
-              updateSettings((prev) => ({
-                ...prev,
-                branding: { ...(prev.branding ?? {}), logoFooterUrl: e.target.value },
-              }))
-            }
-          />
-          <div className="wf-row">
-            <input
-              className="wf-input"
-              disabled={editingLocked}
-              type="file"
-              accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
-              onChange={(e) => {
-                const file = e.target.files?.[0] ?? null;
-                const validationError = validateImageFile(file, {
-                  allowedMimeTypes: LOGO_MIME_TYPES,
-                  maxSizeBytes: LOGO_MAX_BYTES,
-                });
-                if (validationError) {
-                  setBrandingUploadErrors((prev) => ({ ...prev, logoFooter: validationError }));
-                  return;
-                }
-                setBrandingUploadErrors((prev) => ({ ...prev, logoFooter: undefined }));
-                void uploadBrandingAsset("logo", file, "logoFooterUrl");
-              }}
-            />
-            {uploadingAsset === "logo" ? <span className="wf-muted">Subiendo logo...</span> : null}
-          </div>
-          {brandingUploadErrors.logoFooter ? (
-            <span className="wf-upload-error">{brandingUploadErrors.logoFooter}</span>
-          ) : null}
-          {logoFooterPreviewSrc ? (
-            <Image
-              src={logoFooterPreviewSrc}
-              alt="logo footer preview"
-              width={220}
-              height={34}
-              unoptimized
-              style={{ maxHeight: 34, width: "auto", objectFit: "contain" }}
-            />
-          ) : (
-            <span className="wf-muted">Sin logo footer (usa logo navbar por fallback)</span>
-          )}
-          <span className="wf-muted">Logo footer opcional, máx 2MB (png/jpg/webp/svg)</span>
-
-          <input
-            className="wf-input"
+            placeholder="Logo footer URL (opcional)"
             disabled={editingLocked}
-            placeholder="Favicon URL"
-            value={branding.faviconUrl ?? ""}
-            onChange={(e) =>
+            removeDisabled={editingLocked || !(branding.logoFooterUrl ?? "").trim()}
+            uploading={uploadingAsset === "logo"}
+            uploadingText="Subiendo logo..."
+            fallbackText="Sin logo footer (usa logo navbar por fallback)"
+            guidanceText="Logo footer recomendado: 260x72px. Formatos png, jpg, webp, svg. Máximo 2MB."
+            previewAlt="logo footer preview"
+            previewWidth={220}
+            previewHeight={34}
+            previewStyle={{ maxHeight: 34, width: "auto", objectFit: "contain" }}
+            accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
+            allowedMimeTypes={LOGO_MIME_TYPES}
+            maxSizeBytes={LOGO_MAX_BYTES}
+            onValueChange={(nextValue) =>
               updateSettings((prev) => ({
                 ...prev,
-                branding: { ...(prev.branding ?? {}), faviconUrl: e.target.value },
+                branding: { ...(prev.branding ?? {}), logoFooterUrl: nextValue },
               }))
             }
+            onReplace={(file) => {
+              void uploadBrandingAsset("logo", file, "logoFooterUrl");
+            }}
+            onRemove={() =>
+              updateSettings(
+                (prev) => ({
+                  ...prev,
+                  branding: { ...(prev.branding ?? {}), logoFooterUrl: "" },
+                }),
+                { persistNow: true, note: "Autosave: logo footer removed" },
+              )
+            }
           />
-          <div className="wf-row">
-            <input
-              className="wf-input"
-              disabled={editingLocked}
-              type="file"
-              accept="image/png,image/x-icon,image/vnd.microsoft.icon"
-              onChange={(e) => {
-                const file = e.target.files?.[0] ?? null;
-                const validationError = validateImageFile(file, {
-                  allowedMimeTypes: FAVICON_MIME_TYPES,
-                  maxSizeBytes: FAVICON_MAX_BYTES,
-                  allowedExtensions: FAVICON_EXTENSIONS,
-                });
-                if (validationError) {
-                  setBrandingUploadErrors((prev) => ({ ...prev, favicon: validationError }));
-                  return;
-                }
-                setBrandingUploadErrors((prev) => ({ ...prev, favicon: undefined }));
-                void uploadBrandingAsset("favicon", file);
-              }}
-            />
-            {uploadingAsset === "favicon" ? <span className="wf-muted">Subiendo favicon...</span> : null}
-          </div>
-          {brandingUploadErrors.favicon ? <span className="wf-upload-error">{brandingUploadErrors.favicon}</span> : null}
-          {faviconPreviewSrc ? (
-            <Image
-              src={faviconPreviewSrc}
-              alt="favicon preview"
-              width={24}
-              height={24}
-              unoptimized
-              style={{ width: 24, height: 24, objectFit: "contain" }}
-            />
-          ) : (
-            <span className="wf-muted">Sin favicon</span>
-          )}
-          <span className="wf-muted">Máx 1MB (png/ico)</span>
+
+          <ImageUploadField
+            value={branding.faviconUrl ?? ""}
+            placeholder="Favicon URL"
+            disabled={editingLocked}
+            removeDisabled={editingLocked || !(branding.faviconUrl ?? "").trim()}
+            uploading={uploadingAsset === "favicon"}
+            uploadingText="Subiendo favicon..."
+            fallbackText="Sin favicon"
+            guidanceText="Favicon recomendado: 48x48px (mín 32x32). Formato png/ico. Máximo 1MB."
+            previewAlt="favicon preview"
+            previewWidth={24}
+            previewHeight={24}
+            previewStyle={{ width: 24, height: 24, objectFit: "contain" }}
+            accept="image/png,image/x-icon,image/vnd.microsoft.icon"
+            allowedMimeTypes={FAVICON_MIME_TYPES}
+            allowedExtensions={FAVICON_EXTENSIONS}
+            maxSizeBytes={FAVICON_MAX_BYTES}
+            onValueChange={(nextValue) =>
+              updateSettings((prev) => ({
+                ...prev,
+                branding: { ...(prev.branding ?? {}), faviconUrl: nextValue },
+              }))
+            }
+            onReplace={(file) => {
+              void uploadBrandingAsset("favicon", file);
+            }}
+            onRemove={() =>
+              updateSettings(
+                (prev) => ({
+                  ...prev,
+                  branding: { ...(prev.branding ?? {}), faviconUrl: "" },
+                }),
+                { persistNow: true, note: "Autosave: favicon removed" },
+              )
+            }
+          />
         </div>
 
         <h3 className="wf-h3">Contacto básico (opcional)</h3>
