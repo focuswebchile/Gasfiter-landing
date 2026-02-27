@@ -357,7 +357,7 @@ const panelStyles = String.raw`
   .wf-step.state-error .wf-step-num{background:#b91c1c;color:#fff}
   .wf-progress{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;background:#eef2ff;color:#1e3a8a;font-size:12px;font-weight:700}
   .wf-status{display:flex;gap:8px;flex-wrap:wrap}
-  .wf-sticky{position:sticky;top:10px;z-index:30;border:1px solid #dbe3f0;background:#f8fafc;padding:10px 12px;border-radius:12px;margin-bottom:12px;display:flex;gap:8px;align-items:center;justify-content:space-between}
+  .wf-sticky{position:sticky;top:10px;z-index:30;border:1px solid #dbe3f0;background:#f8fafc;padding:10px 12px;border-radius:12px;margin-bottom:12px;display:flex;gap:8px;align-items:center;justify-content:space-between;min-height:46px}
   .wf-sticky strong{font-size:13px}
   .wf-sticky small{color:#64748b}
   .wf-sticky-ok{border-color:#bbf7d0;background:#f0fdf4}
@@ -376,6 +376,8 @@ const panelStyles = String.raw`
   .wf-diff-row.same{border-color:#bbf7d0;background:#f0fdf4}
   .wf-diff-values{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   .wf-diff-cell{border:1px solid #e2e8f0;border-radius:8px;padding:8px;background:#f8fafc;font-size:12px}
+  .wf-action-help{min-height:18px;margin-top:-6px;margin-bottom:12px;font-size:12px;color:#64748b;display:flex;align-items:center}
+  .wf-action-help.err{color:#991b1b}
   .wf-sr-only{
     position:absolute!important;
     width:1px!important;
@@ -3367,6 +3369,14 @@ export default function StagingWorkflowPanel() {
     return Array.from(dedup.values());
   }, [publishValidationMissing]);
 
+  const actionHelpText = useMemo(() => {
+    if (actionContext.publishDisabledReason) return actionContext.publishDisabledReason;
+    if (actionContext.saveDisabledReason) return actionContext.saveDisabledReason;
+    return actionContext.message;
+  }, [actionContext.message, actionContext.publishDisabledReason, actionContext.saveDisabledReason]);
+
+  const actionHelpIsError = Boolean(actionContext.publishDisabledReason || actionContext.saveDisabledReason);
+
   return (
     <main className="wf-shell">
       <style dangerouslySetInnerHTML={{ __html: panelStyles }} />
@@ -3538,11 +3548,9 @@ export default function StagingWorkflowPanel() {
               </>
             ) : null}
           </div>
-          {(actionContext.saveDisabledReason || actionContext.publishDisabledReason) && (
-            <p className="wf-muted" style={{ marginTop: -6, marginBottom: 12 }}>
-              {actionContext.publishDisabledReason || actionContext.saveDisabledReason}
-            </p>
-          )}
+          <div className={`wf-action-help ${actionHelpIsError ? "err" : ""}`} aria-live="polite">
+            {actionHelpText}
+          </div>
           {publishValidationMissing.length > 0 ? (
             <div className="wf-alert" style={{ marginBottom: 12 }}>
               <div className="wf-alert-title">Falta contenido mínimo para publicar</div>
