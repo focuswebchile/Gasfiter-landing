@@ -322,6 +322,9 @@ const panelStyles = String.raw`
   .wf-alert{border:1px solid #fecaca;background:#fef2f2;color:#991b1b;border-radius:10px;padding:10px 12px}
   .wf-alert-title{font-size:13px;font-weight:800;margin-bottom:6px}
   .wf-alert-list{margin:0;padding-left:18px;font-size:12px;display:grid;gap:4px}
+  .wf-readonly{border:1px solid #fde68a;background:#fffbeb;color:#92400e;border-radius:10px;padding:10px 12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+  .wf-readonly strong{font-size:13px}
+  .wf-readonly small{display:block;font-size:12px;color:#a16207}
   .wf-h3{margin:0 0 8px;font-size:17px}
   .wf-muted{color:#64748b;font-size:12px}
   .wf-sections,.wf-versions,.wf-items{display:grid;gap:8px}
@@ -3428,7 +3431,7 @@ export default function StagingWorkflowPanel() {
             >
               {loadingDiff ? "Comparando..." : "Ver cambios"}
             </button>
-            {actionContext.showEditDraft ? (
+            {actionContext.showEditDraft && !publishedReadOnly ? (
               <button className="wf-btn wf-btn-soft" onClick={startDraftEditing} disabled={actionContext.editDraftDisabled}>
                 Editar borrador
               </button>
@@ -3470,6 +3473,19 @@ export default function StagingWorkflowPanel() {
                     </button>
                   ))}
                 </div>
+              ) : null}
+            </div>
+          ) : null}
+          {publishedReadOnly && panelReady ? (
+            <div className="wf-readonly" style={{ marginBottom: 12 }}>
+              <div>
+                <strong>Modo publicado: solo lectura</strong>
+                <small>Los cambios están bloqueados hasta activar un borrador editable.</small>
+              </div>
+              {canSaveDraft ? (
+                <button className="wf-btn wf-btn-soft" onClick={startDraftEditing} disabled={actionContext.editDraftDisabled}>
+                  Editar borrador
+                </button>
               ) : null}
             </div>
           ) : null}
