@@ -372,6 +372,7 @@ export default function StagingWorkflowPanel() {
   const [heroDiff, setHeroDiff] = useState<HeroDiffResult | null>(null);
   const [loadingDiff, setLoadingDiff] = useState(false);
   const [uploadingAsset, setUploadingAsset] = useState<"logo" | "favicon" | null>(null);
+  const [uploadingContentAssetKey, setUploadingContentAssetKey] = useState<string | null>(null);
 
   const baseUrl = useMemo(() => {
     if (typeof window === "undefined") {
@@ -1032,6 +1033,78 @@ export default function StagingWorkflowPanel() {
       }
     };
 
+  const uploadContentAsset = async (params: {
+    sectionId: "hero" | "projects" | "testimonials";
+    field: "image" | "avatar";
+    file: File | null;
+    itemId?: string;
+  }) => {
+    const { sectionId, field, file, itemId } = params;
+    if (!file) return;
+    if (!panelReady) return setError("Primero usa Cargar panel");
+    if (!userId.trim()) return setError("Ingresa userId para subir archivos");
+    if (!canSaveDraft) return setError("Tu rol no puede editar contenido");
+    if (publishedReadOnly) return setError("Activa modo draft para editar contenido");
+
+    const uploadKey = `${sectionId}:${itemId ?? "section"}:${field}`;
+    setUploadingContentAssetKey(uploadKey);
+    try {
+      const form = new FormData();
+      form.append("userId", userId.trim());
+      form.append("sectionId", sectionId);
+      form.append("field", field);
+      if (itemId) form.append("itemId", itemId);
+      form.append("file", file);
+
+      const response = await fetch(`${endpointBase}/asset-upload`, {
+        method: "POST",
+        body: form,
+      });
+      const payload = (await response.json().catch(() => ({}))) as {
+        error?: string;
+        details?: string;
+        url?: string;
+      };
+      if (!response.ok || !payload.url) {
+        throw new Error(payload.error || payload.details || "No se pudo subir imagen");
+      }
+
+      if (itemId) {
+        updateSettings(
+          (prev) => {
+            const section = getSection(prev, sectionId);
+            if (!section) return prev;
+            const nextItems = toSectionItems(section).map((nextItem) =>
+              String(nextItem.id) === itemId ? { ...nextItem, [field]: payload.url } : nextItem,
+            );
+            return setSectionItems(prev, sectionId, nextItems);
+          },
+          {
+            persistNow: true,
+            note: `Autosave: ${sectionId} ${field} replaced`,
+          },
+        );
+      } else {
+        updateSettings(
+          (prev) => {
+            const section = getSection(prev, sectionId);
+            if (!section) return prev;
+            return upsertSection(prev, { ...section, data: { ...section.data, [field]: payload.url } });
+          },
+          {
+            persistNow: true,
+            note: `Autosave: ${sectionId} ${field} replaced`,
+          },
+        );
+      }
+      setOk("Imagen subida");
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Upload failed");
+    } finally {
+      setUploadingContentAssetKey(null);
+    }
+  };
+
   const reorderSections = (draggedId: string, targetId: string) => {
     updateSettings((prev) => {
       const next = normalizeSettings(prev);
@@ -1109,6 +1182,50 @@ export default function StagingWorkflowPanel() {
             placeholder="Hero subtitle"
             onChange={(e) => updateSettings((prev) => upsertSection(prev, { ...section, data: { ...section.data, subtitle: e.target.value } }))}
           />
+          <div className="wf-grid2">
+            <input
+              className="wf-input"
+              disabled={editingLocked}
+              value={typeof section.data.image === "string" ? section.data.image : ""}
+              placeholder="Hero image URL/path"
+              onChange={(e) =>
+                updateSettings((prev) => upsertSection(prev, { ...section, data: { ...section.data, image: e.target.value } }))
+              }
+            />
+            <div className="wf-row" style={{ gap: 8, flexWrap: "wrap" }}>
+              <label className="wf-btn wf-btn-soft" style={{ cursor: editingLocked ? "default" : "pointer" }}>
+                Reemplazar
+                <input
+                  type="file"
+                  hidden
+                  disabled={editingLocked}
+                  accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] ?? null;
+                    void uploadContentAsset({ sectionId: "hero", field: "image", file });
+                  }}
+                />
+              </label>
+              <button
+                className="wf-btn wf-btn-warn"
+                disabled={editingLocked || !(typeof section.data.image === "string" && section.data.image.trim())}
+                onClick={() =>
+                  updateSettings(
+                    (prev) => upsertSection(prev, { ...section, data: { ...section.data, image: "" } }),
+                    { persistNow: true, note: "Autosave: hero image removed" },
+                  )
+                }
+              >
+                Eliminar
+              </button>
+              {uploadingContentAssetKey === "hero:section:image" ? <span className="wf-muted">Subiendo imagen...</span> : null}
+            </div>
+          </div>
+          {typeof section.data.image === "string" && section.data.image.trim() ? (
+            <img src={section.data.image} alt="hero preview" style={{ maxHeight: 92, objectFit: "contain" }} />
+          ) : (
+            <span className="wf-muted">Sin imagen hero (usa fallback del layout)</span>
+          )}
           <div className="wf-grid2">
             <input
               className="wf-input"
@@ -1515,6 +1632,53 @@ export default function StagingWorkflowPanel() {
                       })
                     }
                   />
+                  <div className="wf-row" style={{ gap: 8, flexWrap: "wrap" }}>
+                    <label className="wf-btn wf-btn-soft" style={{ cursor: editingLocked ? "default" : "pointer" }}>
+                      Reemplazar
+                      <input
+                        type="file"
+                        hidden
+                        disabled={editingLocked}
+                        accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0] ?? null;
+                          void uploadContentAsset({
+                            sectionId: "projects",
+                            field: "image",
+                            itemId,
+                            file,
+                          });
+                        }}
+                      />
+                    </label>
+                    <button
+                      className="wf-btn wf-btn-warn"
+                      disabled={editingLocked || !(typeof item.image === "string" && item.image.trim())}
+                      onClick={() =>
+                        updateSettings(
+                          (prev) => {
+                            const sec = getSection(prev, section.id);
+                            if (!sec) return prev;
+                            const nextItems = toSectionItems(sec).map((nextItem) =>
+                              String(nextItem.id) === itemId ? { ...nextItem, image: "" } : nextItem,
+                            );
+                            return setSectionItems(prev, section.id, nextItems);
+                          },
+                          { persistNow: true, note: "Autosave: project image removed" },
+                        )
+                      }
+                    >
+                      Eliminar
+                    </button>
+                    {uploadingContentAssetKey === `projects:${itemId}:image` ? (
+                      <span className="wf-muted">Subiendo imagen...</span>
+                    ) : null}
+                  </div>
+                  {typeof item.image === "string" && item.image.trim() ? (
+                    <img src={item.image} alt="project preview" style={{ maxHeight: 86, objectFit: "contain" }} />
+                  ) : (
+                    <span className="wf-muted">Sin imagen (usa fallback del card)</span>
+                  )}
                   <select
                     className="wf-select"
                     disabled={editingLocked}
@@ -1879,6 +2043,53 @@ export default function StagingWorkflowPanel() {
                       })
                     }
                   />
+                  <div className="wf-row" style={{ gap: 8, flexWrap: "wrap" }}>
+                    <label className="wf-btn wf-btn-soft" style={{ cursor: editingLocked ? "default" : "pointer" }}>
+                      Reemplazar
+                      <input
+                        type="file"
+                        hidden
+                        disabled={editingLocked}
+                        accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0] ?? null;
+                          void uploadContentAsset({
+                            sectionId: "testimonials",
+                            field: "avatar",
+                            itemId,
+                            file,
+                          });
+                        }}
+                      />
+                    </label>
+                    <button
+                      className="wf-btn wf-btn-warn"
+                      disabled={editingLocked || !(typeof item.avatar === "string" && item.avatar.trim())}
+                      onClick={() =>
+                        updateSettings(
+                          (prev) => {
+                            const sec = getSection(prev, section.id);
+                            if (!sec) return prev;
+                            const nextItems = toSectionItems(sec).map((nextItem) =>
+                              String(nextItem.id) === itemId ? { ...nextItem, avatar: "" } : nextItem,
+                            );
+                            return setSectionItems(prev, section.id, nextItems);
+                          },
+                          { persistNow: true, note: "Autosave: testimonial avatar removed" },
+                        )
+                      }
+                    >
+                      Eliminar
+                    </button>
+                    {uploadingContentAssetKey === `testimonials:${itemId}:avatar` ? (
+                      <span className="wf-muted">Subiendo avatar...</span>
+                    ) : null}
+                  </div>
+                  {typeof item.avatar === "string" && item.avatar.trim() ? (
+                    <img src={item.avatar} alt="testimonial preview" style={{ width: 48, height: 48, borderRadius: "999px", objectFit: "cover" }} />
+                  ) : (
+                    <span className="wf-muted">Sin avatar (usa fallback del card)</span>
+                  )}
                 </div>
                 <div className="wf-toggle">
                   <input

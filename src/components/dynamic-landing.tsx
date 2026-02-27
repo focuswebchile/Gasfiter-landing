@@ -1932,6 +1932,7 @@ type Settings = {
     hero?: {
       title?: string;
       subtitle?: string;
+      image?: string;
       cta?: {
         primary_text?: string;
         primary_url?: string;
@@ -2311,6 +2312,12 @@ export default function DynamicLanding() {
           : typeof legacyHero?.subtitle === "string" && legacyHero.subtitle.trim()
             ? legacyHero.subtitle.trim()
             : "";
+      const heroImage =
+        typeof sectionHeroData?.image === "string" && sectionHeroData.image.trim()
+          ? sectionHeroData.image.trim()
+          : typeof legacyHero?.image === "string" && legacyHero.image.trim()
+            ? legacyHero.image.trim()
+            : "";
       const heroPrimaryUrl =
         typeof sectionHeroData?.cta_primary?.url === "string" && sectionHeroData.cta_primary.url.trim()
           ? sectionHeroData.cta_primary.url.trim()
@@ -2366,6 +2373,10 @@ export default function DynamicLanding() {
       if (heroSubtitle) {
         const subtitleEl = document.querySelector("[data-hero-subtitle]");
         if (subtitleEl) subtitleEl.textContent = heroSubtitle;
+      }
+      if (heroImage) {
+        const heroImg = document.querySelector<HTMLImageElement>(".hero-media img");
+        if (heroImg) heroImg.src = heroImage;
       }
 
       const primaryBtn = document.querySelector("[data-hero-cta-primary]");
@@ -2623,11 +2634,12 @@ export default function DynamicLanding() {
               const image = typeof item.image === "string" ? item.image.trim() : "";
               const size = typeof item.size === "string" ? item.size.trim() : "";
               const alt = typeof item.alt === "string" ? item.alt.trim() : title;
-              if (!title || !image) return "";
+              if (!title) return "";
+              const imageUrl = image || "/images/gasfiter-destape.webp";
               const wideClass = size === "wide" ? " project-card-wide" : "";
               return `
                 <figure class="project-card${wideClass}">
-                  <img src="${escapeHtml(image)}" alt="${escapeHtml(alt || title)}" loading="lazy" />
+                  <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(alt || title)}" loading="lazy" />
                   <figcaption class="project-overlay"><strong>${escapeHtml(title)}</strong><span>${escapeHtml(
                     location,
                   )}</span></figcaption>
