@@ -319,6 +319,9 @@ const panelStyles = String.raw`
   .wf-msg{display:inline-block;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700}
   .wf-ok{background:#dcfce7;color:#166534}
   .wf-err{background:#fee2e2;color:#991b1b}
+  .wf-alert{border:1px solid #fecaca;background:#fef2f2;color:#991b1b;border-radius:10px;padding:10px 12px}
+  .wf-alert-title{font-size:13px;font-weight:800;margin-bottom:6px}
+  .wf-alert-list{margin:0;padding-left:18px;font-size:12px;display:grid;gap:4px}
   .wf-h3{margin:0 0 8px;font-size:17px}
   .wf-muted{color:#64748b;font-size:12px}
   .wf-sections,.wf-versions,.wf-items{display:grid;gap:8px}
@@ -565,6 +568,7 @@ export default function StagingWorkflowPanel() {
   const [loadingDiff, setLoadingDiff] = useState(false);
   const [uploadingAsset, setUploadingAsset] = useState<"logoNav" | "logoFooter" | "favicon" | null>(null);
   const [uploadingContentAssetKey, setUploadingContentAssetKey] = useState<string | null>(null);
+  const [publishValidationMissing, setPublishValidationMissing] = useState<string[]>([]);
 
   const baseUrl = useMemo(() => {
     if (typeof window === "undefined") {
@@ -778,6 +782,7 @@ export default function StagingWorkflowPanel() {
 
     setBusy(true);
     setToast(null);
+    setPublishValidationMissing([]);
     try {
       await Promise.all([fetchSettings(mode, true), fetchVersions(true)]);
       setPanelReady(true);
@@ -921,6 +926,7 @@ export default function StagingWorkflowPanel() {
           draftUpdatedAt?: string | null;
         };
         setSettings(normalizeSettings((payload.settings ?? {}) as SettingsPayload));
+        setPublishValidationMissing([]);
         setDraftUpdatedAt(pickTimestamp((payload as { draftUpdatedAt?: unknown }).draftUpdatedAt, expectedUpdatedAt));
         setMode("draft");
         setDraftConflict({ active: false, message: "", serverUpdatedAt: null });
@@ -967,6 +973,7 @@ export default function StagingWorkflowPanel() {
 
     setBusy(true);
     setToast(null);
+    setPublishValidationMissing([]);
     try {
       const draftLoaded = await fetchSettings("draft", true);
       const hasDraft = typeof draftLoaded?.draftUpdatedAt === "string" && !!draftLoaded.draftUpdatedAt;
@@ -1000,6 +1007,7 @@ export default function StagingWorkflowPanel() {
         }
         if (!response.ok) throw new Error((payload as { error?: string })?.error || "No se pudo crear draft");
         setSettings(normalizeSettings(((payload as { settings?: SettingsPayload }).settings ?? {}) as SettingsPayload));
+        setPublishValidationMissing([]);
         setDraftUpdatedAt(
           pickTimestamp((payload as { draftUpdatedAt?: unknown }).draftUpdatedAt, latestDraftVersionToken),
         );
@@ -1055,6 +1063,7 @@ export default function StagingWorkflowPanel() {
 
     setBusy(true);
     setToast(null);
+    setPublishValidationMissing([]);
     try {
       const response = await fetch(`${endpointBase}/publish`, {
         method: "POST",
@@ -1097,6 +1106,7 @@ export default function StagingWorkflowPanel() {
           .filter((value): value is string => typeof value === "string" && value.trim().length > 0);
         const uniqueLabels = Array.from(new Set(labels));
         const details = uniqueLabels.length > 0 ? `Falta: ${uniqueLabels.join(", ")}.` : "";
+        setPublishValidationMissing(uniqueLabels);
         setError(`${payload.message || "No se puede publicar."} ${details}`.trim());
         return;
       }
@@ -1107,6 +1117,7 @@ export default function StagingWorkflowPanel() {
         draftUpdatedAt?: string | null;
       };
       setSettings(normalizeSettings((payload.settings ?? {}) as SettingsPayload));
+      setPublishValidationMissing([]);
       setDraftUpdatedAt(
         pickTimestamp((payload as { draftUpdatedAt?: unknown }).draftUpdatedAt, expectedUpdatedAt),
       );
@@ -1152,6 +1163,7 @@ export default function StagingWorkflowPanel() {
 
     setBusy(true);
     setToast(null);
+    setPublishValidationMissing([]);
     try {
       const response = await fetch(`${endpointBase}/rollback`, {
         method: "POST",
@@ -1168,6 +1180,7 @@ export default function StagingWorkflowPanel() {
       const payload = await response.json();
       if (!response.ok) throw new Error(payload?.error || "Rollback failed");
       setSettings(normalizeSettings((payload?.settings ?? {}) as SettingsPayload));
+      setPublishValidationMissing([]);
       setMode("published");
       setDirty(false);
       setOk(`Rollback aplicado a v${versionNumber}`);
@@ -3413,6 +3426,16 @@ export default function StagingWorkflowPanel() {
               </>
             ) : null}
           </div>
+          {publishValidationMissing.length > 0 ? (
+            <div className="wf-alert" style={{ marginBottom: 12 }}>
+              <div className="wf-alert-title">Falta contenido mínimo para publicar</div>
+              <ul className="wf-alert-list">
+                {publishValidationMissing.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
 
           {view === "sections" ? (
             <>
