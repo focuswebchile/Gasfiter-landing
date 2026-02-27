@@ -1573,39 +1573,39 @@ const landingMarkup = String.raw`
             <div class="service-icon"><i class="fa-solid fa-droplet"></i></div>
             <h3 data-service-title>Filtraciones y fugas</h3>
             <p data-service-description>Detección rápida y reparación inmediata para evitar daños mayores en muros, pisos y techos.</p>
-            <ul class="checklist">
+            <ul class="checklist" data-service-features>
               <li><i class="fa-solid fa-circle-check"></i>Fugas visibles y ocultas</li>
               <li><i class="fa-solid fa-circle-check"></i>Reparación de llaves y cañerías</li>
               <li><i class="fa-solid fa-circle-check"></i>Control de humedad inicial</li>
               <li><i class="fa-solid fa-circle-check"></i>Prueba de funcionamiento</li>
             </ul>
-            <a class="btn btn-primary" href="tel:+569XXXXXXX">Llamar por esto</a>
+            <a class="btn btn-primary" href="tel:+569XXXXXXX" data-service-cta>Llamar por esto</a>
           </article>
 
           <article class="card service-card" data-service-card>
             <div class="service-icon"><i class="fa-solid fa-toilet"></i></div>
             <h3 data-service-title>Destapes urgentes</h3>
             <p data-service-description>Atendemos obstrucciones críticas en cocina, baño y desagües con herramientas profesionales.</p>
-            <ul class="checklist">
+            <ul class="checklist" data-service-features>
               <li><i class="fa-solid fa-circle-check"></i>Destape de lavaplatos</li>
               <li><i class="fa-solid fa-circle-check"></i>Destape de WC</li>
               <li><i class="fa-solid fa-circle-check"></i>Limpieza de sifones</li>
               <li><i class="fa-solid fa-circle-check"></i>Prevención de rebalses</li>
             </ul>
-            <a class="btn btn-primary" href="tel:+569XXXXXXX">Llamar por esto</a>
+            <a class="btn btn-primary" href="tel:+569XXXXXXX" data-service-cta>Llamar por esto</a>
           </article>
 
           <article class="card service-card" data-service-card>
             <div class="service-icon"><i class="fa-solid fa-screwdriver-wrench"></i></div>
             <h3 data-service-title>Instalaciones y reparaciones</h3>
             <p data-service-description>Grifería, lavamanos, calefont y artefactos sanitarios con instalación segura y rápida.</p>
-            <ul class="checklist">
+            <ul class="checklist" data-service-features>
               <li><i class="fa-solid fa-circle-check"></i>Instalación de grifería</li>
               <li><i class="fa-solid fa-circle-check"></i>Reparación de calefont</li>
               <li><i class="fa-solid fa-circle-check"></i>Cambio de conexiones</li>
               <li><i class="fa-solid fa-circle-check"></i>Ajustes y sellado final</li>
             </ul>
-            <a class="btn btn-primary" href="tel:+569XXXXXXX">Llamar por esto</a>
+            <a class="btn btn-primary" href="tel:+569XXXXXXX" data-service-cta>Llamar por esto</a>
           </article>
         </div>
       </div>
@@ -1918,13 +1918,31 @@ type Settings = {
       };
     };
     services?:
-      | Array<{ title?: string; description?: string }>
+      | Array<{
+          title?: string;
+          description?: string;
+          features?: string[];
+          cta?: { text?: string; url?: string; enabled?: boolean };
+        }>
       | {
           title?: string;
           subtitle?: string;
           items?:
-            | Array<{ title?: string; description?: string }>
-            | Record<string, { title?: string; description?: string }>;
+            | Array<{
+                title?: string;
+                description?: string;
+                features?: string[];
+                cta?: { text?: string; url?: string; enabled?: boolean };
+              }>
+            | Record<
+                string,
+                {
+                  title?: string;
+                  description?: string;
+                  features?: string[];
+                  cta?: { text?: string; url?: string; enabled?: boolean };
+                }
+              >;
         };
     faqs?: Array<{ question?: string; answer?: string }>;
   };
@@ -2100,14 +2118,24 @@ export default function DynamicLanding() {
     };
     bindFaqButtons();
 
-    const toServicesArray = (services: unknown): Array<{ title?: string; description?: string }> => {
+    const toServicesArray = (services: unknown): Array<{
+      title?: string;
+      description?: string;
+      features?: string[];
+      cta?: { text?: string; url?: string; enabled?: boolean };
+    }> => {
       if (Array.isArray(services)) return services;
       if (!services || typeof services !== "object") return [];
       const items = (services as { items?: unknown }).items;
       if (Array.isArray(items)) return items;
       if (items && typeof items === "object") {
         return Object.values(items as Record<string, unknown>).filter(
-          (item): item is { title?: string; description?: string } =>
+          (item): item is {
+            title?: string;
+            description?: string;
+            features?: string[];
+            cta?: { text?: string; url?: string; enabled?: boolean };
+          } =>
             !!item && typeof item === "object",
         );
       }
@@ -2317,18 +2345,58 @@ export default function DynamicLanding() {
       if (serviceItems.length) {
         const cards = Array.from(document.querySelectorAll("[data-service-card]"));
         cards.forEach((card, idx) => {
-          const item = serviceItems[idx] as { title?: string; description?: string } | undefined;
+          const item = serviceItems[idx] as
+            | {
+                title?: string;
+                description?: string;
+                features?: string[];
+                cta?: { text?: string; url?: string; enabled?: boolean };
+              }
+            | undefined;
           if (!item) {
             (card as HTMLElement).style.display = "none";
             return;
           }
           const titleEl = card.querySelector("[data-service-title]");
           const descEl = card.querySelector("[data-service-description]");
+          const featuresEl = card.querySelector("[data-service-features]");
+          const ctaEl = card.querySelector("[data-service-cta]");
           if (titleEl && typeof item.title === "string" && item.title.trim()) {
             titleEl.textContent = item.title.trim();
           }
           if (descEl && typeof item.description === "string" && item.description.trim()) {
             descEl.textContent = item.description.trim();
+          }
+          if (featuresEl && Array.isArray(item.features)) {
+            const featureItems = item.features
+              .map((feature) => (typeof feature === "string" ? feature.trim() : ""))
+              .filter(Boolean);
+            if (featureItems.length) {
+              featuresEl.innerHTML = featureItems
+                .map(
+                  (feature) =>
+                    `<li><i class="fa-solid fa-circle-check"></i>${escapeHtml(feature)}</li>`,
+                )
+                .join("");
+            }
+          }
+          if (ctaEl && ctaEl instanceof HTMLAnchorElement) {
+            const ctaData =
+              item.cta && typeof item.cta === "object"
+                ? item.cta
+                : (undefined as { text?: string; url?: string; enabled?: boolean } | undefined);
+            const ctaText =
+              ctaData && typeof ctaData.text === "string" && ctaData.text.trim()
+                ? ctaData.text.trim()
+                : "";
+            const ctaUrl =
+              ctaData && typeof ctaData.url === "string" && ctaData.url.trim()
+                ? ctaData.url.trim()
+                : "";
+            const ctaEnabled = ctaData?.enabled !== false;
+            if (ctaText) ctaEl.textContent = ctaText;
+            if (ctaUrl) ctaEl.setAttribute("href", ctaUrl);
+            ctaEl.style.display = ctaEnabled ? "" : "none";
           }
         });
       }

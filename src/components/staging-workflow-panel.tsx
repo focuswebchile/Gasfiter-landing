@@ -1942,6 +1942,7 @@ export default function StagingWorkflowPanel() {
                         order: 999,
                         title: "Nuevo servicio",
                         description: "",
+                        features: ["Punto clave 1", "Punto clave 2"],
                         cta: { text: "Llamar", url: "tel:+56900000000", kind: "tel", enabled: true },
                       }
                     : {
@@ -2016,6 +2017,7 @@ export default function StagingWorkflowPanel() {
                   }
                 />
                 {section.id === "services" ? (
+                  <>
                   <div className="wf-grid2">
                     <input
                       className="wf-input"
@@ -2133,6 +2135,128 @@ export default function StagingWorkflowPanel() {
                       CTA enabled
                     </label>
                   </div>
+                  <div className="wf-row-item" style={{ marginTop: 8 }}>
+                    <div style={{ flex: 1, display: "grid", gap: 6 }}>
+                      <div className="wf-row" style={{ justifyContent: "space-between" }}>
+                        <strong style={{ fontSize: 13 }}>Features</strong>
+                        <button
+                          className="wf-btn wf-btn-soft"
+                          disabled={editingLocked}
+                          onClick={() =>
+                            updateSettings((prev) => {
+                              const sec = getSection(prev, section.id);
+                              if (!sec) return prev;
+                              const nextItems = toSectionItems(sec).map((nextItem) => {
+                                if (String(nextItem.id) !== itemId) return nextItem;
+                                const current = Array.isArray(nextItem.features)
+                                  ? [...nextItem.features]
+                                  : [];
+                                current.push("Nuevo punto");
+                                return { ...nextItem, features: current };
+                              });
+                              return setSectionItems(prev, section.id, nextItems);
+                            })
+                          }
+                        >
+                          + Add feature
+                        </button>
+                      </div>
+                      {(Array.isArray(item.features) ? item.features : []).map((feature, featureIdx) => (
+                        <div key={`${itemId}-feature-${featureIdx}`} className="wf-row">
+                          <input
+                            className="wf-input"
+                            disabled={editingLocked}
+                            value={typeof feature === "string" ? feature : ""}
+                            placeholder={`Feature ${featureIdx + 1}`}
+                            onChange={(e) =>
+                              updateSettings((prev) => {
+                                const sec = getSection(prev, section.id);
+                                if (!sec) return prev;
+                                const nextItems = toSectionItems(sec).map((nextItem) => {
+                                  if (String(nextItem.id) !== itemId) return nextItem;
+                                  const features = Array.isArray(nextItem.features)
+                                    ? [...nextItem.features]
+                                    : [];
+                                  features[featureIdx] = e.target.value;
+                                  return { ...nextItem, features };
+                                });
+                                return setSectionItems(prev, section.id, nextItems);
+                              })
+                            }
+                          />
+                          <button
+                            className="wf-btn wf-btn-soft"
+                            disabled={editingLocked || featureIdx === 0}
+                            onClick={() =>
+                              updateSettings((prev) => {
+                                const sec = getSection(prev, section.id);
+                                if (!sec) return prev;
+                                const nextItems = toSectionItems(sec).map((nextItem) => {
+                                  if (String(nextItem.id) !== itemId) return nextItem;
+                                  const features = Array.isArray(nextItem.features)
+                                    ? [...nextItem.features]
+                                    : [];
+                                  const [moved] = features.splice(featureIdx, 1);
+                                  features.splice(featureIdx - 1, 0, moved);
+                                  return { ...nextItem, features };
+                                });
+                                return setSectionItems(prev, section.id, nextItems);
+                              })
+                            }
+                          >
+                            ↑
+                          </button>
+                          <button
+                            className="wf-btn wf-btn-soft"
+                            disabled={
+                              editingLocked ||
+                              featureIdx >= (Array.isArray(item.features) ? item.features.length - 1 : -1)
+                            }
+                            onClick={() =>
+                              updateSettings((prev) => {
+                                const sec = getSection(prev, section.id);
+                                if (!sec) return prev;
+                                const nextItems = toSectionItems(sec).map((nextItem) => {
+                                  if (String(nextItem.id) !== itemId) return nextItem;
+                                  const features = Array.isArray(nextItem.features)
+                                    ? [...nextItem.features]
+                                    : [];
+                                  const [moved] = features.splice(featureIdx, 1);
+                                  features.splice(featureIdx + 1, 0, moved);
+                                  return { ...nextItem, features };
+                                });
+                                return setSectionItems(prev, section.id, nextItems);
+                              })
+                            }
+                          >
+                            ↓
+                          </button>
+                          <button
+                            className="wf-btn wf-btn-warn"
+                            disabled={editingLocked}
+                            onClick={() =>
+                              updateSettings((prev) => {
+                                const sec = getSection(prev, section.id);
+                                if (!sec) return prev;
+                                const nextItems = toSectionItems(sec).map((nextItem) => {
+                                  if (String(nextItem.id) !== itemId) return nextItem;
+                                  const features = Array.isArray(nextItem.features)
+                                    ? [...nextItem.features]
+                                    : [];
+                                  features.splice(featureIdx, 1);
+                                  return { ...nextItem, features };
+                                });
+                                return setSectionItems(prev, section.id, nextItems);
+                              })
+                            }
+                          >
+                            Eliminar
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  </>
                 ) : null}
               </div>
               <div className="wf-toggle">
