@@ -2018,6 +2018,32 @@ export default function StagingWorkflowPanel() {
                 />
                 {section.id === "services" ? (
                   <>
+                  <textarea
+                    className="wf-textarea"
+                    disabled={editingLocked}
+                    value={
+                      Array.isArray(item.features)
+                        ? item.features
+                            .map((feature) => (typeof feature === "string" ? feature : ""))
+                            .join("\n")
+                        : ""
+                    }
+                    placeholder={"Features (uno por línea)"}
+                    onChange={(e) =>
+                      updateSettings((prev) => {
+                        const sec = getSection(prev, section.id);
+                        if (!sec) return prev;
+                        const parsedFeatures = e.target.value
+                          .split("\n")
+                          .map((value) => value.trim())
+                          .filter(Boolean);
+                        const nextItems = toSectionItems(sec).map((nextItem) =>
+                          String(nextItem.id) === itemId ? { ...nextItem, features: parsedFeatures } : nextItem,
+                        );
+                        return setSectionItems(prev, section.id, nextItems);
+                      })
+                    }
+                  />
                   <div className="wf-grid2">
                     <input
                       className="wf-input"
