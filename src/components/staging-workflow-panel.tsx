@@ -313,6 +313,10 @@ const panelStyles = String.raw`
   .wf-textarea{width:100%;min-height:88px;resize:vertical}
   .wf-btn{height:38px;border:0;border-radius:10px;padding:0 12px;font-weight:700;cursor:pointer}
   .wf-btn:disabled{opacity:.5;cursor:not-allowed}
+  .wf-btn:focus-visible,.wf-nav-btn:focus-visible,.wf-input:focus-visible,.wf-select:focus-visible,.wf-textarea:focus-visible{
+    outline:2px solid #2563eb;
+    outline-offset:2px;
+  }
   .wf-btn-primary{background:#1565c0;color:#fff}
   .wf-btn-soft{background:#eef2ff;color:#1e3a8a}
   .wf-btn-warn{background:#ffedd5;color:#9a3412}
@@ -372,6 +376,17 @@ const panelStyles = String.raw`
   .wf-diff-row.same{border-color:#bbf7d0;background:#f0fdf4}
   .wf-diff-values{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   .wf-diff-cell{border:1px solid #e2e8f0;border-radius:8px;padding:8px;background:#f8fafc;font-size:12px}
+  .wf-sr-only{
+    position:absolute!important;
+    width:1px!important;
+    height:1px!important;
+    padding:0!important;
+    margin:-1px!important;
+    overflow:hidden!important;
+    clip:rect(0,0,0,0)!important;
+    white-space:nowrap!important;
+    border:0!important;
+  }
 `;
 
 function detectEnvBadge(slug: string): "DEV" | "STAGING" | "PROD" {
@@ -3368,7 +3383,11 @@ export default function StagingWorkflowPanel() {
         </div>
       </header>
 
-      <div className={stickyState.className}>
+      <div
+        className={stickyState.className}
+        role={draftConflict.active ? "alert" : "status"}
+        aria-live={draftConflict.active ? "assertive" : "polite"}
+      >
         <strong>{stickyState.title}</strong>
         <small>{stickyState.detail}</small>
       </div>
@@ -3397,7 +3416,13 @@ export default function StagingWorkflowPanel() {
             <div key={group.title} className="wf-nav-group">
               <span className="wf-nav-group-title">{group.title}</span>
               {group.items.map(([key, label]) => (
-                <button key={key} className={`wf-nav-btn ${view === key ? "active" : ""}`} onClick={() => setView(key)}>
+                <button
+                  key={key}
+                  className={`wf-nav-btn ${view === key ? "active" : ""}`}
+                  onClick={() => setView(key)}
+                  aria-label={`Ir a ${label}`}
+                  aria-pressed={view === key}
+                >
                   <span>{label}</span>
                   <span className="wf-muted">›</span>
                 </button>
@@ -3460,12 +3485,16 @@ export default function StagingWorkflowPanel() {
           </div>
 
           <div className="wf-row" style={{ marginBottom: 12 }}>
+            <span id="panel-action-help" className="wf-sr-only">
+              {actionContext.publishDisabledReason || actionContext.saveDisabledReason || "Acciones disponibles"}
+            </span>
             {actionContext.showSave ? (
               <button
                 className="wf-btn wf-btn-primary"
                 onClick={saveDraft}
                 disabled={actionContext.saveDisabled}
                 title={actionContext.saveDisabled ? actionContext.saveDisabledReason : "Guardar cambios en borrador"}
+                aria-describedby={actionContext.saveDisabled ? "panel-action-help" : undefined}
               >
                 Guardar borrador
               </button>
@@ -3476,6 +3505,7 @@ export default function StagingWorkflowPanel() {
                 onClick={publish}
                 disabled={actionContext.publishDisabled}
                 title={actionContext.publishDisabled ? actionContext.publishDisabledReason : "Publicar versión actual"}
+                aria-describedby={actionContext.publishDisabled ? "panel-action-help" : undefined}
               >
                 {flushingPublish ? "Esperando guardado..." : "Publicar"}
               </button>
