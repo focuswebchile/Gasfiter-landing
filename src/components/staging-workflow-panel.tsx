@@ -111,6 +111,12 @@ type HeroDiffResult = {
     faq: {
       fields: HeroDiffField[];
     };
+    projects?: {
+      fields: HeroDiffField[];
+    };
+    testimonials?: {
+      fields: HeroDiffField[];
+    };
   };
 };
 
@@ -196,12 +202,39 @@ function sortByOrder<T extends { order: number }>(items: T[]) {
   return [...items].sort((a, b) => a.order - b.order);
 }
 
+function createPanelItemId() {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `item-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 function toSectionItems(section: Section): Array<Record<string, unknown>> {
   const raw = Array.isArray(section.data?.items) ? (section.data.items as Array<Record<string, unknown>>) : [];
   return sortByOrder(
     raw.map((item, index) => ({
+      id: typeof item.id === "string" && item.id.trim() ? item.id.trim() : createPanelItemId(),
       enabled: item.enabled !== false,
       order: typeof item.order === "number" ? item.order : index + 1,
+      ...(item.cta && typeof item.cta === "object"
+        ? {
+            cta: {
+              text:
+                typeof (item.cta as { text?: unknown }).text === "string"
+                  ? (item.cta as { text: string }).text
+                  : "",
+              url:
+                typeof (item.cta as { url?: unknown }).url === "string"
+                  ? (item.cta as { url: string }).url
+                  : "",
+              kind:
+                typeof (item.cta as { kind?: unknown }).kind === "string"
+                  ? (item.cta as { kind: string }).kind
+                  : "primary",
+              enabled: (item.cta as { enabled?: unknown }).enabled !== false,
+            },
+          }
+        : {}),
       ...item,
     })),
   );
@@ -248,12 +281,12 @@ function reorderById<T extends { id: string }>(items: T[], draggedId: string, ta
   return next;
 }
 
-function reorderItemsInSection(settings: SettingsPayload, sectionId: string, fromOrder: number, toOrder: number): SettingsPayload {
+function reorderItemsInSection(settings: SettingsPayload, sectionId: string, fromItemId: string, toItemId: string): SettingsPayload {
   const section = getSection(settings, sectionId);
   if (!section) return settings;
   const items = toSectionItems(section);
-  const fromIndex = items.findIndex((item) => Number(item.order) === fromOrder);
-  const toIndex = items.findIndex((item) => Number(item.order) === toOrder);
+  const fromIndex = items.findIndex((item) => String(item.id) === fromItemId);
+  const toIndex = items.findIndex((item) => String(item.id) === toItemId);
   if (fromIndex < 0 || toIndex < 0) return settings;
 
   const nextItems = [...items];
@@ -262,6 +295,18 @@ function reorderItemsInSection(settings: SettingsPayload, sectionId: string, fro
   const normalizedItems = nextItems.map((item, index) => ({ ...item, order: index + 1 }));
 
   return upsertSection(settings, { ...section, data: { ...section.data, items: normalizedItems } });
+}
+
+function setSectionItems(settings: SettingsPayload, sectionId: string, nextItems: Array<Record<string, unknown>>) {
+  const section = getSection(settings, sectionId);
+  if (!section) return settings;
+  const normalized = nextItems.map((item, index) => ({
+    ...item,
+    id: typeof item.id === "string" && item.id.trim() ? item.id.trim() : createPanelItemId(),
+    order: index + 1,
+    enabled: item.enabled !== false,
+  }));
+  return upsertSection(settings, { ...section, data: { ...section.data, items: normalized } });
 }
 
 function pickTimestamp(value: unknown, fallback: string | null = null): string | null {
@@ -286,7 +331,7 @@ export default function StagingWorkflowPanel() {
   const [dirty, setDirty] = useState(false);
   const [autosaveHint, setAutosaveHint] = useState("Sin cambios pendientes");
   const [draggingSectionId, setDraggingSectionId] = useState<string | null>(null);
-  const [draggingItemOrder, setDraggingItemOrder] = useState<number | null>(null);
+  const [draggingItemId, setDraggingItemId] = useState<string | null>(null);
   const [panelReady, setPanelReady] = useState(false);
   const [autosaving, setAutosaving] = useState(false);
   const [flushingPublish, setFlushingPublish] = useState(false);
@@ -1294,25 +1339,52 @@ export default function StagingWorkflowPanel() {
               )
             }
           />
+          <div className="wf-row">
+            <button
+              className="wf-btn wf-btn-soft"
+              disabled={editingLocked}
+              onClick={() =>
+                updateSettings((prev) => {
+                  const sec = getSection(prev, section.id);
+                  if (!sec) return prev;
+                  const nextItems = [
+                    ...toSectionItems(sec),
+                    {
+                      id: createPanelItemId(),
+                      enabled: true,
+                      order: 999,
+                      title: "Nuevo proyecto",
+                      location: "",
+                      image: "",
+                      size: "square",
+                    },
+                  ];
+                  return setSectionItems(prev, section.id, nextItems);
+                })
+              }
+            >
+              + Agregar proyecto
+            </button>
+          </div>
           {items.map((item) => {
-            const key = Number(item.order);
+            const itemId = String(item.id);
             return (
               <div
-                key={key}
-                className={`wf-row-item ${draggingItemOrder === key ? "dragging" : ""}`}
+                key={itemId}
+                className={`wf-row-item ${draggingItemId === itemId ? "dragging" : ""}`}
                 draggable={!editingLocked}
-                onDragStart={() => setDraggingItemOrder(key)}
+                onDragStart={() => setDraggingItemId(itemId)}
                 onDragOver={(event) => event.preventDefault()}
                 onDrop={() => {
-                  if (!editingLocked && draggingItemOrder !== null) {
-                    updateSettings((prev) => reorderItemsInSection(prev, section.id, draggingItemOrder, key), {
+                  if (!editingLocked && draggingItemId !== null) {
+                    updateSettings((prev) => reorderItemsInSection(prev, section.id, draggingItemId, itemId), {
                       persistNow: true,
                       note: "Autosave: item order updated (projects)",
                     });
                   }
-                  setDraggingItemOrder(null);
+                  setDraggingItemId(null);
                 }}
-                onDragEnd={() => setDraggingItemOrder(null)}
+                onDragEnd={() => setDraggingItemId(null)}
               >
                 <span className="wf-drag">⋮⋮</span>
                 <div style={{ flex: 1, display: "grid", gap: 6 }}>
@@ -1326,9 +1398,9 @@ export default function StagingWorkflowPanel() {
                         const sec = getSection(prev, section.id);
                         if (!sec) return prev;
                         const nextItems = toSectionItems(sec).map((nextItem) =>
-                          Number(nextItem.order) === key ? { ...nextItem, title: e.target.value } : nextItem,
+                          String(nextItem.id) === itemId ? { ...nextItem, title: e.target.value } : nextItem,
                         );
-                        return upsertSection(prev, { ...sec, data: { ...sec.data, items: nextItems } });
+                        return setSectionItems(prev, section.id, nextItems);
                       })
                     }
                   />
@@ -1342,9 +1414,9 @@ export default function StagingWorkflowPanel() {
                         const sec = getSection(prev, section.id);
                         if (!sec) return prev;
                         const nextItems = toSectionItems(sec).map((nextItem) =>
-                          Number(nextItem.order) === key ? { ...nextItem, location: e.target.value } : nextItem,
+                          String(nextItem.id) === itemId ? { ...nextItem, location: e.target.value } : nextItem,
                         );
-                        return upsertSection(prev, { ...sec, data: { ...sec.data, items: nextItems } });
+                        return setSectionItems(prev, section.id, nextItems);
                       })
                     }
                   />
@@ -1358,9 +1430,9 @@ export default function StagingWorkflowPanel() {
                         const sec = getSection(prev, section.id);
                         if (!sec) return prev;
                         const nextItems = toSectionItems(sec).map((nextItem) =>
-                          Number(nextItem.order) === key ? { ...nextItem, image: e.target.value } : nextItem,
+                          String(nextItem.id) === itemId ? { ...nextItem, image: e.target.value } : nextItem,
                         );
-                        return upsertSection(prev, { ...sec, data: { ...sec.data, items: nextItems } });
+                        return setSectionItems(prev, section.id, nextItems);
                       })
                     }
                   />
@@ -1373,9 +1445,9 @@ export default function StagingWorkflowPanel() {
                         const sec = getSection(prev, section.id);
                         if (!sec) return prev;
                         const nextItems = toSectionItems(sec).map((nextItem) =>
-                          Number(nextItem.order) === key ? { ...nextItem, size: e.target.value } : nextItem,
+                          String(nextItem.id) === itemId ? { ...nextItem, size: e.target.value } : nextItem,
                         );
-                        return upsertSection(prev, { ...sec, data: { ...sec.data, items: nextItems } });
+                        return setSectionItems(prev, section.id, nextItems);
                       })
                     }
                   >
@@ -1393,13 +1465,49 @@ export default function StagingWorkflowPanel() {
                         const sec = getSection(prev, section.id);
                         if (!sec) return prev;
                         const nextItems = toSectionItems(sec).map((nextItem) =>
-                          Number(nextItem.order) === key ? { ...nextItem, enabled: e.target.checked } : nextItem,
+                          String(nextItem.id) === itemId ? { ...nextItem, enabled: e.target.checked } : nextItem,
                         );
-                        return upsertSection(prev, { ...sec, data: { ...sec.data, items: nextItems } });
+                        return setSectionItems(prev, section.id, nextItems);
                       })
                     }
                   />
                   enabled
+                </div>
+                <div className="wf-row">
+                  <button
+                    className="wf-btn wf-btn-soft"
+                    disabled={editingLocked}
+                    onClick={() =>
+                      updateSettings((prev) => {
+                        const sec = getSection(prev, section.id);
+                        if (!sec) return prev;
+                        const all = toSectionItems(sec);
+                        const idx = all.findIndex((nextItem) => String(nextItem.id) === itemId);
+                        if (idx < 0) return prev;
+                        const clone = { ...all[idx], id: createPanelItemId(), order: 999 };
+                        const nextItems = [...all.slice(0, idx + 1), clone, ...all.slice(idx + 1)];
+                        return setSectionItems(prev, section.id, nextItems);
+                      })
+                    }
+                  >
+                    Duplicar
+                  </button>
+                  <button
+                    className="wf-btn wf-btn-warn"
+                    disabled={editingLocked || items.length <= 1}
+                    onClick={() =>
+                      updateSettings((prev) => {
+                        const sec = getSection(prev, section.id);
+                        if (!sec) return prev;
+                        const nextItems = toSectionItems(sec).filter(
+                          (nextItem) => String(nextItem.id) !== itemId,
+                        );
+                        return setSectionItems(prev, section.id, nextItems);
+                      })
+                    }
+                  >
+                    Eliminar
+                  </button>
                 </div>
               </div>
             );
@@ -1579,25 +1687,52 @@ export default function StagingWorkflowPanel() {
               )
             }
           />
+          <div className="wf-row">
+            <button
+              className="wf-btn wf-btn-soft"
+              disabled={editingLocked}
+              onClick={() =>
+                updateSettings((prev) => {
+                  const sec = getSection(prev, section.id);
+                  if (!sec) return prev;
+                  const nextItems = [
+                    ...toSectionItems(sec),
+                    {
+                      id: createPanelItemId(),
+                      enabled: true,
+                      order: 999,
+                      name: "Nuevo testimonio",
+                      location: "",
+                      quote: "",
+                      avatar: "",
+                    },
+                  ];
+                  return setSectionItems(prev, section.id, nextItems);
+                })
+              }
+            >
+              + Agregar testimonio
+            </button>
+          </div>
           {items.map((item) => {
-            const key = Number(item.order);
+            const itemId = String(item.id);
             return (
               <div
-                key={key}
-                className={`wf-row-item ${draggingItemOrder === key ? "dragging" : ""}`}
+                key={itemId}
+                className={`wf-row-item ${draggingItemId === itemId ? "dragging" : ""}`}
                 draggable={!editingLocked}
-                onDragStart={() => setDraggingItemOrder(key)}
+                onDragStart={() => setDraggingItemId(itemId)}
                 onDragOver={(event) => event.preventDefault()}
                 onDrop={() => {
-                  if (!editingLocked && draggingItemOrder !== null) {
+                  if (!editingLocked && draggingItemId !== null) {
                     updateSettings(
-                      (prev) => reorderItemsInSection(prev, section.id, draggingItemOrder, key),
+                      (prev) => reorderItemsInSection(prev, section.id, draggingItemId, itemId),
                       { persistNow: true, note: "Autosave: item order updated (testimonials)" },
                     );
                   }
-                  setDraggingItemOrder(null);
+                  setDraggingItemId(null);
                 }}
-                onDragEnd={() => setDraggingItemOrder(null)}
+                onDragEnd={() => setDraggingItemId(null)}
               >
                 <span className="wf-drag">⋮⋮</span>
                 <div style={{ flex: 1, display: "grid", gap: 6 }}>
@@ -1611,9 +1746,9 @@ export default function StagingWorkflowPanel() {
                         const sec = getSection(prev, section.id);
                         if (!sec) return prev;
                         const nextItems = toSectionItems(sec).map((nextItem) =>
-                          Number(nextItem.order) === key ? { ...nextItem, name: e.target.value } : nextItem,
+                          String(nextItem.id) === itemId ? { ...nextItem, name: e.target.value } : nextItem,
                         );
-                        return upsertSection(prev, { ...sec, data: { ...sec.data, items: nextItems } });
+                        return setSectionItems(prev, section.id, nextItems);
                       })
                     }
                   />
@@ -1627,9 +1762,9 @@ export default function StagingWorkflowPanel() {
                         const sec = getSection(prev, section.id);
                         if (!sec) return prev;
                         const nextItems = toSectionItems(sec).map((nextItem) =>
-                          Number(nextItem.order) === key ? { ...nextItem, location: e.target.value } : nextItem,
+                          String(nextItem.id) === itemId ? { ...nextItem, location: e.target.value } : nextItem,
                         );
-                        return upsertSection(prev, { ...sec, data: { ...sec.data, items: nextItems } });
+                        return setSectionItems(prev, section.id, nextItems);
                       })
                     }
                   />
@@ -1643,9 +1778,9 @@ export default function StagingWorkflowPanel() {
                         const sec = getSection(prev, section.id);
                         if (!sec) return prev;
                         const nextItems = toSectionItems(sec).map((nextItem) =>
-                          Number(nextItem.order) === key ? { ...nextItem, quote: e.target.value } : nextItem,
+                          String(nextItem.id) === itemId ? { ...nextItem, quote: e.target.value } : nextItem,
                         );
-                        return upsertSection(prev, { ...sec, data: { ...sec.data, items: nextItems } });
+                        return setSectionItems(prev, section.id, nextItems);
                       })
                     }
                   />
@@ -1659,9 +1794,9 @@ export default function StagingWorkflowPanel() {
                         const sec = getSection(prev, section.id);
                         if (!sec) return prev;
                         const nextItems = toSectionItems(sec).map((nextItem) =>
-                          Number(nextItem.order) === key ? { ...nextItem, avatar: e.target.value } : nextItem,
+                          String(nextItem.id) === itemId ? { ...nextItem, avatar: e.target.value } : nextItem,
                         );
-                        return upsertSection(prev, { ...sec, data: { ...sec.data, items: nextItems } });
+                        return setSectionItems(prev, section.id, nextItems);
                       })
                     }
                   />
@@ -1676,13 +1811,49 @@ export default function StagingWorkflowPanel() {
                         const sec = getSection(prev, section.id);
                         if (!sec) return prev;
                         const nextItems = toSectionItems(sec).map((nextItem) =>
-                          Number(nextItem.order) === key ? { ...nextItem, enabled: e.target.checked } : nextItem,
+                          String(nextItem.id) === itemId ? { ...nextItem, enabled: e.target.checked } : nextItem,
                         );
-                        return upsertSection(prev, { ...sec, data: { ...sec.data, items: nextItems } });
+                        return setSectionItems(prev, section.id, nextItems);
                       })
                     }
                   />
                   enabled
+                </div>
+                <div className="wf-row">
+                  <button
+                    className="wf-btn wf-btn-soft"
+                    disabled={editingLocked}
+                    onClick={() =>
+                      updateSettings((prev) => {
+                        const sec = getSection(prev, section.id);
+                        if (!sec) return prev;
+                        const all = toSectionItems(sec);
+                        const idx = all.findIndex((nextItem) => String(nextItem.id) === itemId);
+                        if (idx < 0) return prev;
+                        const clone = { ...all[idx], id: createPanelItemId(), order: 999 };
+                        const nextItems = [...all.slice(0, idx + 1), clone, ...all.slice(idx + 1)];
+                        return setSectionItems(prev, section.id, nextItems);
+                      })
+                    }
+                  >
+                    Duplicar
+                  </button>
+                  <button
+                    className="wf-btn wf-btn-warn"
+                    disabled={editingLocked || items.length <= 1}
+                    onClick={() =>
+                      updateSettings((prev) => {
+                        const sec = getSection(prev, section.id);
+                        if (!sec) return prev;
+                        const nextItems = toSectionItems(sec).filter(
+                          (nextItem) => String(nextItem.id) !== itemId,
+                        );
+                        return setSectionItems(prev, section.id, nextItems);
+                      })
+                    }
+                  >
+                    Eliminar
+                  </button>
                 </div>
               </div>
             );
@@ -1754,27 +1925,61 @@ export default function StagingWorkflowPanel() {
             }
           />
         ) : null}
+        <div className="wf-row">
+          <button
+            className="wf-btn wf-btn-soft"
+            disabled={editingLocked}
+            onClick={() =>
+              updateSettings((prev) => {
+                const sec = getSection(prev, section.id);
+                if (!sec) return prev;
+                const nextItems = [
+                  ...toSectionItems(sec),
+                  section.id === "services"
+                    ? {
+                        id: createPanelItemId(),
+                        enabled: true,
+                        order: 999,
+                        title: "Nuevo servicio",
+                        description: "",
+                        cta: { text: "Llamar", url: "tel:+56900000000", kind: "tel", enabled: true },
+                      }
+                    : {
+                        id: createPanelItemId(),
+                        enabled: true,
+                        order: 999,
+                        question: "Nueva pregunta",
+                        answer: "",
+                      },
+                ];
+                return setSectionItems(prev, section.id, nextItems);
+              })
+            }
+          >
+            {section.id === "services" ? "+ Agregar servicio" : "+ Agregar FAQ"}
+          </button>
+        </div>
         {items.map((item) => {
-          const key = Number(item.order);
+          const itemId = String(item.id);
           const labelA = section.id === "services" ? "title" : "question";
           const labelB = section.id === "services" ? "description" : "answer";
           return (
             <div
-              key={key}
-              className={`wf-row-item ${draggingItemOrder === key ? "dragging" : ""}`}
+              key={itemId}
+              className={`wf-row-item ${draggingItemId === itemId ? "dragging" : ""}`}
               draggable={!editingLocked}
-              onDragStart={() => setDraggingItemOrder(key)}
+              onDragStart={() => setDraggingItemId(itemId)}
               onDragOver={(event) => event.preventDefault()}
               onDrop={() => {
-                if (!editingLocked && draggingItemOrder !== null) {
+                if (!editingLocked && draggingItemId !== null) {
                   updateSettings(
-                    (prev) => reorderItemsInSection(prev, section.id, draggingItemOrder, key),
+                    (prev) => reorderItemsInSection(prev, section.id, draggingItemId, itemId),
                     { persistNow: true, note: `Autosave: item order updated (${section.id})` },
                   );
                 }
-                setDraggingItemOrder(null);
+                setDraggingItemId(null);
               }}
-              onDragEnd={() => setDraggingItemOrder(null)}
+              onDragEnd={() => setDraggingItemId(null)}
             >
               <span className="wf-drag">⋮⋮</span>
               <div style={{ flex: 1, display: "grid", gap: 6 }}>
@@ -1787,8 +1992,10 @@ export default function StagingWorkflowPanel() {
                     updateSettings((prev) => {
                       const sec = getSection(prev, section.id);
                       if (!sec) return prev;
-                      const nextItems = toSectionItems(sec).map((nextItem) => (Number(nextItem.order) === key ? { ...nextItem, [labelA]: e.target.value } : nextItem));
-                      return upsertSection(prev, { ...sec, data: { ...sec.data, items: nextItems } });
+                      const nextItems = toSectionItems(sec).map((nextItem) =>
+                        String(nextItem.id) === itemId ? { ...nextItem, [labelA]: e.target.value } : nextItem,
+                      );
+                      return setSectionItems(prev, section.id, nextItems);
                     })
                   }
                 />
@@ -1801,11 +2008,132 @@ export default function StagingWorkflowPanel() {
                     updateSettings((prev) => {
                       const sec = getSection(prev, section.id);
                       if (!sec) return prev;
-                      const nextItems = toSectionItems(sec).map((nextItem) => (Number(nextItem.order) === key ? { ...nextItem, [labelB]: e.target.value } : nextItem));
-                      return upsertSection(prev, { ...sec, data: { ...sec.data, items: nextItems } });
+                      const nextItems = toSectionItems(sec).map((nextItem) =>
+                        String(nextItem.id) === itemId ? { ...nextItem, [labelB]: e.target.value } : nextItem,
+                      );
+                      return setSectionItems(prev, section.id, nextItems);
                     })
                   }
                 />
+                {section.id === "services" ? (
+                  <div className="wf-grid2">
+                    <input
+                      className="wf-input"
+                      disabled={editingLocked}
+                      value={
+                        typeof (item.cta as { text?: unknown } | undefined)?.text === "string"
+                          ? ((item.cta as { text?: string }).text ?? "")
+                          : ""
+                      }
+                      placeholder="CTA text"
+                      onChange={(e) =>
+                        updateSettings((prev) => {
+                          const sec = getSection(prev, section.id);
+                          if (!sec) return prev;
+                          const nextItems = toSectionItems(sec).map((nextItem) =>
+                            String(nextItem.id) === itemId
+                              ? {
+                                  ...nextItem,
+                                  cta: {
+                                    ...((nextItem.cta as Record<string, unknown>) ?? {}),
+                                    text: e.target.value,
+                                  },
+                                }
+                              : nextItem,
+                          );
+                          return setSectionItems(prev, section.id, nextItems);
+                        })
+                      }
+                    />
+                    <input
+                      className="wf-input"
+                      disabled={editingLocked}
+                      value={
+                        typeof (item.cta as { url?: unknown } | undefined)?.url === "string"
+                          ? ((item.cta as { url?: string }).url ?? "")
+                          : ""
+                      }
+                      placeholder="CTA url"
+                      onChange={(e) =>
+                        updateSettings((prev) => {
+                          const sec = getSection(prev, section.id);
+                          if (!sec) return prev;
+                          const nextItems = toSectionItems(sec).map((nextItem) =>
+                            String(nextItem.id) === itemId
+                              ? {
+                                  ...nextItem,
+                                  cta: {
+                                    ...((nextItem.cta as Record<string, unknown>) ?? {}),
+                                    url: e.target.value,
+                                  },
+                                }
+                              : nextItem,
+                          );
+                          return setSectionItems(prev, section.id, nextItems);
+                        })
+                      }
+                    />
+                    <select
+                      className="wf-select"
+                      disabled={editingLocked}
+                      value={
+                        typeof (item.cta as { kind?: unknown } | undefined)?.kind === "string"
+                          ? ((item.cta as { kind?: string }).kind ?? "primary")
+                          : "primary"
+                      }
+                      onChange={(e) =>
+                        updateSettings((prev) => {
+                          const sec = getSection(prev, section.id);
+                          if (!sec) return prev;
+                          const nextItems = toSectionItems(sec).map((nextItem) =>
+                            String(nextItem.id) === itemId
+                              ? {
+                                  ...nextItem,
+                                  cta: {
+                                    ...((nextItem.cta as Record<string, unknown>) ?? {}),
+                                    kind: e.target.value,
+                                  },
+                                }
+                              : nextItem,
+                          );
+                          return setSectionItems(prev, section.id, nextItems);
+                        })
+                      }
+                    >
+                      <option value="primary">primary</option>
+                      <option value="tel">tel</option>
+                      <option value="whatsapp">whatsapp</option>
+                      <option value="anchor">anchor</option>
+                      <option value="external">external</option>
+                    </select>
+                    <label className="wf-toggle">
+                      <input
+                        disabled={editingLocked}
+                        type="checkbox"
+                        checked={(item.cta as { enabled?: unknown } | undefined)?.enabled !== false}
+                        onChange={(e) =>
+                          updateSettings((prev) => {
+                            const sec = getSection(prev, section.id);
+                            if (!sec) return prev;
+                            const nextItems = toSectionItems(sec).map((nextItem) =>
+                              String(nextItem.id) === itemId
+                                ? {
+                                    ...nextItem,
+                                    cta: {
+                                      ...((nextItem.cta as Record<string, unknown>) ?? {}),
+                                      enabled: e.target.checked,
+                                    },
+                                  }
+                                : nextItem,
+                            );
+                            return setSectionItems(prev, section.id, nextItems);
+                          })
+                        }
+                      />
+                      CTA enabled
+                    </label>
+                  </div>
+                ) : null}
               </div>
               <div className="wf-toggle">
                 <input
@@ -1816,12 +2144,50 @@ export default function StagingWorkflowPanel() {
                     updateSettings((prev) => {
                       const sec = getSection(prev, section.id);
                       if (!sec) return prev;
-                      const nextItems = toSectionItems(sec).map((nextItem) => (Number(nextItem.order) === key ? { ...nextItem, enabled: e.target.checked } : nextItem));
-                      return upsertSection(prev, { ...sec, data: { ...sec.data, items: nextItems } });
+                      const nextItems = toSectionItems(sec).map((nextItem) =>
+                        String(nextItem.id) === itemId ? { ...nextItem, enabled: e.target.checked } : nextItem,
+                      );
+                      return setSectionItems(prev, section.id, nextItems);
                     })
                   }
                 />
                 enabled
+              </div>
+              <div className="wf-row">
+                <button
+                  className="wf-btn wf-btn-soft"
+                  disabled={editingLocked}
+                  onClick={() =>
+                    updateSettings((prev) => {
+                      const sec = getSection(prev, section.id);
+                      if (!sec) return prev;
+                      const all = toSectionItems(sec);
+                      const idx = all.findIndex((nextItem) => String(nextItem.id) === itemId);
+                      if (idx < 0) return prev;
+                      const clone = { ...all[idx], id: createPanelItemId(), order: 999 };
+                      const nextItems = [...all.slice(0, idx + 1), clone, ...all.slice(idx + 1)];
+                      return setSectionItems(prev, section.id, nextItems);
+                    })
+                  }
+                >
+                  Duplicar
+                </button>
+                <button
+                  className="wf-btn wf-btn-warn"
+                  disabled={editingLocked || items.length <= 1}
+                  onClick={() =>
+                    updateSettings((prev) => {
+                      const sec = getSection(prev, section.id);
+                      if (!sec) return prev;
+                      const nextItems = toSectionItems(sec).filter(
+                        (nextItem) => String(nextItem.id) !== itemId,
+                      );
+                      return setSectionItems(prev, section.id, nextItems);
+                    })
+                  }
+                >
+                  Eliminar
+                </button>
               </div>
             </div>
           );
@@ -2163,6 +2529,8 @@ export default function StagingWorkflowPanel() {
                 {renderDiffSection("Hero", heroDiff.sections.hero.fields)}
                 {renderDiffSection("Servicios", heroDiff.sections.services.fields)}
                 {renderDiffSection("FAQ", heroDiff.sections.faq.fields)}
+                {renderDiffSection("Proyectos", heroDiff.sections.projects?.fields ?? [])}
+                {renderDiffSection("Testimonios", heroDiff.sections.testimonials?.fields ?? [])}
               </div>
             ) : (
               <p className="wf-muted" style={{ marginTop: 8 }}>

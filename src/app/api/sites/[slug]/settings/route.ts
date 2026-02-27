@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase-server";
 import { settingsSchema, type SettingsPayload } from "@/lib/settings-schema";
+import { extractSettingsFromSnapshot } from "@/lib/site-versions";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -28,11 +29,18 @@ function normalizeSection(section: DbSection, items: DbItem[]) {
   const sectionItems = items
     .filter((item) => item.section_ref === section.id || item.section_id === section.section_id)
     .sort((a, b) => a.order - b.order)
-    .map((item) => ({
-      ...(item.data ?? {}),
-      enabled: item.enabled,
-      order: item.order,
-    }));
+    .map((item, index) => {
+      const dataItem = (item.data ?? {}) as Record<string, unknown>;
+      return {
+        ...dataItem,
+        id:
+          typeof dataItem.id === "string" && dataItem.id.trim()
+            ? dataItem.id.trim()
+            : `legacy-${section.section_id}-${item.order || index + 1}`,
+        enabled: item.enabled,
+        order: item.order,
+      };
+    });
 
   const normalizedData = sectionItems.length ? { ...data, items: sectionItems } : data;
   return {
@@ -112,63 +120,6 @@ function withLegacyFromSections(payload: SettingsPayload): SettingsPayload {
 
 function parseMode(input: string | null): "draft" | "published" {
   return input?.toLowerCase() === "draft" ? "draft" : "published";
-}
-
-function extractSettingsFromSnapshot(snapshot: Record<string, unknown> | null): SettingsPayload | null {
-  if (!snapshot || typeof snapshot !== "object") return null;
-  const rootSettings = snapshot.settings;
-  const candidate =
-    rootSettings && typeof rootSettings === "object"
-      ? (rootSettings as SettingsPayload)
-      : (snapshot as SettingsPayload);
-
-  const parsed = settingsSchema.safeParse(candidate);
-  if (parsed.success) return parsed.data;
-
-  // Legacy/partial snapshots should still render instead of falling back to table data.
-  if (!candidate || typeof candidate !== "object") return null;
-  const loose = candidate as Record<string, unknown>;
-  const content = (loose.content ?? {}) as Record<string, unknown>;
-  const sections = Array.isArray(content.sections)
-    ? content.sections
-        .filter(
-          (section) =>
-            section &&
-            typeof section === "object" &&
-            typeof (section as { id?: unknown }).id === "string",
-        )
-        .map((section) => {
-          const s = section as {
-            id: string;
-            enabled?: unknown;
-            order?: unknown;
-            data?: unknown;
-          };
-          const parsedOrder =
-            typeof s.order === "number"
-              ? s.order
-              : typeof s.order === "string"
-                ? Number(s.order)
-                : 100;
-          return {
-            id: s.id,
-            enabled: s.enabled !== false,
-            order: Number.isFinite(parsedOrder) ? parsedOrder : 100,
-            data: s.data && typeof s.data === "object" ? (s.data as Record<string, unknown>) : {},
-          };
-        })
-    : [];
-
-  return {
-    colors: (loose.colors ?? {}) as SettingsPayload["colors"],
-    typography: (loose.typography ?? {}) as SettingsPayload["typography"],
-    content: {
-      hero: (content.hero ?? {}) as SettingsPayload["content"]["hero"],
-      services: Array.isArray(content.services) ? (content.services as SettingsPayload["content"]["services"]) : [],
-      faqs: Array.isArray(content.faqs) ? (content.faqs as SettingsPayload["content"]["faqs"]) : [],
-      sections: sections as SettingsPayload["content"]["sections"],
-    },
-  };
 }
 
 async function getVersionedSettings(

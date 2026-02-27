@@ -14,6 +14,7 @@ export const revalidate = 0;
 type Mode = "draft" | "published";
 
 type DiffField = {
+  id?: string;
   path: string;
   label: string;
   from: string;
@@ -70,6 +71,10 @@ function getSectionItems(settings: SnapshotSettings, sectionId: string): Array<R
   return items
     .map((item, index) => ({
       ...item,
+      id:
+        typeof item.id === "string" && item.id.trim()
+          ? item.id.trim()
+          : `legacy-${sectionId}-${typeof item.order === "number" ? item.order : index + 1}`,
       order: typeof item.order === "number" ? item.order : index + 1,
       enabled: item.enabled !== false,
     }))
@@ -88,52 +93,122 @@ function readHeroField(settings: Record<string, unknown> | null, key: "title" | 
   return normalizeText(sectionCta.url ?? legacyCta.primary_url);
 }
 
-function buildListDiffFields(
+function buildListDiffFieldsById(
   fromSettings: SnapshotSettings,
   toSettings: SnapshotSettings,
-  sectionId: "services" | "faq",
+  sectionId: "services" | "faq" | "projects" | "testimonials",
 ): DiffField[] {
   const fromItems = getSectionItems(fromSettings, sectionId);
   const toItems = getSectionItems(toSettings, sectionId);
-  const max = Math.max(fromItems.length, toItems.length);
-  const fields: DiffField[] = [];
+  const byId = new Map<string, { from?: Record<string, unknown>; to?: Record<string, unknown> }>();
+  for (const item of fromItems) {
+    byId.set(String(item.id), { ...(byId.get(String(item.id)) ?? {}), from: item });
+  }
+  for (const item of toItems) {
+    byId.set(String(item.id), { ...(byId.get(String(item.id)) ?? {}), to: item });
+  }
 
-  for (let i = 0; i < max; i += 1) {
-    const from = fromItems[i] ?? {};
-    const to = toItems[i] ?? {};
-    const row = i + 1;
+  const pairs = [...byId.entries()]
+    .map(([id, pair]) => ({ id, ...pair }))
+    .sort((a, b) => {
+      const aOrder = Number(a.from?.order ?? a.to?.order ?? 999);
+      const bOrder = Number(b.from?.order ?? b.to?.order ?? 999);
+      return aOrder - bOrder;
+    });
+
+  const fields: DiffField[] = [];
+  let row = 1;
+  for (const pair of pairs) {
+    const from = pair.from ?? {};
+    const to = pair.to ?? {};
+    const suffix = `#${row}`;
 
     if (sectionId === "services") {
       fields.push({
-        path: `services[${row}].title`,
-        label: `Servicio #${row} title`,
+        id: pair.id,
+        path: `services[${pair.id}].title`,
+        label: `Servicio ${suffix} title`,
         from: normalizeText(from.title),
         to: normalizeText(to.title),
         changed: false,
       });
       fields.push({
-        path: `services[${row}].description`,
-        label: `Servicio #${row} description`,
+        id: pair.id,
+        path: `services[${pair.id}].description`,
+        label: `Servicio ${suffix} description`,
         from: normalizeText(from.description),
         to: normalizeText(to.description),
         changed: false,
       });
-    } else {
+    } else if (sectionId === "faq") {
       fields.push({
-        path: `faq[${row}].question`,
-        label: `FAQ #${row} question`,
+        id: pair.id,
+        path: `faq[${pair.id}].question`,
+        label: `FAQ ${suffix} question`,
         from: normalizeText(from.question),
         to: normalizeText(to.question),
         changed: false,
       });
       fields.push({
-        path: `faq[${row}].answer`,
-        label: `FAQ #${row} answer`,
+        id: pair.id,
+        path: `faq[${pair.id}].answer`,
+        label: `FAQ ${suffix} answer`,
         from: normalizeText(from.answer),
         to: normalizeText(to.answer),
         changed: false,
       });
+    } else if (sectionId === "projects") {
+      fields.push({
+        id: pair.id,
+        path: `projects[${pair.id}].title`,
+        label: `Proyecto ${suffix} title`,
+        from: normalizeText(from.title),
+        to: normalizeText(to.title),
+        changed: false,
+      });
+      fields.push({
+        id: pair.id,
+        path: `projects[${pair.id}].location`,
+        label: `Proyecto ${suffix} location`,
+        from: normalizeText(from.location),
+        to: normalizeText(to.location),
+        changed: false,
+      });
+      fields.push({
+        id: pair.id,
+        path: `projects[${pair.id}].image`,
+        label: `Proyecto ${suffix} image`,
+        from: normalizeText(from.image),
+        to: normalizeText(to.image),
+        changed: false,
+      });
+    } else if (sectionId === "testimonials") {
+      fields.push({
+        id: pair.id,
+        path: `testimonials[${pair.id}].name`,
+        label: `Testimonio ${suffix} name`,
+        from: normalizeText(from.name),
+        to: normalizeText(to.name),
+        changed: false,
+      });
+      fields.push({
+        id: pair.id,
+        path: `testimonials[${pair.id}].quote`,
+        label: `Testimonio ${suffix} quote`,
+        from: normalizeText(from.quote),
+        to: normalizeText(to.quote),
+        changed: false,
+      });
+      fields.push({
+        id: pair.id,
+        path: `testimonials[${pair.id}].location`,
+        label: `Testimonio ${suffix} location`,
+        from: normalizeText(from.location),
+        to: normalizeText(to.location),
+        changed: false,
+      });
     }
+    row += 1;
   }
 
   return fields.map((field) => ({ ...field, changed: field.from !== field.to }));
@@ -226,9 +301,11 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
       },
     ].map((field) => ({ ...field, changed: field.from !== field.to }));
 
-    const servicesFields = buildListDiffFields(fromSettings as SnapshotSettings, toSettings as SnapshotSettings, "services");
-    const faqFields = buildListDiffFields(fromSettings as SnapshotSettings, toSettings as SnapshotSettings, "faq");
-    const allFields = [...heroFields, ...servicesFields, ...faqFields];
+    const servicesFields = buildListDiffFieldsById(fromSettings as SnapshotSettings, toSettings as SnapshotSettings, "services");
+    const faqFields = buildListDiffFieldsById(fromSettings as SnapshotSettings, toSettings as SnapshotSettings, "faq");
+    const projectsFields = buildListDiffFieldsById(fromSettings as SnapshotSettings, toSettings as SnapshotSettings, "projects");
+    const testimonialsFields = buildListDiffFieldsById(fromSettings as SnapshotSettings, toSettings as SnapshotSettings, "testimonials");
+    const allFields = [...heroFields, ...servicesFields, ...faqFields, ...projectsFields, ...testimonialsFields];
     const changedFields = allFields.filter((field) => field.changed).length;
 
     return NextResponse.json(
@@ -261,6 +338,12 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
           },
           faq: {
             fields: faqFields,
+          },
+          projects: {
+            fields: projectsFields,
+          },
+          testimonials: {
+            fields: testimonialsFields,
           },
         },
       },
