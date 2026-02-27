@@ -190,6 +190,12 @@ const panelStyles = String.raw`
   .wf-step.active{border-color:#93c5fd;background:#eff6ff}
   .wf-step.completed{border-color:#86efac;background:#f0fdf4}
   .wf-step.completed .wf-step-num{background:#166534;color:#fff}
+  .wf-step.state-ready{border-color:#86efac;background:#f0fdf4}
+  .wf-step.state-ready .wf-step-num{background:#166534;color:#fff}
+  .wf-step.state-warn{border-color:#fde68a;background:#fffbeb}
+  .wf-step.state-warn .wf-step-num{background:#b45309;color:#fff}
+  .wf-step.state-error{border-color:#fecaca;background:#fef2f2}
+  .wf-step.state-error .wf-step-num{background:#b91c1c;color:#fff}
   .wf-progress{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;background:#eef2ff;color:#1e3a8a;font-size:12px;font-weight:700}
   .wf-status{display:flex;gap:8px;flex-wrap:wrap}
   .wf-sticky{position:sticky;top:10px;z-index:30;border:1px solid #dbe3f0;background:#f8fafc;padding:10px 12px;border-radius:12px;margin-bottom:12px;display:flex;gap:8px;align-items:center;justify-content:space-between}
@@ -3102,21 +3108,31 @@ export default function StagingWorkflowPanel() {
   const workflowProgress = useMemo(() => {
     const hasIdentity = Boolean(siteSlug.trim() && userId.trim());
     const currentStep = !hasIdentity ? 1 : !panelReady ? 2 : 3;
+    const editState: "neutral" | "ready" | "warn" | "error" = draftConflict.active
+      ? "error"
+      : autosaving || flushingPublish || dirty
+        ? "warn"
+        : panelReady
+          ? "ready"
+          : "neutral";
     const steps = [
       {
         id: 1,
         title: "Identidad",
         detail: "Slug y user UUID con membership.",
+        state: "neutral" as const,
       },
       {
         id: 2,
         title: "Cargar panel",
         detail: "Trae settings + versiones + permisos.",
+        state: "neutral" as const,
       },
       {
         id: 3,
         title: "Editar/Publicar",
         detail: "Guardar draft, publicar o rollback según rol.",
+        state: editState,
       },
     ].map((step) => ({
       ...step,
@@ -3124,7 +3140,7 @@ export default function StagingWorkflowPanel() {
       completed: step.id < currentStep,
     }));
     return { currentStep, steps };
-  }, [panelReady, siteSlug, userId]);
+  }, [panelReady, siteSlug, userId, autosaving, flushingPublish, dirty, draftConflict.active]);
 
   const actionContext = useMemo(() => {
     const inDraft = mode === "draft";
@@ -3232,7 +3248,18 @@ export default function StagingWorkflowPanel() {
 
           <div className="wf-steps">
             {workflowProgress.steps.map((step) => (
-              <div key={step.id} className={`wf-step ${step.active ? "active" : ""} ${step.completed ? "completed" : ""}`}>
+              <div
+                key={step.id}
+                className={`wf-step ${step.active ? "active" : ""} ${step.completed ? "completed" : ""} ${
+                  step.id === 3 && step.state === "ready"
+                    ? "state-ready"
+                    : step.id === 3 && step.state === "warn"
+                      ? "state-warn"
+                      : step.id === 3 && step.state === "error"
+                        ? "state-error"
+                        : ""
+                }`}
+              >
                 <span className="wf-step-num">{step.completed ? "✓" : step.id}</span>
                 <div>
                   <strong>{step.title}</strong>
