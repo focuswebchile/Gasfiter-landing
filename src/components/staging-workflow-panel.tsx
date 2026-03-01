@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
 type Mode = "draft" | "published";
 type SidebarView = "sections" | "items" | "style" | "versions" | "members";
@@ -169,6 +169,13 @@ type ImageUploadFieldProps = {
   onRemove: () => void;
 };
 
+type OverlayPanelProps = {
+  open: boolean;
+  title: string;
+  onClose: () => void;
+  children: ReactNode;
+};
+
 const CONTENT_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 const LOGO_MAX_BYTES = 2 * 1024 * 1024;
 const FAVICON_MAX_BYTES = 1 * 1024 * 1024;
@@ -292,6 +299,23 @@ function ImageUploadField({
   );
 }
 
+const OverlayPanel = memo(function OverlayPanel({ open, title, onClose, children }: OverlayPanelProps) {
+  if (!open) return null;
+  return (
+    <div className="wf-overlay-backdrop" role="dialog" aria-modal="true" aria-label={title}>
+      <div className="wf-overlay-panel">
+        <div className="wf-overlay-head">
+          <h3>{title}</h3>
+          <button className="wf-btn wf-btn-soft" style={{ height: 32 }} onClick={onClose}>
+            Cerrar
+          </button>
+        </div>
+        <div className="wf-overlay-body">{children}</div>
+      </div>
+    </div>
+  );
+});
+
 const STORAGE_KEY = "gasfiter_panel_v2_state";
 
 const panelStyles = String.raw`
@@ -305,7 +329,8 @@ const panelStyles = String.raw`
   .wf-badge-env{background:#fef3c7;color:#92400e}
   .wf-badge-role{background:#dbeafe;color:#1e3a8a}
   .wf-layout{display:grid;gap:14px}
-  @media(min-width:1080px){.wf-layout{grid-template-columns:220px 1.25fr 1fr}}
+  @media(min-width:1080px){.wf-layout{grid-template-columns:220px minmax(0,1fr)}}
+  .wf-workspace{max-width:1360px}
   .wf-card{border:1px solid #dbe3f0;border-radius:14px;background:#fff;padding:14px}
   .wf-sidebar{display:grid;gap:8px;align-content:start}
   .wf-nav-group{display:grid;gap:6px}
@@ -400,6 +425,11 @@ const panelStyles = String.raw`
   .wf-check-icon.warn{background:#b45309;color:#fff}
   .wf-action-help{min-height:18px;margin-top:-6px;margin-bottom:12px;font-size:12px;color:#64748b;display:flex;align-items:center}
   .wf-action-help.err{color:#991b1b}
+  .wf-overlay-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:80;display:flex;justify-content:flex-end}
+  .wf-overlay-panel{height:100%;width:min(760px,100vw);background:#fff;border-left:1px solid #dbe3f0;display:grid;grid-template-rows:auto minmax(0,1fr)}
+  .wf-overlay-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-bottom:1px solid #e2e8f0}
+  .wf-overlay-head h3{margin:0;font-size:18px}
+  .wf-overlay-body{overflow:auto;padding:14px;display:grid;gap:12px}
   .wf-sr-only{
     position:absolute!important;
     width:1px!important;
@@ -646,6 +676,8 @@ export default function StagingWorkflowPanel() {
   const [actionLog, setActionLog] = useState<ActionLogItem[]>([]);
   const [heroDiff, setHeroDiff] = useState<HeroDiffResult | null>(null);
   const [loadingDiff, setLoadingDiff] = useState(false);
+  const [showPreviewOverlay, setShowPreviewOverlay] = useState(false);
+  const [showDiffOverlay, setShowDiffOverlay] = useState(false);
   const [uploadingAsset, setUploadingAsset] = useState<"logoNav" | "logoFooter" | "favicon" | null>(null);
   const [uploadingContentAssetKey, setUploadingContentAssetKey] = useState<string | null>(null);
   const [publishValidationMissing, setPublishValidationMissing] = useState<string[]>([]);
@@ -905,6 +937,19 @@ export default function StagingWorkflowPanel() {
       setLoadingDiff(false);
     }
   }, [siteSlug, userId, panelReady, fetchWithJsonFallback, setError, setOk, appendActionLog]);
+
+  const openPreview = useCallback(() => {
+    if (!panelReady) return setError("Primero usa Cargar panel");
+    setShowPreviewOverlay(true);
+  }, [panelReady, setError]);
+
+  const openDiff = useCallback(async () => {
+    if (!panelReady) return setError("Primero usa Cargar panel");
+    if (!heroDiff) {
+      await fetchHeroDiff();
+    }
+    setShowDiffOverlay(true);
+  }, [panelReady, heroDiff, fetchHeroDiff, setError]);
 
   const renderDiffSection = (title: string, fields: HeroDiffField[]) => (
     <div className="wf-diff" style={{ marginTop: 8 }}>
@@ -3572,7 +3617,7 @@ export default function StagingWorkflowPanel() {
           ))}
         </aside>
 
-        <section className="wf-card">
+        <section className="wf-card wf-workspace">
           <div className="wf-row" style={{ marginBottom: 10 }}>
             <input className="wf-input" value={siteSlug} onChange={(e) => setSiteSlug(e.target.value)} placeholder="slug del sitio" />
             {showAdvancedUi || !roleResolved ? (
@@ -3660,13 +3705,18 @@ export default function StagingWorkflowPanel() {
                 Ver JSON publicado
               </button>
             ) : null}
-            <button
-              className="wf-btn wf-btn-soft"
-              onClick={fetchHeroDiff}
-              disabled={busy || loadingDiff || !panelReady || !userId.trim()}
-            >
-              {loadingDiff ? "Comparando..." : "Ver cambios"}
+            <button className="wf-btn wf-btn-soft" onClick={openPreview} disabled={busy || !panelReady}>
+              {showAdvancedUi ? "Vista previa" : "Ver cómo se ve"}
             </button>
+            {showAdvancedUi ? (
+              <button
+                className="wf-btn wf-btn-soft"
+                onClick={openDiff}
+                disabled={busy || loadingDiff || !panelReady || !userId.trim()}
+              >
+                {loadingDiff ? "Comparando..." : "Ver diferencias"}
+              </button>
+            ) : null}
             {actionContext.showEditDraft && !publishedReadOnly ? (
               <button className="wf-btn wf-btn-soft" onClick={startDraftEditing} disabled={actionContext.editDraftDisabled}>
                 Editar borrador
@@ -3851,81 +3901,82 @@ export default function StagingWorkflowPanel() {
           ) : null}
         </section>
 
-        <section className="wf-card wf-preview">
-          <h2 className="wf-h3">Vista previa</h2>
-          <div className="wf-preview-box">
-            <div className="wf-kv">
-              <div><strong>Título hero:</strong> {typeof heroSection?.data?.title === "string" ? heroSection.data.title : "-"}</div>
-              <div><strong>Subtítulo hero:</strong> {typeof heroSection?.data?.subtitle === "string" ? heroSection.data.subtitle : "-"}</div>
-              <div><strong>Secciones:</strong> {settings?.content?.sections?.length ?? 0}</div>
-            </div>
-          </div>
-
-          {showAdvancedUi ? (
-            <div className="wf-preview-box">
-              <strong>Snapshot actual (resumen)</strong>
-              <pre className="wf-code">
-                {JSON.stringify(
-                  {
-                    mode,
-                    role: membership?.role ?? null,
-                    panelReady,
-                    draftUpdatedAt,
-                    draftConflict: draftConflict.active,
-                    heroTitle: typeof heroSection?.data?.title === "string" ? heroSection.data.title : "",
-                    sections: settings?.content?.sections?.length ?? 0,
-                    colors: settings?.colors ?? {},
-                  },
-                  null,
-                  2,
-                )}
-              </pre>
-            </div>
-          ) : null}
-
-          <div className="wf-preview-box">
-            <strong>Diferencias (Borrador vs Publicado)</strong>
-            {heroDiff ? (
-              <div className="wf-diff" style={{ marginTop: 8 }}>
-                <div className="wf-muted">
-                  Borrador v{heroDiff.from.versionNumber} vs Publicado v{heroDiff.to.versionNumber} ·{" "}
-                  {heroDiff.summary.changedFields}/{heroDiff.summary.totalFields} cambios
-                </div>
-                {renderDiffSection("Hero", heroDiff.sections.hero.fields)}
-                {renderDiffSection("Servicios", heroDiff.sections.services.fields)}
-                {renderDiffSection("FAQ", heroDiff.sections.faq.fields)}
-                {renderDiffSection("Proyectos", heroDiff.sections.projects?.fields ?? [])}
-                {renderDiffSection("Testimonios", heroDiff.sections.testimonials?.fields ?? [])}
-              </div>
-            ) : (
-              <p className="wf-muted" style={{ marginTop: 8 }}>
-                Usa “Ver cambios” para comparar borrador vs publicado.
-              </p>
-            )}
-          </div>
-
-          {showAdvancedUi ? (
-            <div className="wf-preview-box">
-              <strong>Actividad reciente</strong>
-              <div className="wf-log" style={{ marginTop: 8 }}>
-                {actionLog.map((entry) => (
-                  <div className="wf-log-item" key={entry.id}>
-                    <div>
-                      <strong>{translateActionLabel(entry.action)}</strong>
-                      <div className="wf-muted">{entry.note}</div>
-                    </div>
-                    <div className="wf-muted" style={{ textAlign: "right" }}>
-                      <div>{entry.version ? `v${entry.version}` : "-"}</div>
-                      <div>{new Date(entry.at).toLocaleTimeString()}</div>
-                    </div>
-                  </div>
-                ))}
-                {!actionLog.length ? <p className="wf-muted">Sin actividad reciente.</p> : null}
-              </div>
-            </div>
-          ) : null}
-        </section>
       </div>
+
+      <OverlayPanel open={showPreviewOverlay} onClose={() => setShowPreviewOverlay(false)} title="Vista previa">
+        <div className="wf-preview-box">
+          <div className="wf-kv">
+            <div><strong>Título hero:</strong> {typeof heroSection?.data?.title === "string" ? heroSection.data.title : "-"}</div>
+            <div><strong>Subtítulo hero:</strong> {typeof heroSection?.data?.subtitle === "string" ? heroSection.data.subtitle : "-"}</div>
+            <div><strong>Secciones:</strong> {settings?.content?.sections?.length ?? 0}</div>
+          </div>
+        </div>
+
+        {showAdvancedUi ? (
+          <div className="wf-preview-box">
+            <strong>Snapshot actual (resumen)</strong>
+            <pre className="wf-code">
+              {JSON.stringify(
+                {
+                  mode,
+                  role: membership?.role ?? null,
+                  panelReady,
+                  draftUpdatedAt,
+                  draftConflict: draftConflict.active,
+                  heroTitle: typeof heroSection?.data?.title === "string" ? heroSection.data.title : "",
+                  sections: settings?.content?.sections?.length ?? 0,
+                  colors: settings?.colors ?? {},
+                },
+                null,
+                2,
+              )}
+            </pre>
+          </div>
+        ) : null}
+
+        {showAdvancedUi ? (
+          <div className="wf-preview-box">
+            <strong>Actividad reciente</strong>
+            <div className="wf-log" style={{ marginTop: 8 }}>
+              {actionLog.map((entry) => (
+                <div className="wf-log-item" key={entry.id}>
+                  <div>
+                    <strong>{translateActionLabel(entry.action)}</strong>
+                    <div className="wf-muted">{entry.note}</div>
+                  </div>
+                  <div className="wf-muted" style={{ textAlign: "right" }}>
+                    <div>{entry.version ? `v${entry.version}` : "-"}</div>
+                    <div>{new Date(entry.at).toLocaleTimeString()}</div>
+                  </div>
+                </div>
+              ))}
+              {!actionLog.length ? <p className="wf-muted">Sin actividad reciente.</p> : null}
+            </div>
+          </div>
+        ) : null}
+      </OverlayPanel>
+
+      <OverlayPanel open={showDiffOverlay} onClose={() => setShowDiffOverlay(false)} title="Diferencias (Borrador vs Publicado)">
+        <div className="wf-preview-box">
+          {heroDiff ? (
+            <div className="wf-diff" style={{ marginTop: 8 }}>
+              <div className="wf-muted">
+                Borrador v{heroDiff.from.versionNumber} vs Publicado v{heroDiff.to.versionNumber} ·{" "}
+                {heroDiff.summary.changedFields}/{heroDiff.summary.totalFields} cambios
+              </div>
+              {renderDiffSection("Hero", heroDiff.sections.hero.fields)}
+              {renderDiffSection("Servicios", heroDiff.sections.services.fields)}
+              {renderDiffSection("FAQ", heroDiff.sections.faq.fields)}
+              {renderDiffSection("Proyectos", heroDiff.sections.projects?.fields ?? [])}
+              {renderDiffSection("Testimonios", heroDiff.sections.testimonials?.fields ?? [])}
+            </div>
+          ) : (
+            <p className="wf-muted" style={{ marginTop: 8 }}>
+              Usa “Ver diferencias” para comparar borrador vs publicado.
+            </p>
+          )}
+        </div>
+      </OverlayPanel>
 
       {toast ? (
         <div className="wf-toast-stack" role="status" aria-live="polite">
