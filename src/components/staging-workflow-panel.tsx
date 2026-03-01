@@ -476,6 +476,13 @@ function translateActionLabel(action: ActionLogItem["action"]) {
   }
 }
 
+function getRoleUxLabel(role: Role | null | undefined) {
+  if (!role) return "SIN ROL";
+  if (role === "owner" || role === "admin") return "OWNER";
+  if (role === "editor") return "EDITOR";
+  return "LECTURA";
+}
+
 function isHexColor(value: string) {
   return /^#([a-f0-9]{3}|[a-f0-9]{6})$/i.test(value.trim());
 }
@@ -3388,7 +3395,7 @@ export default function StagingWorkflowPanel() {
       : inPublished
         ? "Modo lectura publicado. Usa 'Editar borrador' para modificar."
         : !canSaveDraft && !canPublish
-          ? "Tu rol es solo lectura en este sitio."
+          ? "Tu cuenta no puede editar este sitio."
           : autosaving || flushingPublish
             ? "Esperando guardado automático antes de continuar."
             : "Listo para editar y publicar.";
@@ -3583,7 +3590,7 @@ export default function StagingWorkflowPanel() {
         <div className="wf-badges">
           <span className="wf-badge wf-badge-env">{envBadge}</span>
           <span className="wf-badge">{mode.toUpperCase()}</span>
-          {membership?.role ? <span className="wf-badge wf-badge-role">ROL: {membership.role.toUpperCase()}</span> : null}
+          {membership?.role ? <span className="wf-badge wf-badge-role">ROL: {getRoleUxLabel(membership.role)}</span> : null}
         </div>
       </header>
 
@@ -3890,7 +3897,7 @@ export default function StagingWorkflowPanel() {
                 {membership ? (
                   <div className="wf-kv">
                     <div><strong>Usuario:</strong> {membership.userId}</div>
-                    <div><strong>Rol:</strong> {membership.role}</div>
+                    <div><strong>Rol:</strong> {getRoleUxLabel(membership.role)}</div>
                     <div><strong>Permisos:</strong> guardar_borrador={String(membership.permissions.canSaveDraft)} publicar={String(membership.permissions.canPublish)} rollback={String(membership.permissions.canRollback)}</div>
                   </div>
                 ) : (
