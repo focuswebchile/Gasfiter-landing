@@ -144,8 +144,8 @@ type PublishChecklistItem = {
   label: string;
   completed: boolean;
   description: string;
-  section?: EditableSectionId;
-  view?: SidebarView;
+  section: EditableSectionId;
+  view: SidebarView;
 };
 
 type ImageUploadFieldProps = {
