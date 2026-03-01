@@ -19,11 +19,32 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
     const site = await getSiteBySlug(supabase, slug);
     const role = await requireSiteRole(supabase, site.id, userId, ["owner", "admin", "editor", "viewer"]);
 
-    const { data, error } = await supabase
+    const primaryQuery = await supabase
       .from("site_versions")
-      .select("id, version_number, status, created_at, published_at, notes")
+      .select(
+        "id, version_number, status, created_at, updated_at, published_at, notes, publish_requested_at, publish_requested_by, publish_request_note, publish_notified_at",
+      )
       .eq("site_id", site.id)
       .order("version_number", { ascending: false });
+
+    let data = primaryQuery.data as Array<Record<string, unknown>> | null;
+    let error = primaryQuery.error;
+
+    if (error && "code" in error && error.code === "42703") {
+      const fallbackQuery = await supabase
+        .from("site_versions")
+        .select("id, version_number, status, created_at, published_at, notes")
+        .eq("site_id", site.id)
+        .order("version_number", { ascending: false });
+      data = (fallbackQuery.data as Array<Record<string, unknown>> | null)?.map((row) => ({
+        ...row,
+        publish_requested_at: null,
+        publish_requested_by: null,
+        publish_request_note: null,
+        publish_notified_at: null,
+      })) ?? null;
+      error = fallbackQuery.error;
+    }
 
     if (error) {
       return NextResponse.json({ error: "Unable to fetch versions", details: error.message }, { status: 500 });
@@ -42,6 +63,7 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
             canSaveDraft: ["owner", "admin", "editor"].includes(role),
             canPublish: ["owner", "admin"].includes(role),
             canRollback: ["owner", "admin"].includes(role),
+            canRequestPublish: ["owner", "admin", "editor"].includes(role),
             readOnly: role === "viewer",
           },
         },

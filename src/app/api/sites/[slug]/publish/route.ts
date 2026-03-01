@@ -137,6 +137,26 @@ export async function POST(request: Request, context: { params: Promise<{ slug: 
       return NextResponse.json({ error: "Published snapshot is invalid" }, { status: 500 });
     }
 
+    const { error: clearRequestError } = await supabase
+      .from("site_versions")
+      .update({
+        publish_requested_at: null,
+        publish_requested_by: null,
+        publish_request_note: null,
+        publish_notified_at: null,
+      })
+      .eq("id", sourceDraft.id);
+
+    if (clearRequestError && clearRequestError.code !== "42703") {
+      return NextResponse.json(
+        {
+          error: "Published but failed to clear publish request state on draft",
+          details: clearRequestError.message,
+        },
+        { status: 500 },
+      );
+    }
+
     return NextResponse.json(
       {
         site: {

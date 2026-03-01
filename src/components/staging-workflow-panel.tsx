@@ -57,8 +57,13 @@ type VersionItem = {
   version_number: number;
   status: "draft" | "published" | "archived";
   created_at: string;
+  updated_at?: string;
   published_at: string | null;
   notes: string | null;
+  publish_requested_at?: string | null;
+  publish_requested_by?: string | null;
+  publish_request_note?: string | null;
+  publish_notified_at?: string | null;
 };
 
 type MembershipInfo = {
@@ -68,6 +73,7 @@ type MembershipInfo = {
     canSaveDraft: boolean;
     canPublish: boolean;
     canRollback: boolean;
+    canRequestPublish?: boolean;
     readOnly: boolean;
   };
 };
@@ -89,7 +95,7 @@ type ToastState = {
 
 type ActionLogItem = {
   id: string;
-  action: "save" | "publish" | "rollback" | "diff";
+  action: "save" | "publish" | "rollback" | "diff" | "request";
   at: string;
   version: number | null;
   note: string;
@@ -328,6 +334,7 @@ const panelStyles = String.raw`
   .wf-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#e2e8f0;color:#1e293b}
   .wf-badge-env{background:#fef3c7;color:#92400e}
   .wf-badge-role{background:#dbeafe;color:#1e3a8a}
+  .wf-badge-warn{background:#ffedd5;color:#9a3412}
   .wf-layout{display:grid;gap:14px}
   @media(min-width:1080px){.wf-layout{grid-template-columns:220px minmax(0,1fr)}}
   .wf-workspace{max-width:1360px}
@@ -473,6 +480,8 @@ function translateActionLabel(action: ActionLogItem["action"]) {
       return "ROLLBACK";
     case "diff":
       return "COMPARAR";
+    case "request":
+      return "SOLICITUD";
   }
 }
 
@@ -744,6 +753,7 @@ export default function StagingWorkflowPanel() {
   const canSaveDraft = membership?.permissions.canSaveDraft ?? false;
   const canPublish = membership?.permissions.canPublish ?? false;
   const canRollback = membership?.permissions.canRollback ?? false;
+  const canRequestPublish = membership?.permissions.canRequestPublish ?? canSaveDraft;
   const roleResolved = membership !== null;
   const isAdvancedRole = membership?.role === "owner" || membership?.role === "admin";
   const showAdvancedUi = roleResolved && isAdvancedRole;
@@ -751,6 +761,7 @@ export default function StagingWorkflowPanel() {
   const editingLocked = !panelReady || publishedReadOnly || busy || autosaving || flushingPublish || draftConflict.active;
   const latestPublishedVersion = versions.find((version) => version.status === "published") ?? null;
   const latestDraftVersion = versions.find((version) => version.status === "draft") ?? null;
+  const hasActivePublishRequest = Boolean(latestDraftVersion?.publish_requested_at);
   const latestDraftVersionToken = latestDraftVersion?.created_at ?? null;
 
   useEffect(() => {
@@ -891,8 +902,9 @@ export default function StagingWorkflowPanel() {
     setMembership((payload?.membership ?? null) as MembershipInfo | null);
     if (mode === "draft") {
       const latestDraft = nextVersions.find((version) => version.status === "draft") ?? null;
-      if (latestDraft?.created_at) {
-        setDraftUpdatedAt((prev) => pickTimestamp(prev, latestDraft.created_at));
+      const serverDraftTs = pickTimestamp(latestDraft?.updated_at, latestDraft?.created_at);
+      if (serverDraftTs) {
+        setDraftUpdatedAt((prev) => pickTimestamp(prev, serverDraftTs));
       }
     }
     if (!silent) setOk("Versiones cargadas");
@@ -1173,6 +1185,72 @@ export default function StagingWorkflowPanel() {
       await autosavePromiseRef.current;
     }
   }, [panelReady, canSaveDraft, draftConflict.active, saveDraftInternal]);
+
+  const requestPublish = async () => {
+    if (!userId.trim()) return setError("Ingresa UUID de usuario para solicitar publicación");
+    if (!panelReady) return setError("Primero usa Cargar panel");
+    if (!canRequestPublish) return setError("Tu rol no puede solicitar publicación");
+    if (hasActivePublishRequest) return setOk("Ya existe una solicitud de publicación activa.");
+    if (mode !== "draft") return setError("Activa modo borrador para solicitar publicación");
+    if (draftConflict.active) return setError("Conflicto de draft: recarga borrador antes de solicitar.");
+
+    let note = "";
+    if (typeof window !== "undefined") {
+      const maybeNote = window.prompt("Nota opcional para owner/admin (ej: listo para publicar):", "");
+      if (maybeNote === null) return;
+      note = maybeNote.trim();
+    }
+
+    setBusy(true);
+    setToast(null);
+    try {
+      const response = await fetch(`${endpointBase}/request-publish`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-id": userId.trim(),
+        },
+        body: JSON.stringify({
+          userId: userId.trim(),
+          note: note || null,
+        }),
+      });
+      const payload = (await response.json().catch(() => ({}))) as {
+        error?: string;
+        message?: string;
+        request?: {
+          active?: boolean;
+          alreadyRequested?: boolean;
+          requestedAt?: string | null;
+          emailSent?: boolean;
+          emailReason?: string | null;
+        };
+      };
+      if (!response.ok) throw new Error(payload?.error || payload?.message || "No se pudo solicitar publicación");
+
+      if (payload?.request?.alreadyRequested) {
+        setOk("Solicitud ya activa: pendiente de revisión.");
+        appendActionLog("request", latestDraftVersion?.version_number ?? null, "Solicitud ya activa");
+      } else {
+        const emailText = payload?.request?.emailSent
+          ? "Correo enviado a owner/admin."
+          : payload?.request?.emailReason
+            ? `Solicitud registrada (${payload.request.emailReason}).`
+            : "Solicitud registrada.";
+        setOk(`Solicitud de publicación enviada. ${emailText}`);
+        appendActionLog(
+          "request",
+          latestDraftVersion?.version_number ?? null,
+          `Solicitud de publicación (${payload?.request?.emailSent ? "email enviado" : "sin email"})`,
+        );
+      }
+      await fetchVersions(true);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "No se pudo solicitar publicación");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const publish = async () => {
     if (!userId.trim()) return setError("Ingresa UUID de usuario para publicar");
@@ -3388,6 +3466,7 @@ export default function StagingWorkflowPanel() {
     const inPublished = mode === "published";
     const canEditDraftNow = inDraft && canSaveDraft;
     const canPublishNow = inDraft && canPublish;
+    const canRequestNow = inDraft && canRequestPublish && !canPublish;
     const blockedByState = busy || autosaving || flushingPublish || draftConflict.active || !panelReady;
 
     const message = !panelReady
@@ -3424,21 +3503,40 @@ export default function StagingWorkflowPanel() {
               ? "El rol o modo actual no permite publicar."
               : "";
 
+    const requestDisabledReason = hasActivePublishRequest
+      ? "Ya hay una solicitud activa para este borrador."
+      : !panelReady
+        ? "Primero carga el panel."
+        : draftConflict.active
+          ? "Conflicto detectado: recarga borrador."
+          : autosaving || flushingPublish
+            ? "Esperando guardado automático."
+            : busy
+              ? "Hay una operación en curso."
+              : !canRequestNow
+                ? "El rol o modo actual no permite solicitar publicación."
+                : "";
+
     return {
       showSave: canEditDraftNow,
       showPublish: canPublishNow,
+      showRequestPublish: canRequestNow,
       showEditDraft: inPublished && canSaveDraft,
       saveDisabled: blockedByState || !canEditDraftNow,
       publishDisabled: blockedByState || !canPublishNow,
+      requestDisabled: blockedByState || !canRequestNow || hasActivePublishRequest,
       editDraftDisabled: busy || !panelReady || !canSaveDraft,
       saveDisabledReason,
       publishDisabledReason,
+      requestDisabledReason,
       message,
     };
   }, [
     mode,
     canSaveDraft,
+    canRequestPublish,
     canPublish,
+    hasActivePublishRequest,
     busy,
     autosaving,
     flushingPublish,
@@ -3539,11 +3637,19 @@ export default function StagingWorkflowPanel() {
 
   const actionHelpText = useMemo(() => {
     if (actionContext.publishDisabledReason) return actionContext.publishDisabledReason;
+    if (actionContext.requestDisabledReason) return actionContext.requestDisabledReason;
     if (actionContext.saveDisabledReason) return actionContext.saveDisabledReason;
     return actionContext.message;
-  }, [actionContext.message, actionContext.publishDisabledReason, actionContext.saveDisabledReason]);
+  }, [
+    actionContext.message,
+    actionContext.publishDisabledReason,
+    actionContext.requestDisabledReason,
+    actionContext.saveDisabledReason,
+  ]);
 
-  const actionHelpIsError = Boolean(actionContext.publishDisabledReason || actionContext.saveDisabledReason);
+  const actionHelpIsError = Boolean(
+    actionContext.publishDisabledReason || actionContext.requestDisabledReason || actionContext.saveDisabledReason,
+  );
   const sidebarGroups = (
     showAdvancedUi
       ? [
@@ -3655,6 +3761,12 @@ export default function StagingWorkflowPanel() {
             <span className="wf-badge">
               {latestPublishedVersion ? `Publicado v${latestPublishedVersion.version_number}` : "Sin publicado"}
             </span>
+            {hasActivePublishRequest ? (
+              <span className="wf-badge wf-badge-warn">
+                Solicitud pendiente
+                {latestDraftVersion?.publish_requested_by ? ` · ${latestDraftVersion.publish_requested_by.slice(0, 8)}…` : ""}
+              </span>
+            ) : null}
             {autosaving ? <span className="wf-badge wf-badge-role">Autoguardando...</span> : null}
           </div>
 
@@ -3705,6 +3817,17 @@ export default function StagingWorkflowPanel() {
                 aria-describedby={actionContext.publishDisabled ? "panel-action-help" : undefined}
               >
                 {flushingPublish ? "Esperando guardado..." : "Publicar"}
+              </button>
+            ) : null}
+            {actionContext.showRequestPublish ? (
+              <button
+                className="wf-btn wf-btn-soft"
+                onClick={requestPublish}
+                disabled={actionContext.requestDisabled}
+                title={actionContext.requestDisabled ? actionContext.requestDisabledReason : "Solicitar publicación"}
+                aria-describedby={actionContext.requestDisabled ? "panel-action-help" : undefined}
+              >
+                Solicitar publicación
               </button>
             ) : null}
             {showAdvancedUi ? (
@@ -3898,7 +4021,7 @@ export default function StagingWorkflowPanel() {
                   <div className="wf-kv">
                     <div><strong>Usuario:</strong> {membership.userId}</div>
                     <div><strong>Rol:</strong> {getRoleUxLabel(membership.role)}</div>
-                    <div><strong>Permisos:</strong> guardar_borrador={String(membership.permissions.canSaveDraft)} publicar={String(membership.permissions.canPublish)} rollback={String(membership.permissions.canRollback)}</div>
+                    <div><strong>Permisos:</strong> guardar_borrador={String(membership.permissions.canSaveDraft)} solicitar_publicacion={String(membership.permissions.canRequestPublish ?? membership.permissions.canSaveDraft)} publicar={String(membership.permissions.canPublish)} rollback={String(membership.permissions.canRollback)}</div>
                   </div>
                 ) : (
                   <p className="wf-muted">Carga panel para ver permisos.</p>
