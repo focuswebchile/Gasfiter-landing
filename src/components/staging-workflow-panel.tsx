@@ -4,7 +4,6 @@ import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 
 type Mode = "draft" | "published";
-type UiMode = "client" | "advanced";
 type SidebarView = "sections" | "items" | "style" | "versions" | "members";
 type Role = "owner" | "admin" | "editor" | "viewer";
 type EditableSectionId =
@@ -617,7 +616,6 @@ export default function StagingWorkflowPanel() {
   const [siteSlug, setSiteSlug] = useState(defaultSlug);
   const [userId, setUserId] = useState("");
   const [mode, setMode] = useState<Mode>("published");
-  const [uiMode, setUiMode] = useState<UiMode>("client");
   const [view, setView] = useState<SidebarView>("sections");
   const [editableSection, setEditableSection] = useState<EditableSectionId>("hero");
   const [settings, setSettings] = useState<SettingsPayload | null>(null);
@@ -678,24 +676,16 @@ export default function StagingWorkflowPanel() {
     return `${window.location.origin}/api/sites/${encodeURIComponent(siteSlug)}`;
   }, [endpointBase, siteSlug]);
   const envBadge = detectEnvBadge(siteSlug);
-  const isAdvancedMode = uiMode === "advanced";
-  const clientNeedsUserSetup = !isAdvancedMode && !userId.trim();
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     const stored = window.localStorage.getItem(STORAGE_KEY);
     if (!stored) return;
     try {
-      const parsed = JSON.parse(stored) as {
-        siteSlug?: string;
-        userId?: string;
-        mode?: Mode;
-        uiMode?: UiMode;
-      };
+      const parsed = JSON.parse(stored) as { siteSlug?: string; userId?: string; mode?: Mode };
       if (parsed.siteSlug) setSiteSlug(parsed.siteSlug);
       if (parsed.userId) setUserId(parsed.userId);
       if (parsed.mode === "draft" || parsed.mode === "published") setMode(parsed.mode);
-      if (parsed.uiMode === "advanced" || parsed.uiMode === "client") setUiMode(parsed.uiMode);
     } catch {
       // ignore invalid storage
     }
@@ -703,8 +693,8 @@ export default function StagingWorkflowPanel() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ siteSlug, userId, mode, uiMode }));
-  }, [siteSlug, userId, mode, uiMode]);
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ siteSlug, userId, mode }));
+  }, [siteSlug, userId, mode]);
 
   const showToast = useCallback((nextToast: ToastState | null) => {
     setToast(nextToast);
@@ -715,6 +705,9 @@ export default function StagingWorkflowPanel() {
   const canSaveDraft = membership?.permissions.canSaveDraft ?? false;
   const canPublish = membership?.permissions.canPublish ?? false;
   const canRollback = membership?.permissions.canRollback ?? false;
+  const roleResolved = membership !== null;
+  const isAdvancedRole = membership?.role === "owner" || membership?.role === "admin";
+  const showAdvancedUi = roleResolved && isAdvancedRole;
   const publishedReadOnly = mode === "published";
   const editingLocked = !panelReady || publishedReadOnly || busy || autosaving || flushingPublish || draftConflict.active;
   const latestPublishedVersion = versions.find((version) => version.status === "published") ?? null;
@@ -3247,7 +3240,7 @@ export default function StagingWorkflowPanel() {
       return {
         className: "wf-sticky wf-sticky-warn",
         title: "Panel no cargado",
-        detail: isAdvancedMode
+        detail: showAdvancedUi
           ? "Define slug + UUID de usuario y haz click en Cargar panel."
           : "Define el sitio y haz click en Cargar panel.",
       };
@@ -3296,7 +3289,7 @@ export default function StagingWorkflowPanel() {
     dirty,
     mode,
     heroDiff,
-    isAdvancedMode,
+    showAdvancedUi,
   ]);
 
   const workflowProgress = useMemo(() => {
@@ -3313,7 +3306,7 @@ export default function StagingWorkflowPanel() {
       {
         id: 1,
         title: "Identidad",
-        detail: isAdvancedMode
+        detail: showAdvancedUi
           ? "Slug y UUID de usuario con membresía."
           : "Sitio activo listo para edición.",
         state: "neutral" as const,
@@ -3336,7 +3329,7 @@ export default function StagingWorkflowPanel() {
       completed: step.id < currentStep,
     }));
     return { currentStep, steps };
-  }, [panelReady, siteSlug, userId, autosaving, flushingPublish, dirty, draftConflict.active, isAdvancedMode]);
+  }, [panelReady, siteSlug, userId, autosaving, flushingPublish, dirty, draftConflict.active, showAdvancedUi]);
 
   const actionContext = useMemo(() => {
     const inDraft = mode === "draft";
@@ -3411,10 +3404,10 @@ export default function StagingWorkflowPanel() {
   }, [publishValidationMissing]);
 
   useEffect(() => {
-    if (uiMode === "client" && (view === "versions" || view === "members")) {
+    if (!showAdvancedUi && (view === "versions" || view === "members")) {
       setView("sections");
     }
-  }, [uiMode, view]);
+  }, [showAdvancedUi, view]);
 
   const publishChecklist = useMemo<PublishChecklistItem[]>(() => {
     if (!settings) return [];
@@ -3500,7 +3493,7 @@ export default function StagingWorkflowPanel() {
 
   const actionHelpIsError = Boolean(actionContext.publishDisabledReason || actionContext.saveDisabledReason);
   const sidebarGroups = (
-    isAdvancedMode
+    showAdvancedUi
       ? [
           {
             title: "Contenido",
@@ -3546,14 +3539,6 @@ export default function StagingWorkflowPanel() {
           <span className="wf-badge wf-badge-env">{envBadge}</span>
           <span className="wf-badge">{mode.toUpperCase()}</span>
           {membership?.role ? <span className="wf-badge wf-badge-role">ROL: {membership.role.toUpperCase()}</span> : null}
-          <button
-            className="wf-btn wf-btn-soft"
-            style={{ height: 30 }}
-            onClick={() => setUiMode(isAdvancedMode ? "client" : "advanced")}
-            aria-label={isAdvancedMode ? "Cambiar a modo cliente" : "Cambiar a modo avanzado"}
-          >
-            {isAdvancedMode ? "Modo avanzado" : "Modo cliente"}
-          </button>
         </div>
       </header>
 
@@ -3590,7 +3575,7 @@ export default function StagingWorkflowPanel() {
         <section className="wf-card">
           <div className="wf-row" style={{ marginBottom: 10 }}>
             <input className="wf-input" value={siteSlug} onChange={(e) => setSiteSlug(e.target.value)} placeholder="slug del sitio" />
-            {isAdvancedMode ? (
+            {showAdvancedUi || !roleResolved ? (
               <input className="wf-input" value={userId} onChange={(e) => setUserId(e.target.value)} placeholder="UUID de usuario" />
             ) : (
               <input className="wf-input" value={userId ? "Usuario conectado" : "Usuario no configurado"} disabled />
@@ -3602,16 +3587,11 @@ export default function StagingWorkflowPanel() {
               <option value="published">Publicado</option>
               <option value="draft">Borrador</option>
             </select>
-            <button className="wf-btn wf-btn-soft" onClick={loadPanel} disabled={busy || clientNeedsUserSetup}>
+            <button className="wf-btn wf-btn-soft" onClick={loadPanel} disabled={busy}>
               Cargar panel
             </button>
             <span className="wf-muted">{autosaveHint}</span>
             <span className="wf-progress">Paso {workflowProgress.currentStep} de 3</span>
-            {clientNeedsUserSetup ? (
-              <button className="wf-btn wf-btn-soft" style={{ height: 30 }} onClick={() => setUiMode("advanced")}>
-                Configurar usuario
-              </button>
-            ) : null}
           </div>
 
           <div className="wf-status" style={{ marginBottom: 12 }}>
@@ -3675,7 +3655,7 @@ export default function StagingWorkflowPanel() {
                 {flushingPublish ? "Esperando guardado..." : "Publicar"}
               </button>
             ) : null}
-            {isAdvancedMode ? (
+            {showAdvancedUi ? (
               <button className="wf-btn wf-btn-soft" onClick={openPublishedJson} disabled={!panelReady}>
                 Ver JSON publicado
               </button>
@@ -3881,7 +3861,7 @@ export default function StagingWorkflowPanel() {
             </div>
           </div>
 
-          {isAdvancedMode ? (
+          {showAdvancedUi ? (
             <div className="wf-preview-box">
               <strong>Snapshot actual (resumen)</strong>
               <pre className="wf-code">
@@ -3924,7 +3904,7 @@ export default function StagingWorkflowPanel() {
             )}
           </div>
 
-          {isAdvancedMode ? (
+          {showAdvancedUi ? (
             <div className="wf-preview-box">
               <strong>Actividad reciente</strong>
               <div className="wf-log" style={{ marginTop: 8 }}>
