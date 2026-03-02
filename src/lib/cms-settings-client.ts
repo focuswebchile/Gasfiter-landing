@@ -111,6 +111,27 @@ export type ResolvedServices = {
   hasDynamicSource: boolean;
 };
 
+export type ProjectsDefaults = {
+  title: string;
+  description: string;
+  fallbackImage: string;
+};
+
+export type ResolvedProjectItem = {
+  title: string;
+  location: string;
+  image: string;
+  alt: string;
+  size: string;
+};
+
+export type ResolvedProjects = {
+  title: string;
+  description: string;
+  controlsEnabled: boolean;
+  items: ResolvedProjectItem[];
+};
+
 type SettingsResponse = {
   settings: CmsSettings | null;
   site?: { slug?: string; name?: string; status?: string } | null;
@@ -440,4 +461,49 @@ export const resolveServicesFromSettings = ({
   });
 
   return { title, subtitle, items, hasDynamicSource };
+};
+
+export const resolveProjectsFromSettings = ({
+  settings,
+  defaults,
+}: {
+  settings: CmsSettings | null;
+  defaults: ProjectsDefaults;
+}): ResolvedProjects => {
+  const content = settings?.content && typeof settings.content === "object" ? settings.content : {};
+  const sections = Array.isArray(content.sections) ? content.sections : [];
+  const sectionProjects = sections.find(
+    (section) =>
+      section &&
+      typeof section === "object" &&
+      section.id === "projects" &&
+      section.enabled !== false &&
+      section.data &&
+      typeof section.data === "object",
+  );
+
+  const sectionData = sectionProjects?.data && typeof sectionProjects.data === "object" ? sectionProjects.data : {};
+  const title = getTrimmedString((sectionData as { title?: unknown }).title) || defaults.title;
+  const description =
+    getTrimmedString((sectionData as { description?: unknown }).description) || defaults.description;
+  const controlsEnabled = (sectionData as { controls_enabled?: unknown }).controls_enabled !== false;
+  const rawItems = toServicesArray((sectionData as { items?: unknown }).items);
+  const items = rawItems
+    .map((item) => {
+      const titleValue = getTrimmedString(item.title);
+      if (!titleValue) return null;
+      const location = getTrimmedString(item.location);
+      const image = getTrimmedString(item.image) || defaults.fallbackImage;
+      const alt = getTrimmedString(item.alt) || titleValue;
+      const size = getTrimmedString(item.size);
+      return { title: titleValue, location, image, alt, size };
+    })
+    .filter((item): item is ResolvedProjectItem => !!item && item.title.length > 0);
+
+  return {
+    title,
+    description,
+    controlsEnabled,
+    items,
+  };
 };

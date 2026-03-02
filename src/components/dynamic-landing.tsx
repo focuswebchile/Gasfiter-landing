@@ -5,6 +5,7 @@ import {
   fetchSettingsBySlug,
   resolveAudienceFromSettings,
   resolveHeroFromSettings,
+  resolveProjectsFromSettings,
   resolveServicesFromSettings,
   type CmsSettings,
 } from "@/lib/cms-settings-client";
@@ -2466,45 +2467,24 @@ export default function DynamicLanding() {
         const projectsDescription = projectsRoot?.querySelector(".projects-desc");
         const projectsTrack = projectsRoot?.querySelector("[data-projects-track]");
         const projectsControls = projectsRoot?.querySelector(".projects-controls");
-
-        const projectsTitleValue =
-          typeof sectionProjects.data.title === "string" && sectionProjects.data.title.trim()
-            ? sectionProjects.data.title.trim()
-            : DEFAULT_LANDING_VALUES.projects.title;
-        const projectsDescriptionValue =
-          typeof sectionProjects.data.description === "string" && sectionProjects.data.description.trim()
-            ? sectionProjects.data.description.trim()
-            : DEFAULT_LANDING_VALUES.projects.description;
-        if (projectsTitle) projectsTitle.textContent = projectsTitleValue;
-        if (projectsDescription) projectsDescription.textContent = projectsDescriptionValue;
-
-        const controlsEnabled = (sectionProjects.data as { controls_enabled?: unknown }).controls_enabled;
+        const projects = resolveProjectsFromSettings({
+          settings,
+          defaults: DEFAULT_LANDING_VALUES.projects,
+        });
+        if (projectsTitle) projectsTitle.textContent = projects.title;
+        if (projectsDescription) projectsDescription.textContent = projects.description;
         if (projectsControls) {
-          projectsControls.setAttribute("style", controlsEnabled === false ? "display:none" : "");
+          projectsControls.setAttribute("style", projects.controlsEnabled ? "" : "display:none");
         }
-
-        const projectItems = toItemsArray(
-          sectionProjects.data && typeof sectionProjects.data === "object"
-            ? (sectionProjects.data as { items?: unknown }).items
-            : undefined,
-        ).filter((item) => item.enabled !== false);
-
-        if (projectsTrack && projectItems.length) {
-          projectsTrack.innerHTML = projectItems
+        if (projectsTrack && projects.items.length) {
+          projectsTrack.innerHTML = projects.items
             .map((item) => {
-              const title = typeof item.title === "string" ? item.title.trim() : "";
-              const location = typeof item.location === "string" ? item.location.trim() : "";
-              const image = typeof item.image === "string" ? item.image.trim() : "";
-              const size = typeof item.size === "string" ? item.size.trim() : "";
-              const alt = typeof item.alt === "string" ? item.alt.trim() : title;
-              if (!title) return "";
-              const imageUrl = image || DEFAULT_LANDING_VALUES.projects.fallbackImage;
-              const wideClass = size === "wide" ? " project-card-wide" : "";
+              const wideClass = item.size === "wide" ? " project-card-wide" : "";
               return `
                 <figure class="project-card${wideClass}">
-                  <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(alt || title)}" loading="lazy" />
-                  <figcaption class="project-overlay"><strong>${escapeHtml(title)}</strong><span>${escapeHtml(
-                    location,
+                  <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.alt || item.title)}" loading="lazy" />
+                  <figcaption class="project-overlay"><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(
+                    item.location,
                   )}</span></figcaption>
                 </figure>
               `;
