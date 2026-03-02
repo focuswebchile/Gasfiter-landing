@@ -774,6 +774,16 @@ export default function StagingWorkflowPanel() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (userId.trim()) return;
+    const params = new URLSearchParams(window.location.search);
+    const queryUserId = params.get("userId") ?? params.get("uid");
+    if (queryUserId && queryUserId.trim()) {
+      setUserId(queryUserId.trim());
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ siteSlug, userId, mode }));
   }, [siteSlug, userId, mode]);
 
@@ -945,7 +955,7 @@ export default function StagingWorkflowPanel() {
 
   const loadPanel = useCallback(async () => {
     if (!siteSlug.trim()) return setError("Ingresa slug del sitio");
-    if (!userId.trim()) return setError("Ingresa UUID de usuario para cargar panel");
+    if (!userId.trim()) return setError("No se detectó sesión de usuario. Inicia sesión nuevamente.");
 
     setBusy(true);
     setToast(null);
@@ -965,7 +975,7 @@ export default function StagingWorkflowPanel() {
 
   const fetchHeroDiff = useCallback(async () => {
     if (!siteSlug.trim()) return setError("Ingresa slug del sitio");
-    if (!userId.trim()) return setError("Ingresa UUID de usuario para ver cambios");
+    if (!userId.trim()) return setError("No se detectó sesión de usuario. Inicia sesión nuevamente.");
     if (!panelReady) return setError("Primero usa Cargar panel");
 
     setLoadingDiff(true);
@@ -1042,7 +1052,7 @@ export default function StagingWorkflowPanel() {
     notes?: string;
     settingsOverride?: SettingsPayload;
   }) => {
-    if (!userId.trim()) return setError("Ingresa UUID de usuario para guardar borrador");
+    if (!userId.trim()) return setError("No se detectó sesión de usuario. Inicia sesión nuevamente.");
     const snapshot = options?.settingsOverride ?? settings;
     if (!snapshot) return setError("Primero usa Cargar panel");
     if (!panelReady) return setError("Primero usa Cargar panel");
@@ -1147,7 +1157,7 @@ export default function StagingWorkflowPanel() {
   };
 
   const startDraftEditing = useCallback(async () => {
-    if (!userId.trim()) return setError("Ingresa UUID de usuario para editar borrador");
+    if (!userId.trim()) return setError("No se detectó sesión de usuario. Inicia sesión nuevamente.");
     if (!panelReady) return setError("Primero usa Cargar panel");
     if (!canSaveDraft) return setError("Tu rol no puede editar borrador");
 
@@ -1220,7 +1230,7 @@ export default function StagingWorkflowPanel() {
   }, [panelReady, canSaveDraft, draftConflict.active, saveDraftInternal]);
 
   const requestPublish = async () => {
-    if (!userId.trim()) return setError("Ingresa UUID de usuario para solicitar publicación");
+    if (!userId.trim()) return setError("No se detectó sesión de usuario. Inicia sesión nuevamente.");
     if (!panelReady) return setError("Primero usa Cargar panel");
     if (!canRequestPublish) return setError("Tu rol no puede solicitar publicación");
     if (hasActivePublishRequest) return setOk("Ya existe una solicitud de publicación activa.");
@@ -1286,7 +1296,7 @@ export default function StagingWorkflowPanel() {
   };
 
   const publish = async () => {
-    if (!userId.trim()) return setError("Ingresa UUID de usuario para publicar");
+    if (!userId.trim()) return setError("No se detectó sesión de usuario. Inicia sesión nuevamente.");
     if (!panelReady) return setError("Primero usa Cargar panel");
     if (!canPublish) return setError("Tu rol no puede publicar");
     if (draftConflict.active) return setError("Conflicto de draft: recarga borrador antes de publicar.");
@@ -1403,7 +1413,7 @@ export default function StagingWorkflowPanel() {
   }, [panelReady, fetchSettings, fetchVersions, setError, setOk]);
 
   const rollback = async (versionNumber: number) => {
-    if (!userId.trim()) return setError("Ingresa UUID de usuario para rollback");
+    if (!userId.trim()) return setError("No se detectó sesión de usuario. Inicia sesión nuevamente.");
     if (!panelReady) return setError("Primero usa Cargar panel");
     if (!canRollback) return setError("Tu rol no puede hacer rollback");
 
@@ -1457,7 +1467,7 @@ export default function StagingWorkflowPanel() {
       });
       if (validationError) return setError(validationError);
       if (!panelReady) return setError("Primero usa Cargar panel");
-      if (!userId.trim()) return setError("Ingresa UUID de usuario para subir archivos");
+      if (!userId.trim()) return setError("No se detectó sesión de usuario. Inicia sesión nuevamente.");
       if (!canSaveDraft) return setError("Tu rol no puede editar estilo");
       if (publishedReadOnly) return setError("Activa modo draft para editar estilo");
 
@@ -1523,7 +1533,7 @@ export default function StagingWorkflowPanel() {
     });
     if (validationError) return setError(validationError);
     if (!panelReady) return setError("Primero usa Cargar panel");
-    if (!userId.trim()) return setError("Ingresa UUID de usuario para subir archivos");
+    if (!userId.trim()) return setError("No se detectó sesión de usuario. Inicia sesión nuevamente.");
     if (!canSaveDraft) return setError("Tu rol no puede editar contenido");
     if (publishedReadOnly) return setError("Activa modo draft para editar contenido");
 
@@ -3514,7 +3524,7 @@ export default function StagingWorkflowPanel() {
         className: "wf-sticky wf-sticky-warn",
         title: "Panel no cargado",
         detail: showAdvancedUi
-          ? "Define slug + UUID de usuario y haz click en Cargar panel."
+          ? "Define slug y asegúrate de tener sesión iniciada. Luego haz click en Cargar panel."
           : "Define el sitio y haz click en Cargar panel.",
       };
     }
@@ -3566,7 +3576,7 @@ export default function StagingWorkflowPanel() {
   ]);
 
   const workflowProgress = useMemo(() => {
-    const hasIdentity = Boolean(siteSlug.trim() && userId.trim());
+      const hasIdentity = Boolean(siteSlug.trim() && userId.trim());
     const currentStep = !hasIdentity ? 1 : !panelReady ? 2 : 3;
     const editState: "neutral" | "ready" | "warn" | "error" = draftConflict.active
       ? "error"
@@ -3580,7 +3590,7 @@ export default function StagingWorkflowPanel() {
         id: 1,
         title: "Identidad",
         detail: showAdvancedUi
-          ? "Slug y UUID de usuario con membresía."
+          ? "Slug y sesión de usuario con membresía."
           : "Sitio activo listo para edición.",
         state: "neutral" as const,
       },
@@ -3895,11 +3905,11 @@ export default function StagingWorkflowPanel() {
 
           <div className="wf-row" style={{ marginBottom: 10 }}>
             <input className="wf-input" value={siteSlug} onChange={(e) => setSiteSlug(e.target.value)} placeholder="slug del sitio" />
-            {showAdvancedUi || !roleResolved ? (
-              <input className="wf-input" value={userId} onChange={(e) => setUserId(e.target.value)} placeholder="UUID de usuario" />
-            ) : (
-              <input className="wf-input" value={userId ? "Usuario conectado" : "Usuario no configurado"} disabled />
-            )}
+            <input
+              className="wf-input"
+              value={userId ? "Sesión de usuario conectada" : "Sesión de usuario no detectada"}
+              disabled
+            />
           </div>
 
           <div className="wf-row" style={{ marginBottom: 12 }}>
