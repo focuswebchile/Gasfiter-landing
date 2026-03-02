@@ -3513,6 +3513,8 @@ export default function StagingWorkflowPanel() {
         ? "Modo lectura publicado. Usa 'Editar borrador' para modificar."
         : !canSaveDraft && !canPublish
           ? "Tu cuenta no puede editar este sitio."
+          : canRequestNow
+            ? "Edita, guarda borrador y solicita publicación cuando esté listo."
           : autosaving || flushingPublish
             ? "Esperando guardado automático antes de continuar."
             : "Listo para editar y publicar.";
@@ -3805,16 +3807,30 @@ export default function StagingWorkflowPanel() {
           <div className="wf-status" style={{ marginBottom: 12 }}>
             {publishedReadOnly ? <span className="wf-badge wf-badge-env">Lectura: versión publicada</span> : null}
             <span className="wf-badge">{dirty ? "BORRADOR CON CAMBIOS" : "BORRADOR GUARDADO"}</span>
-            <span className="wf-badge">
-              {latestDraftVersion ? `Borrador v${latestDraftVersion.version_number}` : "Sin borrador"}
-            </span>
-            <span className="wf-badge">
-              {latestPublishedVersion ? `Publicado v${latestPublishedVersion.version_number}` : "Sin publicado"}
-            </span>
+            {showAdvancedUi ? (
+              <span className="wf-badge">
+                {latestDraftVersion ? `Borrador v${latestDraftVersion.version_number}` : "Sin borrador"}
+              </span>
+            ) : (
+              <span className="wf-badge">
+                {latestDraftVersion ? "Borrador activo" : "Sin borrador"}
+              </span>
+            )}
+            {showAdvancedUi ? (
+              <span className="wf-badge">
+                {latestPublishedVersion ? `Publicado v${latestPublishedVersion.version_number}` : "Sin publicado"}
+              </span>
+            ) : (
+              <span className="wf-badge">
+                {latestPublishedVersion ? "Publicado activo" : "Sin publicado"}
+              </span>
+            )}
             {hasActivePublishRequest ? (
               <span className="wf-badge wf-badge-warn">
                 Solicitud pendiente
-                {latestDraftVersion?.publish_requested_by ? ` · ${latestDraftVersion.publish_requested_by.slice(0, 8)}…` : ""}
+                {showAdvancedUi && latestDraftVersion?.publish_requested_by
+                  ? ` · ${latestDraftVersion.publish_requested_by.slice(0, 8)}…`
+                  : ""}
               </span>
             ) : null}
             {autosaving ? <span className="wf-badge wf-badge-role">Autoguardando...</span> : null}
