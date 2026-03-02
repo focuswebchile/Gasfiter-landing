@@ -1675,6 +1675,17 @@ export default function StagingWorkflowPanel() {
           <input
             className="wf-input"
             disabled={editingLocked}
+            value={typeof section.data.eyebrow === "string" ? section.data.eyebrow : ""}
+            placeholder="Eyebrow hero (badge superior)"
+            onChange={(e) =>
+              updateSettings((prev) =>
+                upsertSection(prev, { ...section, data: { ...section.data, eyebrow: e.target.value } }),
+              )
+            }
+          />
+          <input
+            className="wf-input"
+            disabled={editingLocked}
             value={typeof section.data.title === "string" ? section.data.title : ""}
             placeholder="Título principal"
             onChange={(e) => updateSettings((prev) => upsertSection(prev, { ...section, data: { ...section.data, title: e.target.value } }))}
