@@ -132,6 +132,22 @@ export type ResolvedProjects = {
   items: ResolvedProjectItem[];
 };
 
+export type UrgencyDefaults = {
+  title: string;
+  description: string;
+  ctaText: string;
+  ctaUrl: string;
+};
+
+export type ResolvedUrgency = {
+  title: string;
+  description: string;
+  ctaPrimary: {
+    text: string;
+    url: string;
+  };
+};
+
 type SettingsResponse = {
   settings: CmsSettings | null;
   site?: { slug?: string; name?: string; status?: string } | null;
@@ -505,5 +521,39 @@ export const resolveProjectsFromSettings = ({
     description,
     controlsEnabled,
     items,
+  };
+};
+
+export const resolveUrgencyFromSettings = ({
+  settings,
+  defaults,
+  heroPrimaryUrl,
+}: {
+  settings: CmsSettings | null;
+  defaults: UrgencyDefaults;
+  heroPrimaryUrl?: string;
+}): ResolvedUrgency => {
+  const content = settings?.content && typeof settings.content === "object" ? settings.content : {};
+  const sections = Array.isArray(content.sections) ? content.sections : [];
+  const sectionUrgency = sections.find(
+    (section) =>
+      section &&
+      typeof section === "object" &&
+      section.id === "urgency_banner" &&
+      section.enabled !== false &&
+      section.data &&
+      typeof section.data === "object",
+  );
+  const sectionData = sectionUrgency?.data && typeof sectionUrgency.data === "object" ? sectionUrgency.data : {};
+
+  const ctaPrimary = (sectionData as { cta_primary?: { text?: unknown; url?: unknown } }).cta_primary;
+  return {
+    title: getTrimmedString((sectionData as { title?: unknown }).title) || defaults.title,
+    description:
+      getTrimmedString((sectionData as { description?: unknown }).description) || defaults.description,
+    ctaPrimary: {
+      text: getTrimmedString(ctaPrimary?.text) || defaults.ctaText,
+      url: getTrimmedString(ctaPrimary?.url) || getTrimmedString(heroPrimaryUrl) || defaults.ctaUrl,
+    },
   };
 };

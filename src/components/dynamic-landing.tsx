@@ -7,6 +7,7 @@ import {
   resolveHeroFromSettings,
   resolveProjectsFromSettings,
   resolveServicesFromSettings,
+  resolveUrgencyFromSettings,
   type CmsSettings,
 } from "@/lib/cms-settings-client";
 
@@ -2530,28 +2531,16 @@ export default function DynamicLanding() {
         const urgencyTitle = urgencyRoot?.querySelector("h2");
         const urgencyDesc = urgencyRoot?.querySelector("p");
         const urgencyCta = urgencyRoot?.querySelector("a");
-        const urgencyTitleValue =
-          typeof sectionUrgency.data.title === "string" && sectionUrgency.data.title.trim()
-            ? sectionUrgency.data.title.trim()
-            : DEFAULT_LANDING_VALUES.urgency.title;
-        const urgencyDescriptionValue =
-          typeof sectionUrgency.data.description === "string" && sectionUrgency.data.description.trim()
-            ? sectionUrgency.data.description.trim()
-            : DEFAULT_LANDING_VALUES.urgency.description;
-        if (urgencyTitle) urgencyTitle.textContent = urgencyTitleValue;
-        if (urgencyDesc) urgencyDesc.textContent = urgencyDescriptionValue;
-        const urgencyCtaData = (sectionUrgency.data as { cta_primary?: { text?: unknown; url?: unknown } }).cta_primary;
+        const urgency = resolveUrgencyFromSettings({
+          settings,
+          defaults: DEFAULT_LANDING_VALUES.urgency,
+          heroPrimaryUrl,
+        });
+        if (urgencyTitle) urgencyTitle.textContent = urgency.title;
+        if (urgencyDesc) urgencyDesc.textContent = urgency.description;
         if (urgencyCta) {
-          const urgencyCtaText =
-            typeof urgencyCtaData?.text === "string" && urgencyCtaData.text.trim()
-              ? urgencyCtaData.text.trim()
-              : DEFAULT_LANDING_VALUES.urgency.ctaText;
-          const urgencyCtaUrl =
-            typeof urgencyCtaData?.url === "string" && urgencyCtaData.url.trim()
-              ? urgencyCtaData.url.trim()
-              : heroPrimaryUrl || DEFAULT_LANDING_VALUES.urgency.ctaUrl;
-          urgencyCta.textContent = urgencyCtaText;
-          urgencyCta.setAttribute("href", urgencyCtaUrl);
+          urgencyCta.textContent = urgency.ctaPrimary.text;
+          urgencyCta.setAttribute("href", urgency.ctaPrimary.url);
         }
       }
 
