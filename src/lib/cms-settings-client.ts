@@ -47,6 +47,26 @@ export type CmsSettings = {
   };
 };
 
+export type HeroDefaults = {
+  eyebrow: string;
+  image: string;
+  primaryUrl: string;
+  primaryText: string;
+  secondaryUrl: string;
+  secondaryText: string;
+};
+
+export type ResolvedHero = {
+  title: string;
+  subtitle: string;
+  eyebrow: string;
+  image: string;
+  primaryUrl: string;
+  primaryText: string;
+  secondaryUrl: string;
+  secondaryText: string;
+};
+
 type SettingsResponse = {
   settings: CmsSettings | null;
   site?: { slug?: string; name?: string; status?: string } | null;
@@ -159,5 +179,62 @@ export const fetchSettingsBySlug = async ({
     site: (payload?.site as SettingsResponse["site"]) ?? null,
     draftUpdatedAt:
       typeof payload?.draftUpdatedAt === "string" ? payload.draftUpdatedAt : null,
+  };
+};
+
+const getTrimmedString = (value: unknown): string =>
+  typeof value === "string" ? value.trim() : "";
+
+export const resolveHeroFromSettings = ({
+  settings,
+  defaults,
+  fallbackWhatsappUrl,
+}: {
+  settings: CmsSettings | null;
+  defaults: HeroDefaults;
+  fallbackWhatsappUrl?: string;
+}): ResolvedHero => {
+  const content = settings?.content && typeof settings.content === "object" ? settings.content : {};
+  const sections = Array.isArray(content.sections) ? content.sections : [];
+  const sectionHero = sections.find(
+    (section) =>
+      section &&
+      typeof section === "object" &&
+      section.id === "hero" &&
+      section.enabled !== false &&
+      section.data &&
+      typeof section.data === "object",
+  );
+
+  const sectionData = sectionHero?.data && typeof sectionHero.data === "object" ? sectionHero.data : {};
+  const legacyHero = content.hero && typeof content.hero === "object" ? content.hero : {};
+  const secondaryUrlFallback = getTrimmedString(fallbackWhatsappUrl) || defaults.secondaryUrl;
+
+  return {
+    title: getTrimmedString((sectionData as { title?: unknown }).title) || getTrimmedString(legacyHero.title),
+    subtitle:
+      getTrimmedString((sectionData as { subtitle?: unknown }).subtitle) ||
+      getTrimmedString(legacyHero.subtitle),
+    eyebrow: getTrimmedString((sectionData as { eyebrow?: unknown }).eyebrow) || defaults.eyebrow,
+    image:
+      getTrimmedString((sectionData as { image?: unknown }).image) ||
+      getTrimmedString(legacyHero.image) ||
+      defaults.image,
+    primaryUrl:
+      getTrimmedString((sectionData as { cta_primary?: { url?: unknown } }).cta_primary?.url) ||
+      getTrimmedString(legacyHero.cta?.primary_url) ||
+      defaults.primaryUrl,
+    primaryText:
+      getTrimmedString((sectionData as { cta_primary?: { text?: unknown } }).cta_primary?.text) ||
+      getTrimmedString(legacyHero.cta?.primary_text) ||
+      defaults.primaryText,
+    secondaryUrl:
+      getTrimmedString((sectionData as { cta_secondary?: { url?: unknown } }).cta_secondary?.url) ||
+      getTrimmedString(legacyHero.cta?.secondary_url) ||
+      secondaryUrlFallback,
+    secondaryText:
+      getTrimmedString((sectionData as { cta_secondary?: { text?: unknown } }).cta_secondary?.text) ||
+      getTrimmedString(legacyHero.cta?.secondary_text) ||
+      defaults.secondaryText,
   };
 };

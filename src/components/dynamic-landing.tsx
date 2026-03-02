@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect } from "react";
-import { fetchSettingsBySlug, type CmsSettings } from "@/lib/cms-settings-client";
+import {
+  fetchSettingsBySlug,
+  resolveHeroFromSettings,
+  type CmsSettings,
+} from "@/lib/cms-settings-client";
 
 const landingStyles = String.raw`
       :root {
@@ -2216,9 +2220,6 @@ export default function DynamicLanding() {
         if (!el) return;
         el.style.display = visible ? "" : "none";
       };
-      const sectionHero = Array.isArray(content.sections)
-        ? findSection("hero")
-        : null;
       const sectionServices = findSection("services");
       const sectionAudience = findSection("audience");
       const sectionProjects = findSection("projects");
@@ -2295,54 +2296,19 @@ export default function DynamicLanding() {
         });
       }
 
-      const legacyHero = content.hero && typeof content.hero === "object" ? content.hero : {};
-      const sectionHeroData = sectionHero && typeof sectionHero === "object" ? sectionHero.data : {};
-      const heroTitle =
-        typeof sectionHeroData?.title === "string" && sectionHeroData.title.trim()
-          ? sectionHeroData.title.trim()
-          : typeof legacyHero?.title === "string" && legacyHero.title.trim()
-            ? legacyHero.title.trim()
-            : "";
-      const heroEyebrow =
-        typeof sectionHeroData?.eyebrow === "string" && sectionHeroData.eyebrow.trim()
-          ? sectionHeroData.eyebrow.trim()
-          : DEFAULT_LANDING_VALUES.hero.eyebrow;
-      const heroSubtitle =
-        typeof sectionHeroData?.subtitle === "string" && sectionHeroData.subtitle.trim()
-          ? sectionHeroData.subtitle.trim()
-          : typeof legacyHero?.subtitle === "string" && legacyHero.subtitle.trim()
-            ? legacyHero.subtitle.trim()
-            : "";
-      const heroImage =
-        typeof sectionHeroData?.image === "string" && sectionHeroData.image.trim()
-          ? sectionHeroData.image.trim()
-          : typeof legacyHero?.image === "string" && legacyHero.image.trim()
-            ? legacyHero.image.trim()
-            : DEFAULT_LANDING_VALUES.hero.image;
-      const heroPrimaryUrl =
-        typeof sectionHeroData?.cta_primary?.url === "string" && sectionHeroData.cta_primary.url.trim()
-          ? sectionHeroData.cta_primary.url.trim()
-          : typeof legacyHero?.cta?.primary_url === "string" && legacyHero.cta.primary_url.trim()
-            ? legacyHero.cta.primary_url.trim()
-            : DEFAULT_LANDING_VALUES.hero.primaryUrl;
-      const heroPrimaryText =
-        typeof sectionHeroData?.cta_primary?.text === "string" && sectionHeroData.cta_primary.text.trim()
-          ? sectionHeroData.cta_primary.text.trim()
-          : typeof legacyHero?.cta?.primary_text === "string" && legacyHero.cta.primary_text.trim()
-            ? legacyHero.cta.primary_text.trim()
-            : DEFAULT_LANDING_VALUES.hero.primaryText;
-      const heroSecondaryUrl =
-        typeof sectionHeroData?.cta_secondary?.url === "string" && sectionHeroData.cta_secondary.url.trim()
-          ? sectionHeroData.cta_secondary.url.trim()
-          : typeof legacyHero?.cta?.secondary_url === "string" && legacyHero.cta.secondary_url.trim()
-            ? legacyHero.cta.secondary_url.trim()
-            : whatsappHref || DEFAULT_LANDING_VALUES.hero.secondaryUrl;
-      const heroSecondaryText =
-        typeof sectionHeroData?.cta_secondary?.text === "string" && sectionHeroData.cta_secondary.text.trim()
-          ? sectionHeroData.cta_secondary.text.trim()
-          : typeof legacyHero?.cta?.secondary_text === "string" && legacyHero.cta.secondary_text.trim()
-            ? legacyHero.cta.secondary_text.trim()
-            : DEFAULT_LANDING_VALUES.hero.secondaryText;
+      const hero = resolveHeroFromSettings({
+        settings,
+        defaults: DEFAULT_LANDING_VALUES.hero,
+        fallbackWhatsappUrl: whatsappHref,
+      });
+      const heroTitle = hero.title;
+      const heroEyebrow = hero.eyebrow;
+      const heroSubtitle = hero.subtitle;
+      const heroImage = hero.image;
+      const heroPrimaryUrl = hero.primaryUrl;
+      const heroPrimaryText = hero.primaryText;
+      const heroSecondaryUrl = hero.secondaryUrl;
+      const heroSecondaryText = hero.secondaryText;
 
       if (heroTitle) {
         const titleEl = document.querySelector("[data-hero-title]");
