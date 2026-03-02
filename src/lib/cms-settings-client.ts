@@ -181,6 +181,16 @@ export type ResolvedTestimonials = {
   hasSectionSource: boolean;
 };
 
+export type FaqDefaults = {
+  title: string;
+};
+
+export type ResolvedFaq = {
+  title: string;
+  items: Array<{ question: string; answer: string }>;
+  hasDynamicSource: boolean;
+};
+
 type SettingsResponse = {
   settings: CmsSettings | null;
   site?: { slug?: string; name?: string; status?: string } | null;
@@ -660,5 +670,43 @@ export const resolveTestimonialsFromSettings = ({
     kicker: getTrimmedString((sectionData as { kicker?: unknown }).kicker) || defaults.kicker,
     items,
     hasSectionSource: !!sectionTestimonials,
+  };
+};
+
+export const resolveFaqFromSettings = ({
+  settings,
+  defaults,
+}: {
+  settings: CmsSettings | null;
+  defaults: FaqDefaults;
+}): ResolvedFaq => {
+  const content = settings?.content && typeof settings.content === "object" ? settings.content : {};
+  const sections = Array.isArray(content.sections) ? content.sections : [];
+  const sectionFaq = sections.find(
+    (section) =>
+      section &&
+      typeof section === "object" &&
+      section.id === "faq" &&
+      section.enabled !== false &&
+      section.data &&
+      typeof section.data === "object",
+  );
+  const sectionData = sectionFaq?.data && typeof sectionFaq.data === "object" ? sectionFaq.data : {};
+  const sectionItems = toServicesArray((sectionData as { items?: unknown }).items);
+  const legacyFaqs = Array.isArray(content.faqs)
+    ? content.faqs.filter((item): item is Record<string, unknown> => !!item && typeof item === "object")
+    : [];
+  const itemsSource = sectionItems.length ? sectionItems : legacyFaqs;
+  const items = itemsSource
+    .map((item) => ({
+      question: getTrimmedString(item.question),
+      answer: getTrimmedString(item.answer),
+    }))
+    .filter((item) => item.question && item.answer);
+
+  return {
+    title: getTrimmedString((sectionData as { title?: unknown }).title) || defaults.title,
+    items,
+    hasDynamicSource: !!sectionFaq || Array.isArray(content.faqs),
   };
 };

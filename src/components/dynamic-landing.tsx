@@ -5,6 +5,7 @@ import {
   resolveContactBannerFromSettings,
   fetchSettingsBySlug,
   resolveAudienceFromSettings,
+  resolveFaqFromSettings,
   resolveHeroFromSettings,
   resolveProjectsFromSettings,
   resolveServicesFromSettings,
@@ -2125,11 +2126,6 @@ export default function DynamicLanding() {
     };
     bindFaqButtons();
 
-    const toItemsArray = (items: unknown): Array<Record<string, unknown>> => {
-      if (!Array.isArray(items)) return [];
-      return items.filter((item): item is Record<string, unknown> => !!item && typeof item === "object");
-    };
-
     const escapeHtml = (value: string) =>
       value
         .replace(/&/g, "&amp;")
@@ -2204,7 +2200,6 @@ export default function DynamicLanding() {
       };
       const sectionAudience = findSection("audience");
       const sectionProjects = findSection("projects");
-      const sectionFaq = findSection("faq");
       const sectionUrgency = findSection("urgency_banner");
       const sectionContact = findSection("contact_banner");
       setVisible("#inicio", !isExplicitlyDisabled("hero"));
@@ -2496,34 +2491,28 @@ export default function DynamicLanding() {
       }
 
       const faqSectionEl = document.getElementById("faq");
-      const sectionFaqItems = toItemsArray(sectionFaq && sectionFaq.data ? (sectionFaq.data as { items?: unknown }).items : []);
-      const faqItems = sectionFaqItems.length ? sectionFaqItems : Array.isArray(content.faqs) ? content.faqs : [];
+      const faq = resolveFaqFromSettings({
+        settings,
+        defaults: DEFAULT_LANDING_VALUES.faq,
+      });
       const faqTitle = document.querySelector("[data-faq-title]");
-      const faqTitleValue =
-        sectionFaq?.data && typeof sectionFaq.data.title === "string" && sectionFaq.data.title.trim()
-          ? sectionFaq.data.title.trim()
-          : DEFAULT_LANDING_VALUES.faq.title;
-      if (faqTitle) faqTitle.textContent = faqTitleValue;
-      if (Array.isArray(faqItems) && faqItems.length) {
+      if (faqTitle) faqTitle.textContent = faq.title;
+      if (faq.items.length) {
         const faqList = document.querySelector("[data-faq-list]");
         if (faqList) {
-          faqList.innerHTML = faqItems
-            .filter((faq) => faq && typeof faq === "object")
+          faqList.innerHTML = faq.items
             .map((faq) => {
-              const q = typeof faq.question === "string" ? faq.question.trim() : "";
-              const a = typeof faq.answer === "string" ? faq.answer.trim() : "";
-              if (!q || !a) return "";
               return `
                 <article class="faq-item">
-                  <button class="faq-btn" type="button">${q} <i class="fa-solid fa-chevron-down"></i></button>
-                  <div class="faq-content"><p>${a}</p></div>
+                  <button class="faq-btn" type="button">${faq.question} <i class="fa-solid fa-chevron-down"></i></button>
+                  <div class="faq-content"><p>${faq.answer}</p></div>
                 </article>
               `;
             })
             .join("");
           bindFaqButtons();
         }
-      } else if (faqSectionEl && (!!sectionFaq || Array.isArray(content.faqs))) {
+      } else if (faqSectionEl && faq.hasDynamicSource) {
         faqSectionEl.style.display = "none";
       }
 
