@@ -67,6 +67,26 @@ export type ResolvedHero = {
   secondaryText: string;
 };
 
+export type AudienceDefaults = {
+  kicker: string;
+  title: string;
+  description: string;
+  ctaPrimaryText: string;
+  ctaPrimaryUrl: string;
+  ctaSecondaryText: string;
+  ctaSecondaryUrl: string;
+};
+
+export type ResolvedAudience = {
+  kicker: string;
+  title: string;
+  description: string;
+  bullets: Array<{ text: string; icon: string }>;
+  ctaPrimary: { text: string; url: string };
+  ctaSecondary: { text: string; url: string };
+  images: { back: string; front: string };
+};
+
 type SettingsResponse = {
   settings: CmsSettings | null;
   site?: { slug?: string; name?: string; status?: string } | null;
@@ -236,5 +256,96 @@ export const resolveHeroFromSettings = ({
       getTrimmedString((sectionData as { cta_secondary?: { text?: unknown } }).cta_secondary?.text) ||
       getTrimmedString(legacyHero.cta?.secondary_text) ||
       defaults.secondaryText,
+  };
+};
+
+export const resolveAudienceFromSettings = ({
+  settings,
+  defaults,
+  heroPrimaryUrl,
+}: {
+  settings: CmsSettings | null;
+  defaults: AudienceDefaults;
+  heroPrimaryUrl?: string;
+}): ResolvedAudience => {
+  const content = settings?.content && typeof settings.content === "object" ? settings.content : {};
+  const sections = Array.isArray(content.sections) ? content.sections : [];
+  const sectionAudience = sections.find(
+    (section) =>
+      section &&
+      typeof section === "object" &&
+      section.id === "audience" &&
+      section.enabled !== false &&
+      section.data &&
+      typeof section.data === "object",
+  );
+  const sectionData = sectionAudience?.data && typeof sectionAudience.data === "object" ? sectionAudience.data : {};
+  const legacyAudience =
+    (content as { audience?: Record<string, unknown> }).audience &&
+    typeof (content as { audience?: Record<string, unknown> }).audience === "object"
+      ? ((content as { audience?: Record<string, unknown> }).audience as Record<string, unknown>)
+      : {};
+
+  const bulletsRaw = Array.isArray((sectionData as { bullets?: unknown }).bullets)
+    ? (((sectionData as { bullets?: unknown[] }).bullets ?? []) as unknown[])
+    : Array.isArray((legacyAudience as { bullets?: unknown }).bullets)
+      ? ((((legacyAudience as { bullets?: unknown[] }).bullets ?? []) as unknown[]) as unknown[])
+      : [];
+
+  const bullets = bulletsRaw
+    .filter((item) => item && typeof item === "object" && (item as { enabled?: unknown }).enabled !== false)
+    .map((item) => ({
+      text: getTrimmedString((item as { text?: unknown }).text),
+      icon: getTrimmedString((item as { icon?: unknown }).icon) || "fa-circle-check",
+    }))
+    .filter((item) => item.text);
+
+  const sectionPrimary = (sectionData as { cta_primary?: { text?: unknown; url?: unknown } }).cta_primary;
+  const legacyPrimary = (legacyAudience as { cta_primary?: { text?: unknown; url?: unknown } }).cta_primary;
+  const sectionSecondary = (sectionData as { cta_secondary?: { text?: unknown; url?: unknown } }).cta_secondary;
+  const legacySecondary = (legacyAudience as { cta_secondary?: { text?: unknown; url?: unknown } }).cta_secondary;
+
+  const sectionImages = (sectionData as { images?: { back?: unknown; front?: unknown } }).images;
+  const legacyImages = (legacyAudience as { images?: { back?: unknown; front?: unknown } }).images;
+
+  return {
+    kicker:
+      getTrimmedString((sectionData as { kicker?: unknown }).kicker) ||
+      getTrimmedString((legacyAudience as { kicker?: unknown }).kicker) ||
+      defaults.kicker,
+    title:
+      getTrimmedString((sectionData as { title?: unknown }).title) ||
+      getTrimmedString((legacyAudience as { title?: unknown }).title) ||
+      defaults.title,
+    description:
+      getTrimmedString((sectionData as { description?: unknown }).description) ||
+      getTrimmedString((legacyAudience as { description?: unknown }).description) ||
+      defaults.description,
+    bullets,
+    ctaPrimary: {
+      text:
+        getTrimmedString(sectionPrimary?.text) ||
+        getTrimmedString(legacyPrimary?.text) ||
+        defaults.ctaPrimaryText,
+      url:
+        getTrimmedString(sectionPrimary?.url) ||
+        getTrimmedString(legacyPrimary?.url) ||
+        getTrimmedString(heroPrimaryUrl) ||
+        defaults.ctaPrimaryUrl,
+    },
+    ctaSecondary: {
+      text:
+        getTrimmedString(sectionSecondary?.text) ||
+        getTrimmedString(legacySecondary?.text) ||
+        defaults.ctaSecondaryText,
+      url:
+        getTrimmedString(sectionSecondary?.url) ||
+        getTrimmedString(legacySecondary?.url) ||
+        defaults.ctaSecondaryUrl,
+    },
+    images: {
+      back: getTrimmedString(sectionImages?.back) || getTrimmedString(legacyImages?.back),
+      front: getTrimmedString(sectionImages?.front) || getTrimmedString(legacyImages?.front),
+    },
   };
 };

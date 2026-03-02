@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import {
   fetchSettingsBySlug,
+  resolveAudienceFromSettings,
   resolveHeroFromSettings,
   type CmsSettings,
 } from "@/lib/cms-settings-client";
@@ -2490,93 +2491,41 @@ export default function DynamicLanding() {
         const audienceBackImage = audienceRoot?.querySelector(".audience-image-back");
         const audienceFrontImage = audienceRoot?.querySelector(".audience-image-front");
 
-        const audienceKickerValue =
-          typeof sectionAudience.data.kicker === "string" && sectionAudience.data.kicker.trim()
-            ? sectionAudience.data.kicker.trim()
-            : DEFAULT_LANDING_VALUES.audience.kicker;
-        const audienceTitleValue =
-          typeof sectionAudience.data.title === "string" && sectionAudience.data.title.trim()
-            ? sectionAudience.data.title.trim()
-            : DEFAULT_LANDING_VALUES.audience.title;
-        const audienceDescriptionValue =
-          typeof sectionAudience.data.description === "string" && sectionAudience.data.description.trim()
-            ? sectionAudience.data.description.trim()
-            : DEFAULT_LANDING_VALUES.audience.description;
-        if (audienceKicker) audienceKicker.textContent = audienceKickerValue;
-        if (audienceTitle) audienceTitle.textContent = audienceTitleValue;
-        if (audienceDescription) audienceDescription.textContent = audienceDescriptionValue;
-
-        const audienceBulletsRaw = Array.isArray(
-          (sectionAudience.data as { bullets?: unknown }).bullets,
-        )
-          ? ((sectionAudience.data as { bullets?: unknown[] }).bullets ?? [])
-          : [];
-        const audienceBullets = audienceBulletsRaw
-          .filter((item) => item && typeof item === "object" && (item as { enabled?: unknown }).enabled !== false)
-          .map((item) => ({
-            text:
-              typeof (item as { text?: unknown }).text === "string"
-                ? ((item as { text?: string }).text ?? "").trim()
-                : "",
-            icon:
-              typeof (item as { icon?: unknown }).icon === "string"
-                ? ((item as { icon?: string }).icon ?? "").trim()
-                : "fa-circle-check",
-          }))
-          .filter((item) => item.text);
-        if (audienceList && audienceBullets.length) {
-          audienceList.innerHTML = audienceBullets
+        const audience = resolveAudienceFromSettings({
+          settings,
+          defaults: DEFAULT_LANDING_VALUES.audience,
+          heroPrimaryUrl,
+        });
+        if (audienceKicker) audienceKicker.textContent = audience.kicker;
+        if (audienceTitle) audienceTitle.textContent = audience.title;
+        if (audienceDescription) audienceDescription.textContent = audience.description;
+        if (audienceList && audience.bullets.length) {
+          audienceList.innerHTML = audience.bullets
             .map(
               (item) =>
                 `<li><i class="fa-solid ${escapeHtml(item.icon || "fa-circle-check")}"></i>${escapeHtml(item.text)}</li>`,
             )
             .join("");
         }
-
-        const audiencePrimary = (sectionAudience.data as { cta_primary?: { text?: unknown; url?: unknown } })
-          .cta_primary;
-        const audienceSecondary = (
-          sectionAudience.data as { cta_secondary?: { text?: unknown; url?: unknown } }
-        ).cta_secondary;
         if (audiencePrimaryBtn) {
-          const primaryText =
-            typeof audiencePrimary?.text === "string" && audiencePrimary.text.trim()
-              ? audiencePrimary.text.trim()
-              : DEFAULT_LANDING_VALUES.audience.ctaPrimaryText;
-          const primaryUrl =
-            typeof audiencePrimary?.url === "string" && audiencePrimary.url.trim()
-              ? audiencePrimary.url.trim()
-              : heroPrimaryUrl || DEFAULT_LANDING_VALUES.audience.ctaPrimaryUrl;
-          audiencePrimaryBtn.textContent = primaryText;
-          audiencePrimaryBtn.setAttribute("href", primaryUrl);
+          audiencePrimaryBtn.textContent = audience.ctaPrimary.text;
+          audiencePrimaryBtn.setAttribute("href", audience.ctaPrimary.url);
         }
         if (audienceSecondaryBtn) {
-          const secondaryText =
-            typeof audienceSecondary?.text === "string" && audienceSecondary.text.trim()
-              ? audienceSecondary.text.trim()
-              : DEFAULT_LANDING_VALUES.audience.ctaSecondaryText;
-          const secondaryUrl =
-            typeof audienceSecondary?.url === "string" && audienceSecondary.url.trim()
-              ? audienceSecondary.url.trim()
-              : DEFAULT_LANDING_VALUES.audience.ctaSecondaryUrl;
-          audienceSecondaryBtn.textContent = secondaryText;
-          audienceSecondaryBtn.setAttribute("href", secondaryUrl);
+          audienceSecondaryBtn.textContent = audience.ctaSecondary.text;
+          audienceSecondaryBtn.setAttribute("href", audience.ctaSecondary.url);
         }
-
-        const audienceImages = (sectionAudience.data as { images?: { back?: unknown; front?: unknown } }).images;
         if (
           audienceBackImage instanceof HTMLImageElement &&
-          typeof audienceImages?.back === "string" &&
-          audienceImages.back.trim()
+          audience.images.back
         ) {
-          audienceBackImage.src = audienceImages.back.trim();
+          audienceBackImage.src = audience.images.back;
         }
         if (
           audienceFrontImage instanceof HTMLImageElement &&
-          typeof audienceImages?.front === "string" &&
-          audienceImages.front.trim()
+          audience.images.front
         ) {
-          audienceFrontImage.src = audienceImages.front.trim();
+          audienceFrontImage.src = audience.images.front;
         }
       }
 
