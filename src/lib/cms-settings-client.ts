@@ -87,6 +87,30 @@ export type ResolvedAudience = {
   images: { back: string; front: string };
 };
 
+export type ServicesDefaults = {
+  title: string;
+  subtitle: string;
+  ctaText: string;
+};
+
+export type ResolvedServiceItem = {
+  title: string;
+  description: string;
+  features: string[];
+  cta: {
+    text: string;
+    url: string;
+    enabled: boolean;
+  };
+};
+
+export type ResolvedServices = {
+  title: string;
+  subtitle: string;
+  items: ResolvedServiceItem[];
+  hasDynamicSource: boolean;
+};
+
 type SettingsResponse = {
   settings: CmsSettings | null;
   site?: { slug?: string; name?: string; status?: string } | null;
@@ -204,6 +228,23 @@ export const fetchSettingsBySlug = async ({
 
 const getTrimmedString = (value: unknown): string =>
   typeof value === "string" ? value.trim() : "";
+
+const toServicesArray = (services: unknown): Array<Record<string, unknown>> => {
+  if (Array.isArray(services)) {
+    return services.filter((item): item is Record<string, unknown> => !!item && typeof item === "object");
+  }
+  if (!services || typeof services !== "object") return [];
+  const items = (services as { items?: unknown }).items;
+  if (Array.isArray(items)) {
+    return items.filter((item): item is Record<string, unknown> => !!item && typeof item === "object");
+  }
+  if (items && typeof items === "object") {
+    return Object.values(items as Record<string, unknown>).filter(
+      (item): item is Record<string, unknown> => !!item && typeof item === "object",
+    );
+  }
+  return [];
+};
 
 export const resolveHeroFromSettings = ({
   settings,
@@ -348,4 +389,55 @@ export const resolveAudienceFromSettings = ({
       front: getTrimmedString(sectionImages?.front) || getTrimmedString(legacyImages?.front),
     },
   };
+};
+
+export const resolveServicesFromSettings = ({
+  settings,
+  defaults,
+  heroPrimaryUrl,
+}: {
+  settings: CmsSettings | null;
+  defaults: ServicesDefaults;
+  heroPrimaryUrl: string;
+}): ResolvedServices => {
+  const content = settings?.content && typeof settings.content === "object" ? settings.content : {};
+  const sections = Array.isArray(content.sections) ? content.sections : [];
+  const sectionServices = sections.find(
+    (section) =>
+      section &&
+      typeof section === "object" &&
+      section.id === "services" &&
+      section.enabled !== false &&
+      section.data &&
+      typeof section.data === "object",
+  );
+
+  const sectionData = sectionServices?.data && typeof sectionServices.data === "object" ? sectionServices.data : null;
+  const servicesSource = sectionData ?? content.services;
+  const hasDynamicSource = !!sectionData || Array.isArray(content.services);
+
+  const title =
+    (sectionData && getTrimmedString((sectionData as { title?: unknown }).title)) || defaults.title;
+  const subtitle =
+    (sectionData && getTrimmedString((sectionData as { subtitle?: unknown }).subtitle)) || defaults.subtitle;
+
+  const items = toServicesArray(servicesSource).map((item) => {
+    const rawFeatures = Array.isArray(item.features) ? item.features : [];
+    const features = rawFeatures
+      .map((feature) => getTrimmedString(feature))
+      .filter(Boolean);
+    const rawCta = item.cta && typeof item.cta === "object" ? (item.cta as Record<string, unknown>) : {};
+    return {
+      title: getTrimmedString(item.title),
+      description: getTrimmedString(item.description),
+      features,
+      cta: {
+        text: getTrimmedString(rawCta.text) || defaults.ctaText,
+        url: getTrimmedString(rawCta.url) || heroPrimaryUrl,
+        enabled: rawCta.enabled !== false,
+      },
+    };
+  });
+
+  return { title, subtitle, items, hasDynamicSource };
 };

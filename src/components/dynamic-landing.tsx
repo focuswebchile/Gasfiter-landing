@@ -5,6 +5,7 @@ import {
   fetchSettingsBySlug,
   resolveAudienceFromSettings,
   resolveHeroFromSettings,
+  resolveServicesFromSettings,
   type CmsSettings,
 } from "@/lib/cms-settings-client";
 
@@ -2120,30 +2121,6 @@ export default function DynamicLanding() {
     };
     bindFaqButtons();
 
-    const toServicesArray = (services: unknown): Array<{
-      title?: string;
-      description?: string;
-      features?: string[];
-      cta?: { text?: string; url?: string; enabled?: boolean };
-    }> => {
-      if (Array.isArray(services)) return services;
-      if (!services || typeof services !== "object") return [];
-      const items = (services as { items?: unknown }).items;
-      if (Array.isArray(items)) return items;
-      if (items && typeof items === "object") {
-        return Object.values(items as Record<string, unknown>).filter(
-          (item): item is {
-            title?: string;
-            description?: string;
-            features?: string[];
-            cta?: { text?: string; url?: string; enabled?: boolean };
-          } =>
-            !!item && typeof item === "object",
-        );
-      }
-      return [];
-    };
-
     const toItemsArray = (items: unknown): Array<Record<string, unknown>> => {
       if (!Array.isArray(items)) return [];
       return items.filter((item): item is Record<string, unknown> => !!item && typeof item === "object");
@@ -2221,7 +2198,6 @@ export default function DynamicLanding() {
         if (!el) return;
         el.style.display = visible ? "" : "none";
       };
-      const sectionServices = findSection("services");
       const sectionAudience = findSection("audience");
       const sectionProjects = findSection("projects");
       const sectionFaq = findSection("faq");
@@ -2386,52 +2362,25 @@ export default function DynamicLanding() {
         link.href = heroSecondaryUrl;
       });
 
-      const services =
-        sectionServices &&
-        typeof sectionServices.data === "object" &&
-        sectionServices.data &&
-        (Array.isArray((sectionServices.data as { items?: unknown }).items) || typeof sectionServices.data === "object")
-          ? sectionServices.data
-          : content.services;
+      const services = resolveServicesFromSettings({
+        settings,
+        defaults: DEFAULT_LANDING_VALUES.services,
+        heroPrimaryUrl,
+      });
       const servicesTitleEl = document.querySelector("[data-services-title]");
       const servicesSubtitleEl = document.querySelector("[data-services-subtitle]");
-      const servicesTitle =
-        services &&
-        typeof services === "object" &&
-        !Array.isArray(services) &&
-        typeof services.title === "string" &&
-        services.title.trim()
-          ? services.title.trim()
-          : DEFAULT_LANDING_VALUES.services.title;
-      const servicesSubtitle =
-        services &&
-        typeof services === "object" &&
-        !Array.isArray(services) &&
-        typeof services.subtitle === "string" &&
-        services.subtitle.trim()
-          ? services.subtitle.trim()
-          : DEFAULT_LANDING_VALUES.services.subtitle;
-      if (servicesTitleEl) servicesTitleEl.textContent = servicesTitle;
-      if (servicesSubtitleEl) servicesSubtitleEl.textContent = servicesSubtitle;
+      if (servicesTitleEl) servicesTitleEl.textContent = services.title;
+      if (servicesSubtitleEl) servicesSubtitleEl.textContent = services.subtitle;
 
-      const serviceItems = toServicesArray(services);
       const servicesSection = document.getElementById("servicios");
-      const hasDynamicServicesSource = !!sectionServices || Array.isArray(content.services);
-      if (hasDynamicServicesSource && Array.isArray(serviceItems) && serviceItems.length === 0 && servicesSection) {
+      if (services.hasDynamicSource && services.items.length === 0 && servicesSection) {
         servicesSection.style.display = "none";
       }
 
-      if (serviceItems.length) {
+      if (services.items.length) {
         const cards = Array.from(document.querySelectorAll("[data-service-card]"));
         cards.forEach((card, idx) => {
-          const item = serviceItems[idx] as
-            | {
-                title?: string;
-                description?: string;
-                features?: string[];
-                cta?: { text?: string; url?: string; enabled?: boolean };
-              }
-            | undefined;
+          const item = services.items[idx];
           if (!item) {
             (card as HTMLElement).style.display = "none";
             return;
@@ -2440,42 +2389,24 @@ export default function DynamicLanding() {
           const descEl = card.querySelector("[data-service-description]");
           const featuresEl = card.querySelector("[data-service-features]");
           const ctaEl = card.querySelector("[data-service-cta]");
-          if (titleEl && typeof item.title === "string" && item.title.trim()) {
-            titleEl.textContent = item.title.trim();
+          if (titleEl && item.title) {
+            titleEl.textContent = item.title;
           }
-          if (descEl && typeof item.description === "string" && item.description.trim()) {
-            descEl.textContent = item.description.trim();
+          if (descEl && item.description) {
+            descEl.textContent = item.description;
           }
-          if (featuresEl && Array.isArray(item.features)) {
-            const featureItems = item.features
-              .map((feature) => (typeof feature === "string" ? feature.trim() : ""))
-              .filter(Boolean);
-            if (featureItems.length) {
-              featuresEl.innerHTML = featureItems
+          if (featuresEl && item.features.length) {
+              featuresEl.innerHTML = item.features
                 .map(
                   (feature) =>
                     `<li><i class="fa-solid fa-circle-check"></i>${escapeHtml(feature)}</li>`,
                 )
                 .join("");
-            }
           }
           if (ctaEl && ctaEl instanceof HTMLAnchorElement) {
-            const ctaData =
-              item.cta && typeof item.cta === "object"
-                ? item.cta
-                : (undefined as { text?: string; url?: string; enabled?: boolean } | undefined);
-            const ctaText =
-              ctaData && typeof ctaData.text === "string" && ctaData.text.trim()
-                ? ctaData.text.trim()
-                : DEFAULT_LANDING_VALUES.services.ctaText;
-            const ctaUrl =
-              ctaData && typeof ctaData.url === "string" && ctaData.url.trim()
-                ? ctaData.url.trim()
-                : heroPrimaryUrl;
-            const ctaEnabled = ctaData?.enabled !== false;
-            if (ctaText) ctaEl.textContent = ctaText;
-            if (ctaUrl) ctaEl.setAttribute("href", ctaUrl);
-            ctaEl.style.display = ctaEnabled ? "" : "none";
+            ctaEl.textContent = item.cta.text;
+            ctaEl.setAttribute("href", item.cta.url);
+            ctaEl.style.display = item.cta.enabled ? "" : "none";
           }
         });
       }
