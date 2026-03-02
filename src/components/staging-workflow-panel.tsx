@@ -453,6 +453,34 @@ const panelStyles = String.raw`
     white-space:nowrap!important;
     border:0!important;
   }
+  @media(max-width:1079px){
+    .wf-shell{padding:0 14px 20px}
+    .wf-layout{grid-template-columns:1fr}
+    .wf-sidebar{position:sticky;top:8px;z-index:20;background:#fff}
+    .wf-nav-group{display:flex;gap:8px;overflow:auto;padding-bottom:4px}
+    .wf-nav-group + .wf-nav-group{margin-top:0;padding-top:0;border-top:0}
+    .wf-nav-group-title{min-width:max-content;padding:9px 2px 0}
+    .wf-nav-btn{min-width:max-content}
+    .wf-workspace{max-width:100%}
+    .wf-flowbar-head{align-items:flex-start;flex-direction:column}
+    .wf-grid2{grid-template-columns:1fr}
+    .wf-overlay-panel{width:min(820px,100vw)}
+  }
+  @media(max-width:768px){
+    .wf-head{align-items:flex-start}
+    .wf-title{font-size:22px}
+    .wf-row{align-items:stretch}
+    .wf-input,.wf-select{min-width:0;width:100%}
+    .wf-btn{width:100%}
+    .wf-status .wf-badge{width:max-content}
+    .wf-step{padding:10px}
+    .wf-checklist-item{flex-direction:column;align-items:flex-start}
+    .wf-row-item{align-items:flex-start;flex-wrap:wrap}
+    .wf-overlay-panel{width:100%;border-left:0}
+    .wf-overlay-head{padding:10px 12px}
+    .wf-overlay-body{padding:12px}
+    .wf-toast-stack{left:10px;right:10px;bottom:10px;max-width:none}
+  }
 `;
 
 function detectEnvBadge(slug: string): "DEV" | "STAGING" | "PROD" {
