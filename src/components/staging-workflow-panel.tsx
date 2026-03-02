@@ -1510,8 +1510,8 @@ export default function StagingWorkflowPanel() {
     };
 
   const uploadContentAsset = async (params: {
-    sectionId: "hero" | "projects" | "testimonials" | "contact_banner";
-    field: "image" | "avatar" | "background_image";
+    sectionId: "hero" | "projects" | "testimonials" | "contact_banner" | "audience";
+    field: "image" | "avatar" | "background_image" | "image_back" | "image_front";
     file: File | null;
     itemId?: string;
   }) => {
@@ -1570,6 +1570,19 @@ export default function StagingWorkflowPanel() {
           (prev) => {
             const section = getSection(prev, sectionId);
             if (!section) return prev;
+            if (sectionId === "audience" && (field === "image_back" || field === "image_front")) {
+              const key = field === "image_back" ? "back" : "front";
+              return upsertSection(prev, {
+                ...section,
+                data: {
+                  ...section.data,
+                  images: {
+                    ...((section.data.images as Record<string, unknown>) ?? {}),
+                    [key]: payload.url,
+                  },
+                },
+              });
+            }
             return upsertSection(prev, { ...section, data: { ...section.data, [field]: payload.url } });
           },
           {
@@ -1744,6 +1757,9 @@ export default function StagingWorkflowPanel() {
       const bullets = Array.isArray(section.data.bullets)
         ? (section.data.bullets as Array<Record<string, unknown>>)
         : [];
+      const audienceImages = (section.data.images as { back?: unknown; front?: unknown } | undefined) ?? {};
+      const audienceBackImage = typeof audienceImages.back === "string" ? audienceImages.back : "";
+      const audienceFrontImage = typeof audienceImages.front === "string" ? audienceImages.front : "";
       return (
         <div className="wf-sections">
           <div className="wf-toggle">
@@ -1788,7 +1804,7 @@ export default function StagingWorkflowPanel() {
             <input
               className="wf-input"
               disabled={editingLocked}
-              value={typeof (section.data.images as { back?: unknown } | undefined)?.back === "string" ? ((section.data.images as { back?: string }).back ?? "") : ""}
+              value={audienceBackImage}
               placeholder="Imagen fondo"
               onChange={(e) =>
                 updateSettings((prev) =>
@@ -1805,7 +1821,7 @@ export default function StagingWorkflowPanel() {
             <input
               className="wf-input"
               disabled={editingLocked}
-              value={typeof (section.data.images as { front?: unknown } | undefined)?.front === "string" ? ((section.data.images as { front?: string }).front ?? "") : ""}
+              value={audienceFrontImage}
               placeholder="Imagen frontal"
               onChange={(e) =>
                 updateSettings((prev) =>
@@ -1816,6 +1832,100 @@ export default function StagingWorkflowPanel() {
                       images: { ...((section.data.images as Record<string, unknown>) ?? {}), front: e.target.value },
                     },
                   }),
+                )
+              }
+            />
+          </div>
+          <div className="wf-grid2">
+            <ImageUploadField
+              value={audienceBackImage}
+              placeholder="Imagen fondo audiencia (URL/ruta)"
+              disabled={editingLocked}
+              removeDisabled={editingLocked || !audienceBackImage.trim()}
+              uploading={uploadingContentAssetKey === "audience:section:image_back"}
+              uploadingText="Subiendo imagen..."
+              fallbackText="Sin imagen fondo (usa fallback del layout)"
+              guidanceText="Formatos: png, jpg, webp, svg. Máximo 5MB."
+              previewAlt="audience background preview"
+              previewWidth={280}
+              previewHeight={84}
+              accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
+              allowedMimeTypes={CONTENT_IMAGE_MIME_TYPES}
+              maxSizeBytes={CONTENT_IMAGE_MAX_BYTES}
+              onValueChange={(nextValue) =>
+                updateSettings((prev) =>
+                  upsertSection(prev, {
+                    ...section,
+                    data: {
+                      ...section.data,
+                      images: { ...((section.data.images as Record<string, unknown>) ?? {}), back: nextValue },
+                    },
+                  }),
+                )
+              }
+              onReplace={(file) => {
+                void uploadContentAsset({ sectionId: "audience", field: "image_back", file });
+              }}
+              onRemove={() =>
+                updateSettings(
+                  (prev) =>
+                    upsertSection(prev, {
+                      ...section,
+                      data: {
+                        ...section.data,
+                        images: {
+                          ...((section.data.images as Record<string, unknown>) ?? {}),
+                          back: "",
+                        },
+                      },
+                    }),
+                  { persistNow: true, note: "Autosave: audience image back removed" },
+                )
+              }
+            />
+            <ImageUploadField
+              value={audienceFrontImage}
+              placeholder="Imagen frontal audiencia (URL/ruta)"
+              disabled={editingLocked}
+              removeDisabled={editingLocked || !audienceFrontImage.trim()}
+              uploading={uploadingContentAssetKey === "audience:section:image_front"}
+              uploadingText="Subiendo imagen..."
+              fallbackText="Sin imagen frontal (usa fallback del layout)"
+              guidanceText="Formatos: png, jpg, webp, svg. Máximo 5MB."
+              previewAlt="audience front preview"
+              previewWidth={280}
+              previewHeight={84}
+              accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
+              allowedMimeTypes={CONTENT_IMAGE_MIME_TYPES}
+              maxSizeBytes={CONTENT_IMAGE_MAX_BYTES}
+              onValueChange={(nextValue) =>
+                updateSettings((prev) =>
+                  upsertSection(prev, {
+                    ...section,
+                    data: {
+                      ...section.data,
+                      images: { ...((section.data.images as Record<string, unknown>) ?? {}), front: nextValue },
+                    },
+                  }),
+                )
+              }
+              onReplace={(file) => {
+                void uploadContentAsset({ sectionId: "audience", field: "image_front", file });
+              }}
+              onRemove={() =>
+                updateSettings(
+                  (prev) =>
+                    upsertSection(prev, {
+                      ...section,
+                      data: {
+                        ...section.data,
+                        images: {
+                          ...((section.data.images as Record<string, unknown>) ?? {}),
+                          front: "",
+                        },
+                      },
+                    }),
+                  { persistNow: true, note: "Autosave: audience image front removed" },
                 )
               }
             />

@@ -7,8 +7,8 @@ export const revalidate = 0;
 
 const MAX_BYTES = 4 * 1024 * 1024;
 const defaultBucket = "branding-assets";
-const allowedSections = new Set(["hero", "projects", "testimonials", "contact_banner"]);
-const allowedFields = new Set(["image", "avatar", "background_image"]);
+const allowedSections = new Set(["hero", "projects", "testimonials", "contact_banner", "audience"]);
+const allowedFields = new Set(["image", "avatar", "background_image", "image_back", "image_front"]);
 
 function guessExt(file: File) {
   const byType = file.type.toLowerCase();
@@ -55,12 +55,15 @@ export async function POST(request: Request, context: { params: Promise<{ slug: 
 
     if (!allowedSections.has(sectionId)) {
       return NextResponse.json(
-        { error: "Invalid sectionId. Use hero|projects|testimonials|contact_banner" },
+        { error: "Invalid sectionId. Use hero|projects|testimonials|contact_banner|audience" },
         { status: 400 },
       );
     }
     if (!allowedFields.has(field)) {
-      return NextResponse.json({ error: "Invalid field. Use image|avatar|background_image" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid field. Use image|avatar|background_image|image_back|image_front" },
+        { status: 400 },
+      );
     }
     if (!(file instanceof File)) {
       return NextResponse.json({ error: "Missing file" }, { status: 400 });
