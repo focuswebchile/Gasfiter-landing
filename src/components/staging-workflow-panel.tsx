@@ -330,6 +330,11 @@ const panelStyles = String.raw`
   .wf-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;align-items:flex-end;margin-bottom:14px}
   .wf-title{margin:0;font-size:26px;line-height:1.1;font-weight:800}
   .wf-sub{margin:4px 0 0;color:#64748b;font-size:14px}
+  .wf-flowbar{border:1px solid #dbe3f0;background:#f8fafc;border-radius:10px;padding:10px 12px;margin:0 0 12px}
+  .wf-flowbar-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .wf-flowbar-title{font-size:13px;font-weight:700;color:#1e293b}
+  .wf-flowbar-track{height:8px;border-radius:999px;background:#e2e8f0;overflow:hidden;margin-top:8px}
+  .wf-flowbar-fill{height:100%;background:#16a34a;transition:width .2s ease}
   .wf-badges{display:flex;gap:8px;flex-wrap:wrap}
   .wf-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#e2e8f0;color:#1e293b}
   .wf-badge-env{background:#fef3c7;color:#92400e}
@@ -3450,7 +3455,7 @@ export default function StagingWorkflowPanel() {
       {
         id: 3,
         title: "Editar/Publicar",
-        detail: "Guardar borrador, publicar o rollback según rol.",
+        detail: "Completa contenido, guarda borrador y finaliza publicación según tu rol.",
         state: editState,
       },
     ].map((step) => ({
@@ -3460,6 +3465,11 @@ export default function StagingWorkflowPanel() {
     }));
     return { currentStep, steps };
   }, [panelReady, siteSlug, userId, autosaving, flushingPublish, dirty, draftConflict.active, showAdvancedUi]);
+
+  const workflowCompletionPercent = useMemo(
+    () => Math.round((workflowProgress.currentStep / workflowProgress.steps.length) * 100),
+    [workflowProgress.currentStep, workflowProgress.steps.length],
+  );
 
   const actionContext = useMemo(() => {
     const inDraft = mode === "draft";
@@ -3731,6 +3741,18 @@ export default function StagingWorkflowPanel() {
         </aside>
 
         <section className="wf-card wf-workspace">
+          <div className="wf-flowbar">
+            <div className="wf-flowbar-head">
+              <span className="wf-flowbar-title">Flujo: Completar → Revisar → Publicar</span>
+              <span className="wf-muted">
+                Paso {workflowProgress.currentStep}/{workflowProgress.steps.length} · {workflowCompletionPercent}%
+              </span>
+            </div>
+            <div className="wf-flowbar-track" aria-hidden="true">
+              <div className="wf-flowbar-fill" style={{ width: `${workflowCompletionPercent}%` }} />
+            </div>
+          </div>
+
           <div className="wf-row" style={{ marginBottom: 10 }}>
             <input className="wf-input" value={siteSlug} onChange={(e) => setSiteSlug(e.target.value)} placeholder="slug del sitio" />
             {showAdvancedUi || !roleResolved ? (
