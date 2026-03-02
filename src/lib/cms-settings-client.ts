@@ -148,6 +148,19 @@ export type ResolvedUrgency = {
   };
 };
 
+export type ContactDefaults = {
+  kicker: string;
+  title: string;
+  submitText: string;
+};
+
+export type ResolvedContactBanner = {
+  kicker: string;
+  title: string;
+  submitText: string;
+  backgroundImage: string;
+};
+
 type SettingsResponse = {
   settings: CmsSettings | null;
   site?: { slug?: string; name?: string; status?: string } | null;
@@ -555,5 +568,34 @@ export const resolveUrgencyFromSettings = ({
       text: getTrimmedString(ctaPrimary?.text) || defaults.ctaText,
       url: getTrimmedString(ctaPrimary?.url) || getTrimmedString(heroPrimaryUrl) || defaults.ctaUrl,
     },
+  };
+};
+
+export const resolveContactBannerFromSettings = ({
+  settings,
+  defaults,
+}: {
+  settings: CmsSettings | null;
+  defaults: ContactDefaults;
+}): ResolvedContactBanner => {
+  const content = settings?.content && typeof settings.content === "object" ? settings.content : {};
+  const sections = Array.isArray(content.sections) ? content.sections : [];
+  const sectionContact = sections.find(
+    (section) =>
+      section &&
+      typeof section === "object" &&
+      section.id === "contact_banner" &&
+      section.enabled !== false &&
+      section.data &&
+      typeof section.data === "object",
+  );
+  const sectionData = sectionContact?.data && typeof sectionContact.data === "object" ? sectionContact.data : {};
+
+  return {
+    kicker: getTrimmedString((sectionData as { kicker?: unknown }).kicker) || defaults.kicker,
+    title: getTrimmedString((sectionData as { title?: unknown }).title) || defaults.title,
+    submitText:
+      getTrimmedString((sectionData as { submit_text?: unknown }).submit_text) || defaults.submitText,
+    backgroundImage: getTrimmedString((sectionData as { background_image?: unknown }).background_image),
   };
 };

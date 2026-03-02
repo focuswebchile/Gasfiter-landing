@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import {
+  resolveContactBannerFromSettings,
   fetchSettingsBySlug,
   resolveAudienceFromSettings,
   resolveHeroFromSettings,
@@ -2549,31 +2550,20 @@ export default function DynamicLanding() {
         const contactKicker = contactRoot?.querySelector(".contact-kicker");
         const contactTitle = contactRoot?.querySelector(".contact-title");
         const contactSubmit = contactRoot?.querySelector(".contact-submit");
+        const contact = resolveContactBannerFromSettings({
+          settings,
+          defaults: DEFAULT_LANDING_VALUES.contact,
+        });
         if (contactRoot) {
-          if (
-            typeof sectionContact.data.background_image === "string" &&
-            sectionContact.data.background_image.trim()
-          ) {
-            (contactRoot as HTMLElement).style.backgroundImage = `url("${sectionContact.data.background_image.trim()}")`;
+          if (contact.backgroundImage) {
+            (contactRoot as HTMLElement).style.backgroundImage = `url("${contact.backgroundImage}")`;
           } else {
             (contactRoot as HTMLElement).style.backgroundImage = "";
           }
         }
-        const contactKickerValue =
-          typeof sectionContact.data.kicker === "string" && sectionContact.data.kicker.trim()
-            ? sectionContact.data.kicker.trim()
-            : DEFAULT_LANDING_VALUES.contact.kicker;
-        const contactTitleValue =
-          typeof sectionContact.data.title === "string" && sectionContact.data.title.trim()
-            ? sectionContact.data.title
-            : DEFAULT_LANDING_VALUES.contact.title;
-        const contactSubmitValue =
-          typeof sectionContact.data.submit_text === "string" && sectionContact.data.submit_text.trim()
-            ? sectionContact.data.submit_text.trim()
-            : DEFAULT_LANDING_VALUES.contact.submitText;
-        if (contactKicker) contactKicker.textContent = contactKickerValue;
-        if (contactTitle) contactTitle.innerHTML = escapeHtml(contactTitleValue).replace(/\n/g, "<br />");
-        if (contactSubmit) contactSubmit.textContent = contactSubmitValue;
+        if (contactKicker) contactKicker.textContent = contact.kicker;
+        if (contactTitle) contactTitle.innerHTML = escapeHtml(contact.title).replace(/\n/g, "<br />");
+        if (contactSubmit) contactSubmit.textContent = contact.submitText;
       }
 
       const testimonialsItems = toItemsArray(
