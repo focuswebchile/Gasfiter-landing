@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { fetchSettingsBySlug, type CmsSettings } from "@/lib/cms-settings-client";
 
 const landingStyles = String.raw`
       :root {
@@ -1893,84 +1894,6 @@ const landingMarkup = String.raw`
 
 `;
 
-type Settings = {
-  colors?: {
-    primary?: string;
-    secondary?: string;
-    background?: string;
-    text?: string;
-  };
-  typography?: {
-    font?: string;
-    fontFamily?: string;
-    baseSize?: string;
-    lineHeight?: string;
-  };
-  branding?: {
-    logoUrl?: string;
-    logoNavUrl?: string;
-    logoFooterUrl?: string;
-    faviconUrl?: string;
-    contact?: {
-      whatsapp?: string;
-      email?: string;
-      address?: string;
-    };
-  };
-  content?: {
-    sections?: Array<{
-      id?: string;
-      enabled?: boolean;
-      order?: number;
-      data?: {
-        title?: string;
-        subtitle?: string;
-        cta_primary?: { text?: string; url?: string };
-        cta_secondary?: { text?: string; url?: string };
-      } & Record<string, unknown>;
-    }>;
-    hero?: {
-      title?: string;
-      subtitle?: string;
-      image?: string;
-      cta?: {
-        primary_text?: string;
-        primary_url?: string;
-        secondary_text?: string;
-        secondary_url?: string;
-      };
-    };
-    services?:
-      | Array<{
-          title?: string;
-          description?: string;
-          features?: string[];
-          cta?: { text?: string; url?: string; enabled?: boolean };
-        }>
-      | {
-          title?: string;
-          subtitle?: string;
-          items?:
-            | Array<{
-                title?: string;
-                description?: string;
-                features?: string[];
-                cta?: { text?: string; url?: string; enabled?: boolean };
-              }>
-            | Record<
-                string,
-                {
-                  title?: string;
-                  description?: string;
-                  features?: string[];
-                  cta?: { text?: string; url?: string; enabled?: boolean };
-                }
-              >;
-        };
-    faqs?: Array<{ question?: string; answer?: string }>;
-  };
-};
-
 const DEFAULT_LANDING_VALUES = {
   hero: {
     eyebrow: "SERVICIO 24/7 · SANTIAGO",
@@ -2263,7 +2186,7 @@ export default function DynamicLanding() {
       }
     };
 
-    const applySettings = (settings: Settings | null) => {
+    const applySettings = (settings: CmsSettings | null) => {
       if (!settings || typeof settings !== "object") return;
       const content = settings.content || {};
       const findRawSection = (id: string) =>
@@ -2941,38 +2864,10 @@ export default function DynamicLanding() {
 
     const hydrateFromBackend = async () => {
       try {
-        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.trim() || "";
         const siteSlug = process.env.NEXT_PUBLIC_SITE_SLUG?.trim();
         if (!siteSlug) return;
-        let resolvedBackendUrl = backendUrl;
-        if (!resolvedBackendUrl && typeof window !== "undefined") {
-          resolvedBackendUrl = window.location.origin;
-        }
-        if (resolvedBackendUrl && typeof window !== "undefined") {
-          try {
-            const configuredHost = new URL(resolvedBackendUrl).hostname;
-            const onLocalhost = /^(localhost|127\.0\.0\.1)$/.test(configuredHost);
-            const currentLocalhost = /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname);
-            if (onLocalhost && !currentLocalhost) {
-              resolvedBackendUrl = window.location.origin;
-            }
-          } catch {
-            resolvedBackendUrl = window.location.origin;
-          }
-        }
-        if (!resolvedBackendUrl) return;
-
-        const settingsRes = await fetch(
-          `${resolvedBackendUrl.replace(/\/$/, "")}/api/sites/${encodeURIComponent(siteSlug)}/settings?t=${Date.now()}`,
-          {
-            cache: "no-store",
-            headers: { "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0" },
-          },
-        );
-        if (!settingsRes.ok) return;
-
-        const payload = await settingsRes.json();
-        applySettings(payload?.settings ?? null);
+        const payload = await fetchSettingsBySlug({ slug: siteSlug, mode: "published" });
+        applySettings(payload.settings);
       } catch {
         // Keep static content as fallback.
       }
