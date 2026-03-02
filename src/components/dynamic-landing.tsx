@@ -8,6 +8,7 @@ import {
   resolveHeroFromSettings,
   resolveProjectsFromSettings,
   resolveServicesFromSettings,
+  resolveTestimonialsFromSettings,
   resolveUrgencyFromSettings,
   type CmsSettings,
 } from "@/lib/cms-settings-client";
@@ -2204,7 +2205,6 @@ export default function DynamicLanding() {
       const sectionAudience = findSection("audience");
       const sectionProjects = findSection("projects");
       const sectionFaq = findSection("faq");
-      const sectionTestimonials = findSection("testimonials");
       const sectionUrgency = findSection("urgency_banner");
       const sectionContact = findSection("contact_banner");
       setVisible("#inicio", !isExplicitlyDisabled("hero"));
@@ -2566,48 +2566,30 @@ export default function DynamicLanding() {
         if (contactSubmit) contactSubmit.textContent = contact.submitText;
       }
 
-      const testimonialsItems = toItemsArray(
-        sectionTestimonials && sectionTestimonials.data
-          ? (sectionTestimonials.data as { items?: unknown }).items
-          : undefined,
-      ).filter((item) => item.enabled !== false);
+      const testimonials = resolveTestimonialsFromSettings({
+        settings,
+        defaults: DEFAULT_LANDING_VALUES.testimonials,
+      });
       const testimonialsSectionEl = document.getElementById("testimonios");
-      if (testimonialsItems.length) {
+      if (testimonials.items.length) {
         const testimonialsTitle = document.querySelector(".clients-title");
         const testimonialsKicker = document.querySelector(".clients-kicker");
-        const testimonialsTitleValue =
-          sectionTestimonials?.data &&
-          typeof sectionTestimonials.data.title === "string" &&
-          sectionTestimonials.data.title.trim()
-            ? sectionTestimonials.data.title.trim()
-            : DEFAULT_LANDING_VALUES.testimonials.title;
-        const testimonialsKickerValue =
-          sectionTestimonials?.data &&
-          typeof sectionTestimonials.data.kicker === "string" &&
-          sectionTestimonials.data.kicker.trim()
-            ? sectionTestimonials.data.kicker.trim()
-            : DEFAULT_LANDING_VALUES.testimonials.kicker;
-        if (testimonialsTitle) testimonialsTitle.textContent = testimonialsTitleValue;
-        if (testimonialsKicker) testimonialsKicker.textContent = testimonialsKickerValue;
+        if (testimonialsTitle) testimonialsTitle.textContent = testimonials.title;
+        if (testimonialsKicker) testimonialsKicker.textContent = testimonials.kicker;
 
         const clientsTrack = document.querySelector("[data-clients-track]");
         if (clientsTrack) {
-          clientsTrack.innerHTML = testimonialsItems
+          clientsTrack.innerHTML = testimonials.items
             .map((item) => {
-              const quote = typeof item.quote === "string" ? item.quote.trim() : "";
-              const name = typeof item.name === "string" ? item.name.trim() : "";
-              const location = typeof item.location === "string" ? item.location.trim() : "";
-              const avatar = typeof item.avatar === "string" ? item.avatar.trim() : "";
-              if (!quote || !name) return "";
               return `
                 <article class="client-card">
                   <div class="client-quote">”</div>
-                  <p class="client-text">${escapeHtml(quote)}</p>
+                  <p class="client-text">${escapeHtml(item.quote)}</p>
                   <div class="client-person">
-                    <img src="${escapeHtml(avatar || DEFAULT_LANDING_VALUES.testimonials.fallbackAvatar)}" alt="${escapeHtml(name)}" loading="lazy" />
+                    <img src="${escapeHtml(item.avatar)}" alt="${escapeHtml(item.name)}" loading="lazy" />
                     <div>
-                      <strong>${escapeHtml(name)}</strong>
-                      <span>${escapeHtml(location)}</span>
+                      <strong>${escapeHtml(item.name)}</strong>
+                      <span>${escapeHtml(item.location)}</span>
                     </div>
                   </div>
                 </article>
@@ -2618,11 +2600,11 @@ export default function DynamicLanding() {
 
         const dots = document.querySelector("[data-clients-dots]");
         if (dots) {
-          dots.innerHTML = testimonialsItems
+          dots.innerHTML = testimonials.items
             .map((_, idx) => `<span class="clients-dot${idx === 0 ? " active" : ""}"></span>`)
             .join("");
         }
-      } else if (testimonialsSectionEl && !!sectionTestimonials) {
+      } else if (testimonialsSectionEl && testimonials.hasSectionSource) {
         testimonialsSectionEl.style.display = "none";
       }
 

@@ -161,6 +161,26 @@ export type ResolvedContactBanner = {
   backgroundImage: string;
 };
 
+export type TestimonialsDefaults = {
+  title: string;
+  kicker: string;
+  fallbackAvatar: string;
+};
+
+export type ResolvedTestimonialItem = {
+  quote: string;
+  name: string;
+  location: string;
+  avatar: string;
+};
+
+export type ResolvedTestimonials = {
+  title: string;
+  kicker: string;
+  items: ResolvedTestimonialItem[];
+  hasSectionSource: boolean;
+};
+
 type SettingsResponse = {
   settings: CmsSettings | null;
   site?: { slug?: string; name?: string; status?: string } | null;
@@ -597,5 +617,48 @@ export const resolveContactBannerFromSettings = ({
     submitText:
       getTrimmedString((sectionData as { submit_text?: unknown }).submit_text) || defaults.submitText,
     backgroundImage: getTrimmedString((sectionData as { background_image?: unknown }).background_image),
+  };
+};
+
+export const resolveTestimonialsFromSettings = ({
+  settings,
+  defaults,
+}: {
+  settings: CmsSettings | null;
+  defaults: TestimonialsDefaults;
+}): ResolvedTestimonials => {
+  const content = settings?.content && typeof settings.content === "object" ? settings.content : {};
+  const sections = Array.isArray(content.sections) ? content.sections : [];
+  const sectionTestimonials = sections.find(
+    (section) =>
+      section &&
+      typeof section === "object" &&
+      section.id === "testimonials" &&
+      section.enabled !== false &&
+      section.data &&
+      typeof section.data === "object",
+  );
+  const sectionData =
+    sectionTestimonials?.data && typeof sectionTestimonials.data === "object"
+      ? sectionTestimonials.data
+      : {};
+
+  const items = toServicesArray((sectionData as { items?: unknown }).items)
+    .filter((item) => item.enabled !== false)
+    .map((item) => {
+      const quote = getTrimmedString(item.quote);
+      const name = getTrimmedString(item.name);
+      if (!quote || !name) return null;
+      const location = getTrimmedString(item.location);
+      const avatar = getTrimmedString(item.avatar) || defaults.fallbackAvatar;
+      return { quote, name, location, avatar };
+    })
+    .filter((item): item is ResolvedTestimonialItem => !!item);
+
+  return {
+    title: getTrimmedString((sectionData as { title?: unknown }).title) || defaults.title,
+    kicker: getTrimmedString((sectionData as { kicker?: unknown }).kicker) || defaults.kicker,
+    items,
+    hasSectionSource: !!sectionTestimonials,
   };
 };
