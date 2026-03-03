@@ -3943,7 +3943,6 @@ export default function StagingWorkflowPanel() {
     const testimonials = getSection(settings, "testimonials");
     const urgency = getSection(settings, "urgency_banner");
     const branding = settings.branding ?? {};
-    const brandingContact = branding.contact ?? {};
 
     const titleChecks: Array<{ key: string; title: unknown; section: EditableSectionId; label: string }> = [
       { key: "hero", title: hero?.data?.title, section: "hero", label: "Hero" },
@@ -4017,18 +4016,6 @@ export default function StagingWorkflowPanel() {
     }
 
     const serviceItems = services ? toSectionItems(services) : [];
-    if (
-      serviceItems.some((item) => item.enabled !== false && !asNonEmptyString(item.image))
-    ) {
-      addWarning({
-        key: "services-missing-image",
-        label: "Servicios sin imagen",
-        description: "Se usará fallback visual; recomendado cargar imagen por servicio.",
-        section: "services",
-        view: "items",
-      });
-    }
-
     const projectItems = projects ? toSectionItems(projects) : [];
     if (
       projectItems.some((item) => item.enabled !== false && !asNonEmptyString(item.image))
@@ -4061,19 +4048,6 @@ export default function StagingWorkflowPanel() {
         key: "branding-favicon",
         label: "Branding sin favicon",
         description: "Recomendado definir favicon para consistencia de marca.",
-        section: "hero",
-        view: "style",
-      });
-    }
-
-    const contactFields = [brandingContact.whatsapp, brandingContact.email, brandingContact.address].filter(
-      (value) => asNonEmptyString(value).length > 0,
-    );
-    if (contactFields.length === 0) {
-      addWarning({
-        key: "branding-contact",
-        label: "Branding sin contacto básico",
-        description: "Recomendado completar WhatsApp, email o dirección.",
         section: "hero",
         view: "style",
       });
