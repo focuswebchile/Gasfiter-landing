@@ -4121,8 +4121,15 @@ export default function StagingWorkflowPanel() {
     }
 
     const testimonialItems = testimonials ? toSectionItems(testimonials) : [];
+    const testimonialItemsWithContent = testimonialItems.filter(
+      (item) =>
+        item.enabled !== false &&
+        (asNonEmptyString(item.name).length > 0 || asNonEmptyString(item.quote).length > 0),
+    );
     if (
-      testimonialItems.some((item) => item.enabled !== false && !asNonEmptyString(item.avatar))
+      testimonials?.enabled !== false &&
+      testimonialItemsWithContent.length > 0 &&
+      testimonialItemsWithContent.some((item) => !asNonEmptyString(item.avatar))
     ) {
       addWarning({
         key: "testimonials-missing-avatar",
