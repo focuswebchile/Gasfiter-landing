@@ -451,19 +451,21 @@ const panelStyles = String.raw`
   .wf-preview{display:grid;gap:12px}
   .wf-preview-box{border:1px solid var(--wf-border);border-radius:10px;background:var(--wf-surface-soft);padding:12px}
   .wf-kv{display:grid;gap:6px;font-size:13px}
-  .wf-steps{display:grid;gap:8px;margin-bottom:12px;opacity:.88}
-  .wf-step{display:flex;gap:8px;align-items:flex-start;padding:9px 10px;border-radius:10px;background:var(--wf-surface-soft);border:1px solid #e2e8f0}
+  .wf-steps{display:grid;gap:8px;margin-bottom:12px;opacity:.8}
+  .wf-step{display:flex;gap:8px;align-items:flex-start;padding:9px 10px;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0}
   .wf-step strong{font-size:13px;line-height:1.25}
-  .wf-step-num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:999px;background:#dbeafe;color:#1d4ed8;font-size:12px;font-weight:800}
-  .wf-step.active{border-color:#93c5fd;background:#eff6ff;opacity:1}
-  .wf-step.completed{border-color:var(--wf-success-border);background:var(--wf-success-bg)}
-  .wf-step.completed .wf-step-num{background:var(--wf-success-ink);color:#fff}
-  .wf-step.state-ready{border-color:var(--wf-success-border);background:var(--wf-success-bg)}
-  .wf-step.state-ready .wf-step-num{background:var(--wf-success-ink);color:#fff}
-  .wf-step.state-warn{border-color:var(--wf-warn-border);background:var(--wf-warn-bg)}
-  .wf-step.state-warn .wf-step-num{background:#b45309;color:#fff}
-  .wf-step.state-error{border-color:#fecaca;background:#fef2f2}
-  .wf-step.state-error .wf-step-num{background:#b91c1c;color:#fff}
+  .wf-step-num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:999px;background:#e2e8f0;color:#334155;font-size:12px;font-weight:800}
+  .wf-step.active{border-color:#cbd5e1;background:#fff;opacity:1}
+  .wf-step.active .wf-step-num{background:#dbeafe;color:#1d4ed8}
+  .wf-step-subtle{opacity:.72}
+  .wf-step.completed{border-color:#e2e8f0;background:#f8fafc}
+  .wf-step.completed .wf-step-num{background:#e2e8f0;color:#334155}
+  .wf-step.state-ready{border-color:#e2e8f0;background:#f8fafc}
+  .wf-step.state-ready .wf-step-num{background:#e2e8f0;color:#334155}
+  .wf-step.state-warn{border-color:#e2e8f0;background:#f8fafc}
+  .wf-step.state-warn .wf-step-num{background:#e2e8f0;color:#334155}
+  .wf-step.state-error{border-color:#e2e8f0;background:#f8fafc}
+  .wf-step.state-error .wf-step-num{background:#e2e8f0;color:#334155}
   .wf-progress{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;background:#eef2ff;color:var(--wf-primary-ink);font-size:12px;font-weight:700;letter-spacing:.01em}
   .wf-status{display:flex;gap:8px;flex-wrap:wrap}
   .wf-sticky{position:sticky;top:10px;z-index:30;border:1px solid var(--wf-border);background:var(--wf-surface-soft);padding:10px 12px;border-radius:12px;margin-bottom:12px;display:flex;gap:8px;align-items:center;justify-content:space-between;min-height:46px}
@@ -4266,7 +4268,7 @@ export default function StagingWorkflowPanel() {
             <div className="wf-flowbar-head">
               <span className="wf-flowbar-title">Flujo: Completar → Revisar → Publicar</span>
               <span className="wf-muted">
-                Paso {workflowProgress.currentStep}/{workflowProgress.steps.length} · {workflowCompletionPercent}%
+                Paso {workflowProgress.currentStep} de {workflowProgress.steps.length}
               </span>
             </div>
             <div className="wf-flowbar-track" aria-hidden="true">
@@ -4296,23 +4298,23 @@ export default function StagingWorkflowPanel() {
           <div className="wf-editorial-status">
             <div className="wf-editorial-status-title">
               <strong>Estado del contenido: {editorialStatus.title}</strong>
-              <span className={`wf-pill ${editorialStatus.tone === "ok" ? "wf-pill-ok" : "wf-pill-warn"}`}>
+              <span className="wf-pill wf-pill-neutral">
                 Paso {workflowProgress.currentStep} de 3 · {workflowCompletionPercent}% completado
               </span>
             </div>
             <div className="wf-editorial-status-desc">{editorialStatus.detail}</div>
             <div className="wf-editorial-status-meta">
-              <span className="wf-pill wf-pill-primary">
+              <span className="wf-pill wf-pill-neutral">
                 {latestDraftVersion ? `Borrador v${latestDraftVersion.version_number}` : "Sin borrador activo"}
               </span>
               <span className="wf-pill wf-pill-neutral">
                 {latestPublishedVersion ? `Publicado v${latestPublishedVersion.version_number}` : "Sin versión publicada"}
               </span>
               {hasActivePublishRequest ? (
-                <span className="wf-pill wf-pill-warn">Solicitud de publicación pendiente</span>
+                <span className="wf-pill wf-pill-neutral">Solicitud de publicación pendiente</span>
               ) : null}
               {autosaving || flushingPublish ? (
-                <span className="wf-pill wf-pill-warn">{flushingPublish ? "Preparando publicación..." : "Guardando..."}</span>
+                <span className="wf-pill wf-pill-neutral">{flushingPublish ? "Preparando publicación..." : "Guardando..."}</span>
               ) : null}
               {editorialStatus.action === "load_panel" ? (
                 <button className="wf-btn wf-btn-primary wf-btn-sm wf-btn-compact" onClick={loadPanel} disabled={busy}>
@@ -4335,7 +4337,7 @@ export default function StagingWorkflowPanel() {
             {workflowProgress.steps.map((step) => (
               <div
                 key={step.id}
-                className={`wf-step ${step.active ? "active" : ""} ${step.completed ? "completed" : ""} ${
+                className={`wf-step ${step.id === 2 ? "wf-step-subtle" : ""} ${step.active ? "active" : ""} ${step.completed ? "completed" : ""} ${
                   step.id === 3 && step.state === "ready"
                     ? "state-ready"
                     : step.id === 3 && step.state === "warn"
