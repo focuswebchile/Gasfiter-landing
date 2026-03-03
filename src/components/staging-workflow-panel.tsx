@@ -3759,6 +3759,11 @@ export default function StagingWorkflowPanel() {
     [workflowProgress.currentStep, workflowProgress.steps.length],
   );
 
+  const testimonialsApplicable = useMemo(
+    () => String(siteSlug || "").trim().toLowerCase() !== "abcis",
+    [siteSlug],
+  );
+
   const editorialStatus = useMemo(() => {
     if (!panelReady) {
       return {
@@ -3945,18 +3950,20 @@ export default function StagingWorkflowPanel() {
     );
 
     const testimonialItems = testimonials ? toSectionItems(testimonials) : [];
-    const testimonialOk = Boolean(
-      testimonials?.enabled &&
-        testimonialItems.some(
-          (item) =>
-            item.enabled !== false && asNonEmptyString(item.name) && asNonEmptyString(item.quote),
-        ),
-    );
+    const testimonialOk = testimonialsApplicable
+      ? Boolean(
+          testimonials?.enabled &&
+            testimonialItems.some(
+              (item) =>
+                item.enabled !== false && asNonEmptyString(item.name) && asNonEmptyString(item.quote),
+            ),
+        )
+      : true;
 
     const contactTitle = asNonEmptyString(contact?.data?.title);
     const contactOk = Boolean(contact?.enabled && contactTitle);
 
-    return [
+    const baseItems: PublishChecklistItem[] = [
       {
         key: "hero_cta",
         label: "Hero con CTA activo",
@@ -3974,14 +3981,6 @@ export default function StagingWorkflowPanel() {
         view: "items",
       },
       {
-        key: "testimonials",
-        label: "Al menos un testimonio",
-        description: testimonialOk ? "Completo" : "Activa y completa un testimonio",
-        completed: testimonialOk,
-        section: "testimonials",
-        view: "items",
-      },
-      {
         key: "contact",
         label: "Sección de contacto",
         description: contactOk ? "Completo" : "Activa contacto y completa título",
@@ -3990,7 +3989,20 @@ export default function StagingWorkflowPanel() {
         view: "sections",
       },
     ];
-  }, [settings]);
+
+    if (testimonialsApplicable) {
+      baseItems.splice(2, 0, {
+        key: "testimonials",
+        label: "Al menos un testimonio",
+        description: testimonialOk ? "Completo" : "Activa y completa un testimonio",
+        completed: testimonialOk,
+        section: "testimonials",
+        view: "items",
+      });
+    }
+
+    return baseItems;
+  }, [settings, testimonialsApplicable]);
 
   const checklistCompleted = useMemo(
     () => publishChecklist.filter((item) => item.completed).length,
@@ -4127,6 +4139,7 @@ export default function StagingWorkflowPanel() {
         (asNonEmptyString(item.name).length > 0 || asNonEmptyString(item.quote).length > 0),
     );
     if (
+      testimonialsApplicable &&
       testimonials?.enabled !== false &&
       testimonialItemsWithContent.length > 0 &&
       testimonialItemsWithContent.some((item) => !asNonEmptyString(item.avatar))
@@ -4202,7 +4215,7 @@ export default function StagingWorkflowPanel() {
     }
 
     return warnings;
-  }, [settings]);
+  }, [settings, testimonialsApplicable]);
 
   const actionHelpText = useMemo(() => {
     if (actionContext.publishDisabledReason) return actionContext.publishDisabledReason;
