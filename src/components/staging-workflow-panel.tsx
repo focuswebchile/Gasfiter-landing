@@ -363,8 +363,8 @@ const panelStyles = String.raw`
     --wf-lh-tight:1.2;
     --wf-lh-base:1.45;
   }
-  .wf-shell{max-width:1480px;margin:20px auto;padding:0 18px 24px;font-family:Inter,sans-serif;color:var(--wf-text);background:var(--wf-bg)}
-  .wf-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:14px;align-items:flex-end;margin-bottom:16px}
+  .wf-shell{max-width:1480px;margin:0 auto;padding:28px 22px 24px;font-family:Inter,sans-serif;color:var(--wf-text);background:var(--wf-bg)}
+  .wf-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:14px;align-items:flex-end;margin-bottom:18px}
   .wf-title{margin:0;font-size:var(--wf-fs-title);line-height:var(--wf-lh-tight);font-weight:800;letter-spacing:-.02em}
   .wf-sub{margin:6px 0 0;color:var(--wf-muted);font-size:var(--wf-fs-body);line-height:var(--wf-lh-base)}
   .wf-flowbar{border:1px solid var(--wf-border);background:var(--wf-surface-soft);border-radius:10px;padding:10px 12px;margin:0 0 12px}
@@ -376,6 +376,7 @@ const panelStyles = String.raw`
   .wf-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#e2e8f0;color:var(--wf-text)}
   .wf-badge-env{background:#fef3c7;color:var(--wf-warn-ink)}
   .wf-badge-role{background:#dbeafe;color:var(--wf-primary-ink)}
+  .wf-badge-role-main{font-size:14px;font-weight:800;padding:8px 14px}
   .wf-badge-warn{background:#ffedd5;color:#9a3412}
   .wf-layout{display:grid;gap:16px}
   @media(min-width:1180px){.wf-layout{grid-template-columns:250px minmax(0,1fr);align-items:start}}
@@ -513,7 +514,7 @@ const panelStyles = String.raw`
     border:0!important;
   }
   @media(max-width:1179px){
-    .wf-shell{padding:0 14px 20px}
+    .wf-shell{padding:22px 14px 20px}
     .wf-layout{grid-template-columns:1fr}
     .wf-sidebar{position:sticky;top:8px;z-index:20;background:#fff}
     .wf-nav-group{display:flex;gap:8px;overflow:auto;padding-bottom:4px}
@@ -586,6 +587,14 @@ function getRoleUxLabel(role: Role | null | undefined) {
   if (role === "owner" || role === "admin") return "OWNER";
   if (role === "editor") return "EDITOR";
   return "LECTURA";
+}
+
+function getRoleDisplayLabel(role: Role | null | undefined) {
+  if (!role) return "Sin rol";
+  if (role === "owner") return "Owner";
+  if (role === "admin") return "Admin";
+  if (role === "editor") return "Editor";
+  return "Lectura";
 }
 
 function isHexColor(value: string) {
@@ -4214,13 +4223,13 @@ export default function StagingWorkflowPanel() {
 
       <header className="wf-head">
         <div>
-          <h1 className="wf-title">Editor CMS — ABCIS</h1>
-          <p className="wf-sub">Edición, revisión y publicación de contenido por sitio y rol.</p>
+          <h1 className="wf-title">ABCIS Admin - Panel v2</h1>
+          <p className="wf-sub">Gestión de borradores, versiones, permisos y aprobación de cambios.</p>
         </div>
         <div className="wf-badges">
-          <span className="wf-badge wf-badge-env">{envBadge}</span>
-          <span className="wf-badge">{mode.toUpperCase()}</span>
-          {membership?.role ? <span className="wf-badge wf-badge-role">ROL: {getRoleUxLabel(membership.role)}</span> : null}
+          {membership?.role ? (
+            <span className="wf-badge wf-badge-role wf-badge-role-main">Rol: {getRoleDisplayLabel(membership.role)}</span>
+          ) : null}
         </div>
       </header>
 
