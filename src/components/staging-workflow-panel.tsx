@@ -799,7 +799,7 @@ function getSectionDisplayName(sectionId: string): string {
     case "services":
       return "Servicios";
     case "projects":
-      return "Proyectos";
+      return "Clientes";
     case "urgency_banner":
       return "Banner urgente";
     case "contact_banner":
@@ -4125,7 +4125,7 @@ export default function StagingWorkflowPanel() {
     ) {
       addWarning({
         key: "projects-missing-image",
-        label: "Clientes/Proyectos sin imagen",
+        label: "Clientes sin imagen",
         description: "Se usará fallback visual; recomendado cargar imagen por item.",
         section: "projects",
         view: "items",
@@ -4610,7 +4610,7 @@ export default function StagingWorkflowPanel() {
               <div className="wf-row" style={{ marginBottom: 10 }}>
                 <button className="wf-btn wf-btn-soft" onClick={() => setEditableSection("services")}>Servicios</button>
                 <button className="wf-btn wf-btn-soft" onClick={() => setEditableSection("faq")}>FAQ</button>
-                <button className="wf-btn wf-btn-soft" onClick={() => setEditableSection("projects")}>Proyectos</button>
+                <button className="wf-btn wf-btn-soft" onClick={() => setEditableSection("projects")}>Clientes</button>
                 <button className="wf-btn wf-btn-soft" onClick={() => setEditableSection("testimonials")}>Testimonios</button>
               </div>
               {renderSectionEditor()}
@@ -4719,7 +4719,7 @@ export default function StagingWorkflowPanel() {
               {renderDiffSection("Hero", heroDiff.sections.hero.fields)}
               {renderDiffSection("Servicios", heroDiff.sections.services.fields)}
               {renderDiffSection("FAQ", heroDiff.sections.faq.fields)}
-              {renderDiffSection("Proyectos", heroDiff.sections.projects?.fields ?? [])}
+              {renderDiffSection("Clientes", heroDiff.sections.projects?.fields ?? [])}
               {renderDiffSection("Testimonios", heroDiff.sections.testimonials?.fields ?? [])}
             </div>
           ) : (
