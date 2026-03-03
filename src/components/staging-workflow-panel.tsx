@@ -321,7 +321,7 @@ const OverlayPanel = memo(function OverlayPanel({ open, title, onClose, children
       <div className="wf-overlay-panel">
         <div className="wf-overlay-head">
           <h3>{title}</h3>
-          <button className="wf-btn wf-btn-soft" style={{ height: 32 }} onClick={onClose}>
+          <button className="wf-btn wf-btn-soft wf-btn-sm wf-btn-compact" onClick={onClose}>
             Cerrar
           </button>
         </div>
@@ -407,6 +407,8 @@ const panelStyles = String.raw`
   .wf-select{min-width:150px}
   .wf-textarea{width:100%;min-height:88px;resize:vertical}
   .wf-btn{height:38px;border:0;border-radius:10px;padding:0 12px;font-weight:700;font-size:13px;letter-spacing:.01em;cursor:pointer}
+  .wf-btn-sm{height:32px;padding:0 10px;font-size:12px}
+  .wf-btn-compact{width:auto;min-width:max-content}
   .wf-btn:disabled{opacity:.5;cursor:not-allowed}
   .wf-btn:focus-visible,.wf-nav-btn:focus-visible,.wf-input:focus-visible,.wf-select:focus-visible,.wf-textarea:focus-visible{
     outline:2px solid var(--wf-primary);
@@ -492,6 +494,8 @@ const panelStyles = String.raw`
   .wf-check-icon.warn{background:#b45309;color:#fff}
   .wf-action-help{min-height:18px;margin-top:-6px;margin-bottom:12px;font-size:12px;color:var(--wf-muted);display:flex;align-items:center}
   .wf-action-help.err{color:var(--wf-danger-ink)}
+  .wf-actions-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+  .wf-actions-row .wf-muted{margin-left:4px}
   .wf-overlay-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:80;display:flex;justify-content:flex-end}
   .wf-overlay-panel{height:100%;width:min(760px,100vw);background:#fff;border-left:1px solid #dbe3f0;display:grid;grid-template-rows:auto minmax(0,1fr)}
   .wf-overlay-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-bottom:1px solid #e2e8f0}
@@ -529,6 +533,7 @@ const panelStyles = String.raw`
     .wf-toolbar{padding:10px}
     .wf-input,.wf-select{min-width:0;width:100%}
     .wf-btn{width:100%}
+    .wf-btn-compact{width:auto}
     .wf-toolbar-actions .wf-muted,.wf-toolbar-actions .wf-progress{width:100%}
     .wf-status .wf-badge{width:max-content}
     .wf-step{padding:10px}
@@ -4338,7 +4343,7 @@ export default function StagingWorkflowPanel() {
             ))}
           </div>
 
-          <div className="wf-row" style={{ marginBottom: 12 }}>
+          <div className="wf-actions-row">
             <span id="panel-action-help" className="wf-sr-only">
               {actionContext.publishDisabledReason || actionContext.saveDisabledReason || "Acciones disponibles"}
             </span>
@@ -4437,8 +4442,7 @@ export default function StagingWorkflowPanel() {
                     </div>
                     {!item.completed && item.section && item.view ? (
                       <button
-                        className="wf-btn wf-btn-soft"
-                        style={{ height: 30 }}
+                        className="wf-btn wf-btn-soft wf-btn-sm wf-btn-compact"
                         onClick={() => {
                           setView(item.view);
                           setEditableSection(item.section);
@@ -4466,8 +4470,7 @@ export default function StagingWorkflowPanel() {
                       <span>{warning.description}</span>
                     </div>
                     <button
-                      className="wf-btn wf-btn-soft"
-                      style={{ height: 30 }}
+                      className="wf-btn wf-btn-soft wf-btn-sm wf-btn-compact"
                       onClick={() => {
                         setView(warning.view);
                         setEditableSection(warning.section);
@@ -4496,8 +4499,7 @@ export default function StagingWorkflowPanel() {
                   {publishFixActions.map((action) => (
                     <button
                       key={action.section}
-                      className="wf-btn wf-btn-soft"
-                      style={{ height: 32 }}
+                      className="wf-btn wf-btn-soft wf-btn-sm wf-btn-compact"
                       onClick={() => {
                         setView(action.view);
                         setEditableSection(action.section);
