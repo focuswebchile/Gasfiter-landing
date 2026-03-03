@@ -335,10 +335,19 @@ const STORAGE_KEY = "gasfiter_panel_v2_state";
 
 const panelStyles = String.raw`
   :root{color-scheme:light}
+  :root{
+    --wf-fs-title:30px;
+    --wf-fs-h2:21px;
+    --wf-fs-h3:18px;
+    --wf-fs-body:14px;
+    --wf-fs-meta:12px;
+    --wf-lh-tight:1.2;
+    --wf-lh-base:1.45;
+  }
   .wf-shell{max-width:1480px;margin:20px auto;padding:0 18px 24px;font-family:Inter,sans-serif;color:#0f172a}
   .wf-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:14px;align-items:flex-end;margin-bottom:16px}
-  .wf-title{margin:0;font-size:26px;line-height:1.1;font-weight:800}
-  .wf-sub{margin:4px 0 0;color:#64748b;font-size:14px}
+  .wf-title{margin:0;font-size:var(--wf-fs-title);line-height:var(--wf-lh-tight);font-weight:800;letter-spacing:-.02em}
+  .wf-sub{margin:6px 0 0;color:#64748b;font-size:var(--wf-fs-body);line-height:var(--wf-lh-base)}
   .wf-flowbar{border:1px solid #dbe3f0;background:#f8fafc;border-radius:10px;padding:10px 12px;margin:0 0 12px}
   .wf-flowbar-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
   .wf-flowbar-title{font-size:13px;font-weight:700;color:#1e293b}
@@ -364,8 +373,8 @@ const panelStyles = String.raw`
   }
   .wf-nav-group{display:grid;gap:6px}
   .wf-nav-group + .wf-nav-group{margin-top:6px;padding-top:10px;border-top:1px solid #e2e8f0}
-  .wf-nav-group-title{font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:#64748b;font-weight:800;padding:0 4px}
-  .wf-nav-btn{display:flex;justify-content:space-between;align-items:center;border:1px solid #dbe3f0;background:#f8fafc;border-radius:10px;padding:10px 12px;font-weight:700;color:#334155;cursor:pointer}
+  .wf-nav-group-title{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#64748b;font-weight:800;padding:0 4px}
+  .wf-nav-btn{display:flex;justify-content:space-between;align-items:center;border:1px solid #dbe3f0;background:#f8fafc;border-radius:10px;padding:10px 12px;font-weight:700;font-size:13px;line-height:1.3;color:#334155;cursor:pointer}
   .wf-nav-btn.active{background:#e0ebff;border-color:#9db4ee;color:#1e3a8a}
   .wf-grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   .wf-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
@@ -373,12 +382,12 @@ const panelStyles = String.raw`
   .wf-toolbar-main .wf-input{min-width:260px}
   .wf-toolbar-actions .wf-select{min-width:170px}
   .wf-toolbar-status{display:flex;gap:8px;flex-wrap:wrap;padding:2px 0}
-  .wf-input,.wf-select,.wf-textarea{border:1px solid #cbd5e1;border-radius:10px;padding:10px 12px;font:inherit;background:#fff}
+  .wf-input,.wf-select,.wf-textarea{border:1px solid #cbd5e1;border-radius:10px;padding:10px 12px;font:inherit;font-size:14px;line-height:1.35;background:#fff}
   .wf-input,.wf-select{height:40px}
   .wf-input{min-width:200px;flex:1}
   .wf-select{min-width:150px}
   .wf-textarea{width:100%;min-height:88px;resize:vertical}
-  .wf-btn{height:38px;border:0;border-radius:10px;padding:0 12px;font-weight:700;cursor:pointer}
+  .wf-btn{height:38px;border:0;border-radius:10px;padding:0 12px;font-weight:700;font-size:13px;letter-spacing:.01em;cursor:pointer}
   .wf-btn:disabled{opacity:.5;cursor:not-allowed}
   .wf-btn:focus-visible,.wf-nav-btn:focus-visible,.wf-input:focus-visible,.wf-select:focus-visible,.wf-textarea:focus-visible{
     outline:2px solid #2563eb;
@@ -391,13 +400,13 @@ const panelStyles = String.raw`
   .wf-ok{background:#dcfce7;color:#166534}
   .wf-err{background:#fee2e2;color:#991b1b}
   .wf-alert{border:1px solid #fecaca;background:#fef2f2;color:#991b1b;border-radius:10px;padding:10px 12px}
-  .wf-alert-title{font-size:13px;font-weight:800;margin-bottom:6px}
-  .wf-alert-list{margin:0;padding-left:18px;font-size:12px;display:grid;gap:4px}
+  .wf-alert-title{font-size:14px;font-weight:800;margin-bottom:6px}
+  .wf-alert-list{margin:0;padding-left:18px;font-size:13px;line-height:1.4;display:grid;gap:4px}
   .wf-readonly{border:1px solid #fde68a;background:#fffbeb;color:#92400e;border-radius:10px;padding:10px 12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
   .wf-readonly strong{font-size:13px}
   .wf-readonly small{display:block;font-size:12px;color:#a16207}
-  .wf-h3{margin:0 0 8px;font-size:17px}
-  .wf-muted{color:#64748b;font-size:12px}
+  .wf-h3{margin:2px 0 10px;font-size:var(--wf-fs-h3);line-height:1.25;font-weight:800;letter-spacing:-.01em}
+  .wf-muted{color:#64748b;font-size:var(--wf-fs-meta);line-height:1.4}
   .wf-sections,.wf-versions,.wf-items{display:grid;gap:8px}
   .wf-row-item{border:1px solid #e2e8f0;border-radius:10px;padding:8px 10px;background:#fff;display:flex;gap:8px;align-items:center;justify-content:space-between}
   .wf-drag{cursor:grab;font-size:16px;color:#64748b;user-select:none;padding:0 2px}
@@ -411,7 +420,8 @@ const panelStyles = String.raw`
   .wf-preview-box{border:1px solid #dbe3f0;border-radius:10px;background:#f8fafc;padding:12px}
   .wf-kv{display:grid;gap:6px;font-size:13px}
   .wf-steps{display:grid;gap:8px;margin-bottom:12px}
-  .wf-step{display:flex;gap:8px;align-items:flex-start;padding:8px 10px;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0}
+  .wf-step{display:flex;gap:8px;align-items:flex-start;padding:9px 10px;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0}
+  .wf-step strong{font-size:14px;line-height:1.25}
   .wf-step-num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:999px;background:#dbeafe;color:#1d4ed8;font-size:12px;font-weight:800}
   .wf-step.active{border-color:#93c5fd;background:#eff6ff}
   .wf-step.completed{border-color:#86efac;background:#f0fdf4}
@@ -422,7 +432,7 @@ const panelStyles = String.raw`
   .wf-step.state-warn .wf-step-num{background:#b45309;color:#fff}
   .wf-step.state-error{border-color:#fecaca;background:#fef2f2}
   .wf-step.state-error .wf-step-num{background:#b91c1c;color:#fff}
-  .wf-progress{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;background:#eef2ff;color:#1e3a8a;font-size:12px;font-weight:700}
+  .wf-progress{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;background:#eef2ff;color:#1e3a8a;font-size:12px;font-weight:700;letter-spacing:.01em}
   .wf-status{display:flex;gap:8px;flex-wrap:wrap}
   .wf-sticky{position:sticky;top:10px;z-index:30;border:1px solid #dbe3f0;background:#f8fafc;padding:10px 12px;border-radius:12px;margin-bottom:12px;display:flex;gap:8px;align-items:center;justify-content:space-between;min-height:46px}
   .wf-sticky strong{font-size:13px}
@@ -445,19 +455,19 @@ const panelStyles = String.raw`
   .wf-diff-cell{border:1px solid #e2e8f0;border-radius:8px;padding:8px;background:#f8fafc;font-size:12px}
   .wf-checklist{display:grid;gap:8px;border:1px solid #dbe3f0;border-radius:12px;padding:10px;background:#f8fafc;margin-bottom:12px}
   .wf-checklist-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
-  .wf-checklist-head strong{font-size:13px}
+  .wf-checklist-head strong{font-size:14px}
   .wf-checklist-list{display:grid;gap:6px}
   .wf-checklist-item{display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid #e2e8f0;background:#fff;padding:8px 10px;border-radius:10px}
   .wf-checklist-item.ok{border-color:#86efac;background:#f0fdf4}
   .wf-checklist-item.warn{border-color:#fde68a;background:#fffbeb}
   .wf-checklist-left{display:grid;gap:2px}
-  .wf-checklist-left strong{font-size:13px}
-  .wf-checklist-left span{font-size:12px;color:#64748b}
+  .wf-checklist-left strong{font-size:14px;line-height:1.3}
+  .wf-checklist-left span{font-size:12px;color:#64748b;line-height:1.4}
   .wf-warn-block{display:grid;gap:8px;border:1px solid #fde68a;border-radius:12px;padding:10px;background:#fffbeb;margin-bottom:12px}
   .wf-warn-title{display:flex;align-items:center;justify-content:space-between;gap:8px}
   .wf-warn-item{display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid #fcd34d;background:#fffaf0;padding:8px 10px;border-radius:10px}
-  .wf-warn-item strong{font-size:13px}
-  .wf-warn-item span{font-size:12px;color:#7c2d12}
+  .wf-warn-item strong{font-size:14px;line-height:1.3}
+  .wf-warn-item span{font-size:12px;color:#7c2d12;line-height:1.4}
   .wf-check-icon{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:999px;font-size:12px;font-weight:800}
   .wf-check-icon.ok{background:#166534;color:#fff}
   .wf-check-icon.warn{background:#b45309;color:#fff}
@@ -466,7 +476,7 @@ const panelStyles = String.raw`
   .wf-overlay-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:80;display:flex;justify-content:flex-end}
   .wf-overlay-panel{height:100%;width:min(760px,100vw);background:#fff;border-left:1px solid #dbe3f0;display:grid;grid-template-rows:auto minmax(0,1fr)}
   .wf-overlay-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-bottom:1px solid #e2e8f0}
-  .wf-overlay-head h3{margin:0;font-size:18px}
+  .wf-overlay-head h3{margin:0;font-size:20px;line-height:1.2;font-weight:800}
   .wf-overlay-body{overflow:auto;padding:14px;display:grid;gap:12px}
   .wf-sr-only{
     position:absolute!important;
@@ -494,7 +504,8 @@ const panelStyles = String.raw`
   }
   @media(max-width:768px){
     .wf-head{align-items:flex-start}
-    .wf-title{font-size:22px}
+    :root{--wf-fs-title:24px;--wf-fs-h2:19px;--wf-fs-h3:17px}
+    .wf-title{font-size:var(--wf-fs-title)}
     .wf-row{align-items:stretch}
     .wf-toolbar{padding:10px}
     .wf-input,.wf-select{min-width:0;width:100%}
