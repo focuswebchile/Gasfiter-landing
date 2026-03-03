@@ -154,6 +154,14 @@ type PublishChecklistItem = {
   view: SidebarView;
 };
 
+type PublishWarningItem = {
+  key: string;
+  label: string;
+  description: string;
+  section: EditableSectionId;
+  view: SidebarView;
+};
+
 type ImageUploadFieldProps = {
   value: string;
   placeholder: string;
@@ -433,6 +441,11 @@ const panelStyles = String.raw`
   .wf-checklist-left{display:grid;gap:2px}
   .wf-checklist-left strong{font-size:13px}
   .wf-checklist-left span{font-size:12px;color:#64748b}
+  .wf-warn-block{display:grid;gap:8px;border:1px solid #fde68a;border-radius:12px;padding:10px;background:#fffbeb;margin-bottom:12px}
+  .wf-warn-title{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .wf-warn-item{display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid #fcd34d;background:#fffaf0;padding:8px 10px;border-radius:10px}
+  .wf-warn-item strong{font-size:13px}
+  .wf-warn-item span{font-size:12px;color:#7c2d12}
   .wf-check-icon{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:999px;font-size:12px;font-weight:800}
   .wf-check-icon.ok{background:#166534;color:#fff}
   .wf-check-icon.warn{background:#b45309;color:#fff}
@@ -541,6 +554,40 @@ function sortByOrder<T extends { order: number }>(items: T[]) {
 
 function asNonEmptyString(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
+}
+
+function normalizeInternalTarget(value: unknown): string {
+  const raw = asNonEmptyString(value).toLowerCase().replace(/\/+$/, "");
+  if (!raw) return "";
+  const aliases: Record<string, string> = {
+    home: "home",
+    "/": "home",
+    "/home": "home",
+    "#home": "home",
+    servicios: "servicios",
+    "/servicios": "servicios",
+    "#servicios": "servicios",
+    empresa: "empresa",
+    "/empresa": "empresa",
+    "#empresa": "empresa",
+    clientes: "clientes",
+    "/clientes": "clientes",
+    "#clientes": "clientes",
+    contacto: "contacto",
+    "/contacto": "contacto",
+    "#contacto": "contacto",
+  };
+  return aliases[raw] || "";
+}
+
+function isValidExternalUrl(value: unknown): boolean {
+  const raw = asNonEmptyString(value).toLowerCase();
+  return (
+    raw.startsWith("https://") ||
+    raw.startsWith("http://") ||
+    raw.startsWith("mailto:") ||
+    raw.startsWith("tel:")
+  );
 }
 
 function createPanelItemId() {
@@ -3873,6 +3920,212 @@ export default function StagingWorkflowPanel() {
     [publishChecklist],
   );
 
+  const publishWarnings = useMemo<PublishWarningItem[]>(() => {
+    if (!settings) return [];
+
+    const warnings: PublishWarningItem[] = [];
+    const addWarning = (warning: PublishWarningItem) => {
+      if (warnings.some((item) => item.key === warning.key)) return;
+      warnings.push(warning);
+    };
+
+    const hero = getSection(settings, "hero");
+    const audience = getSection(settings, "audience");
+    const services = getSection(settings, "services");
+    const projects = getSection(settings, "projects");
+    const faq = getSection(settings, "faq");
+    const testimonials = getSection(settings, "testimonials");
+    const urgency = getSection(settings, "urgency_banner");
+    const branding = settings.branding ?? {};
+    const brandingContact = branding.contact ?? {};
+
+    const titleChecks: Array<{ key: string; title: unknown; section: EditableSectionId; label: string }> = [
+      { key: "hero", title: hero?.data?.title, section: "hero", label: "Hero" },
+      { key: "audience", title: audience?.data?.title, section: "audience", label: "Empresa" },
+      { key: "services", title: services?.data?.title, section: "services", label: "Servicios" },
+      { key: "projects", title: projects?.data?.title, section: "projects", label: "Clientes" },
+      { key: "testimonials", title: testimonials?.data?.title, section: "testimonials", label: "Testimonios" },
+      { key: "faq", title: faq?.data?.title, section: "faq", label: "FAQ" },
+    ];
+
+    for (const check of titleChecks) {
+      const length = asNonEmptyString(check.title).length;
+      if (length > 65) {
+        addWarning({
+          key: `title-length-${check.key}`,
+          label: `Título largo en ${check.label}`,
+          description: "Recomendado: máximo 65 caracteres.",
+          section: check.section,
+          view: "sections",
+        });
+      }
+    }
+
+    const ctaTextChecks: Array<{ key: string; text: unknown; section: EditableSectionId; label: string }> = [
+      {
+        key: "hero-primary",
+        text: (hero?.data as { cta_primary?: { text?: unknown } } | undefined)?.cta_primary?.text,
+        section: "hero",
+        label: "CTA Hero",
+      },
+      {
+        key: "audience-secondary",
+        text: (audience?.data as { cta_secondary?: { text?: unknown } } | undefined)?.cta_secondary?.text,
+        section: "audience",
+        label: "CTA Empresa",
+      },
+      {
+        key: "urgency-primary",
+        text: (urgency?.data as { cta_primary?: { text?: unknown } } | undefined)?.cta_primary?.text,
+        section: "urgency_banner",
+        label: "CTA Banner urgente",
+      },
+    ];
+
+    for (const check of ctaTextChecks) {
+      const length = asNonEmptyString(check.text).length;
+      if (length > 22) {
+        addWarning({
+          key: `cta-text-${check.key}`,
+          label: `Botón largo en ${check.label}`,
+          description: "Recomendado: máximo 22 caracteres.",
+          section: check.section,
+          view: "sections",
+        });
+      }
+    }
+
+    const faqItems = faq ? toSectionItems(faq) : [];
+    if (
+      faqItems.some(
+        (item) => item.enabled !== false && asNonEmptyString(item.answer).length > 450,
+      )
+    ) {
+      addWarning({
+        key: "faq-long-answer",
+        label: "FAQ con respuesta extensa",
+        description: "Recomendado: máximo 450 caracteres por respuesta.",
+        section: "faq",
+        view: "items",
+      });
+    }
+
+    const serviceItems = services ? toSectionItems(services) : [];
+    if (
+      serviceItems.some((item) => item.enabled !== false && !asNonEmptyString(item.image))
+    ) {
+      addWarning({
+        key: "services-missing-image",
+        label: "Servicios sin imagen",
+        description: "Se usará fallback visual; recomendado cargar imagen por servicio.",
+        section: "services",
+        view: "items",
+      });
+    }
+
+    const projectItems = projects ? toSectionItems(projects) : [];
+    if (
+      projectItems.some((item) => item.enabled !== false && !asNonEmptyString(item.image))
+    ) {
+      addWarning({
+        key: "projects-missing-image",
+        label: "Clientes/Proyectos sin imagen",
+        description: "Se usará fallback visual; recomendado cargar imagen por item.",
+        section: "projects",
+        view: "items",
+      });
+    }
+
+    const testimonialItems = testimonials ? toSectionItems(testimonials) : [];
+    if (
+      testimonialItems.some((item) => item.enabled !== false && !asNonEmptyString(item.avatar))
+    ) {
+      addWarning({
+        key: "testimonials-missing-avatar",
+        label: "Testimonios sin avatar",
+        description: "No bloquea publicación, pero mejora confianza visual.",
+        section: "testimonials",
+        view: "items",
+      });
+    }
+
+    const hasFavicon = asNonEmptyString(branding.faviconUrl).length > 0;
+    if (!hasFavicon) {
+      addWarning({
+        key: "branding-favicon",
+        label: "Branding sin favicon",
+        description: "Recomendado definir favicon para consistencia de marca.",
+        section: "hero",
+        view: "style",
+      });
+    }
+
+    const contactFields = [brandingContact.whatsapp, brandingContact.email, brandingContact.address].filter(
+      (value) => asNonEmptyString(value).length > 0,
+    );
+    if (contactFields.length === 0) {
+      addWarning({
+        key: "branding-contact",
+        label: "Branding sin contacto básico",
+        description: "Recomendado completar WhatsApp, email o dirección.",
+        section: "hero",
+        view: "style",
+      });
+    }
+
+    const internalCtaChecks: Array<{ key: string; url: unknown; section: EditableSectionId; label: string }> = [
+      {
+        key: "hero-primary-url",
+        url: (hero?.data as { cta_primary?: { url?: unknown } } | undefined)?.cta_primary?.url,
+        section: "hero",
+        label: "CTA Hero",
+      },
+      {
+        key: "audience-secondary-url",
+        url: (audience?.data as { cta_secondary?: { url?: unknown } } | undefined)?.cta_secondary?.url,
+        section: "audience",
+        label: "CTA Empresa",
+      },
+    ];
+
+    for (const check of internalCtaChecks) {
+      const raw = asNonEmptyString(check.url);
+      if (!raw) continue;
+      const isExternal = isValidExternalUrl(raw);
+      const normalizedInternal = normalizeInternalTarget(raw);
+      if (!isExternal && !normalizedInternal && !raw.startsWith("#")) {
+        addWarning({
+          key: `internal-cta-${check.key}`,
+          label: `${check.label} con destino no reconocido`,
+          description: "Usa /servicios, /empresa, /clientes, /contacto o URL externa válida.",
+          section: check.section,
+          view: "sections",
+        });
+      }
+    }
+
+    const allowedServiceTargets = new Set(["consultoria", "auditorias", "certificacion", "capacitacion"]);
+    for (const item of serviceItems) {
+      if (item.enabled === false) continue;
+      const cta = (item.cta ?? {}) as Record<string, unknown>;
+      const kind = asNonEmptyString(cta.kind).toLowerCase();
+      const targetRaw = asNonEmptyString(
+        cta.sectionTarget || cta.targetSection || item.targetSection || item.sectionTarget,
+      );
+      if (kind === "anchor" && targetRaw && !allowedServiceTargets.has(targetRaw)) {
+        addWarning({
+          key: `service-target-${String(item.id)}`,
+          label: `Servicio con target interno no recomendado (${asNonEmptyString(item.title) || "sin título"})`,
+          description: "Usa: consultoria, auditorias, certificacion o capacitacion.",
+          section: "services",
+          view: "items",
+        });
+      }
+    }
+
+    return warnings;
+  }, [settings]);
+
   const actionHelpText = useMemo(() => {
     if (actionContext.publishDisabledReason) return actionContext.publishDisabledReason;
     if (actionContext.requestDisabledReason) return actionContext.requestDisabledReason;
@@ -4166,6 +4419,34 @@ export default function StagingWorkflowPanel() {
                         Ir a completar
                       </button>
                     ) : null}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+          {publishWarnings.length > 0 ? (
+            <div className="wf-warn-block">
+              <div className="wf-warn-title">
+                <strong>Advertencias UX (no bloquean publicación)</strong>
+                <span className="wf-muted">{publishWarnings.length} detectadas</span>
+              </div>
+              <div className="wf-checklist-list">
+                {publishWarnings.map((warning) => (
+                  <div key={warning.key} className="wf-warn-item">
+                    <div className="wf-checklist-left">
+                      <strong>{warning.label}</strong>
+                      <span>{warning.description}</span>
+                    </div>
+                    <button
+                      className="wf-btn wf-btn-soft"
+                      style={{ height: 30 }}
+                      onClick={() => {
+                        setView(warning.view);
+                        setEditableSection(warning.section);
+                      }}
+                    >
+                      Ir a revisar
+                    </button>
                   </div>
                 ))}
               </div>
