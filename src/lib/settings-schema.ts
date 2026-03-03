@@ -67,6 +67,7 @@ export const settingsSchema = z
         logoNavUrl: z.string().url().optional(),
         logoFooterUrl: z.string().url().optional(),
         faviconUrl: z.string().url().optional(),
+        hideNavLogo: z.boolean().optional(),
         contact: z
           .object({
             whatsapp: z.string().trim().optional(),

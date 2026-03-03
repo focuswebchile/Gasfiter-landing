@@ -31,6 +31,7 @@ type SettingsPayload = {
     logoNavUrl?: string;
     logoFooterUrl?: string;
     faviconUrl?: string;
+    hideNavLogo?: boolean;
     contact?: {
       whatsapp?: string;
       email?: string;
@@ -3512,6 +3513,26 @@ export default function StagingWorkflowPanel() {
               )
             }
           />
+        </div>
+
+        <div style={{ marginTop: 10, marginBottom: 14 }}>
+          <label className="wf-checkbox">
+            <input
+              type="checkbox"
+              checked={Boolean(branding.hideNavLogo)}
+              disabled={editingLocked}
+              onChange={(e) =>
+                updateSettings((prev) => ({
+                  ...prev,
+                  branding: {
+                    ...(prev.branding ?? {}),
+                    hideNavLogo: e.target.checked,
+                  },
+                }))
+              }
+            />
+            <span>Ocultar logo en navbar (solo landing)</span>
+          </label>
         </div>
 
         <h3 className="wf-h3">Contacto básico (opcional)</h3>
