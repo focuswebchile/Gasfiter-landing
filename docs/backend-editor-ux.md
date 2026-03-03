@@ -1,5 +1,7 @@
 # Gasfiter Backend Editor UX
 
+> Referencia vigente para refactor visual ABCIS: `docs/t8.0-guardrails-baseline.md` y `docs/t8.0-baseline-checklist.md`.
+
 ## Objetivo
 Editar contenido de landing sin romper layout/CSS, con vista previa y publicaci√≥n controlada.
 
@@ -68,4 +70,3 @@ Editar contenido de landing sin romper layout/CSS, con vista previa y publicaci√
   - `content.services`
   - `content.faqs`
 - No tocar estructura HTML ni clases CSS: solo contenido y visibilidad.
-
