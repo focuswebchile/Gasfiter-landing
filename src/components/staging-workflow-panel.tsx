@@ -1192,7 +1192,7 @@ export default function StagingWorkflowPanel() {
           },
           body: JSON.stringify({
             userId: userId.trim(),
-            notes: options?.notes ?? "Saved from v2 UX panel",
+            notes: options?.notes ?? "Guardado desde editor CMS",
             settings: snapshot,
             expectedUpdatedAt,
           }),
@@ -1256,7 +1256,7 @@ export default function StagingWorkflowPanel() {
       window.clearTimeout(autosaveTimerRef.current);
       autosaveTimerRef.current = null;
     }
-    await saveDraftInternal({ silent: false, notes: "Saved from v2 UX panel" });
+    await saveDraftInternal({ silent: false, notes: "Guardado desde editor CMS" });
   };
 
   const startDraftEditing = useCallback(async () => {
@@ -1432,7 +1432,7 @@ export default function StagingWorkflowPanel() {
         },
         body: JSON.stringify({
           userId: userId.trim(),
-          notes: "Published from v2 UX panel",
+          notes: "Publicado desde editor CMS",
           expectedUpdatedAt,
         }),
       });
@@ -1537,7 +1537,7 @@ export default function StagingWorkflowPanel() {
         body: JSON.stringify({
           userId: userId.trim(),
           versionNumber,
-          notes: `Rollback desde panel v2 a v${versionNumber}`,
+          notes: `Rollback desde editor CMS a v${versionNumber}`,
         }),
       });
       const payload = await response.json();
@@ -3708,8 +3708,8 @@ export default function StagingWorkflowPanel() {
         className: "wf-sticky wf-sticky-warn",
         title: "Panel no cargado",
         detail: showAdvancedUi
-          ? "Define slug y asegúrate de tener sesión iniciada. Luego haz click en Cargar panel."
-          : "Define el sitio y haz click en Cargar panel.",
+          ? "Define slug y asegúrate de tener sesión iniciada. Luego haz clic en Cargar panel."
+          : "Define el sitio y haz clic en Cargar panel.",
       };
     }
     if (autosaving || flushingPublish) {
@@ -4214,8 +4214,8 @@ export default function StagingWorkflowPanel() {
 
       <header className="wf-head">
         <div>
-          <h1 className="wf-title">Gasfiter Admin - Panel v2</h1>
-          <p className="wf-sub">Flujo guiado para borrador/publicado, versiones y permisos.</p>
+          <h1 className="wf-title">Editor CMS — ABCIS</h1>
+          <p className="wf-sub">Edición, revisión y publicación de contenido por sitio y rol.</p>
         </div>
         <div className="wf-badges">
           <span className="wf-badge wf-badge-env">{envBadge}</span>
@@ -4382,11 +4382,11 @@ export default function StagingWorkflowPanel() {
             ) : null}
             {showAdvancedUi ? (
               <button className="wf-btn wf-btn-soft" onClick={openPublishedJson} disabled={!panelReady}>
-                Ver JSON publicado
+                Ver JSON de producción
               </button>
             ) : null}
             <button className="wf-btn wf-btn-soft" onClick={openPreview} disabled={busy || !panelReady}>
-              {showAdvancedUi ? "Vista previa" : "Ver cómo se ve"}
+              {showAdvancedUi ? "Vista previa" : "Previsualizar"}
             </button>
             {showAdvancedUi ? (
               <button
@@ -4581,7 +4581,7 @@ export default function StagingWorkflowPanel() {
               <div className="wf-versions">
                 {versions.map((version) => (
                   <div className="wf-row-item" key={version.id}>
-                    <div><strong>v{version.version_number}</strong> · {translateVersionStatus(version.status)}<div className="wf-muted">{version.notes ?? "Sin nota"}</div></div>
+                    <div><strong>v{version.version_number}</strong> · {translateVersionStatus(version.status)}<div className="wf-muted">{version.notes ?? "Sin observaciones"}</div></div>
                     <button className="wf-btn wf-btn-warn" disabled={busy || !panelReady || version.status === "published" || !canRollback} onClick={() => rollback(version.version_number)}>Revertir</button>
                   </div>
                 ))}
@@ -4658,13 +4658,13 @@ export default function StagingWorkflowPanel() {
                   </div>
                 </div>
               ))}
-              {!actionLog.length ? <p className="wf-muted">Sin actividad reciente.</p> : null}
+              {!actionLog.length ? <p className="wf-muted">Sin eventos recientes.</p> : null}
             </div>
           </div>
         ) : null}
       </OverlayPanel>
 
-      <OverlayPanel open={showDiffOverlay} onClose={() => setShowDiffOverlay(false)} title="Diferencias (Borrador vs Publicado)">
+      <OverlayPanel open={showDiffOverlay} onClose={() => setShowDiffOverlay(false)} title="Comparación borrador vs publicado">
         <div className="wf-preview-box">
           {heroDiff ? (
             <div className="wf-diff" style={{ marginTop: 8 }}>
@@ -4680,7 +4680,7 @@ export default function StagingWorkflowPanel() {
             </div>
           ) : (
             <p className="wf-muted" style={{ marginTop: 8 }}>
-              Usa “Ver diferencias” para comparar borrador vs publicado.
+              Usa "Ver diferencias" para comparar borrador y publicado.
             </p>
           )}
         </div>
