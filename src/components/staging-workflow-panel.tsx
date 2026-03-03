@@ -405,6 +405,7 @@ const panelStyles = String.raw`
   .wf-editorial-status{display:grid;gap:8px;border:1px solid var(--wf-border);border-radius:12px;background:var(--wf-surface-soft);padding:12px 14px;margin-bottom:12px}
   .wf-editorial-status-title{display:flex;align-items:center;justify-content:space-between;gap:10px}
   .wf-editorial-status-title strong{font-size:15px;line-height:1.25}
+  .wf-editorial-status-desc{font-size:13px;line-height:1.4;color:var(--wf-muted)}
   .wf-editorial-status-meta{display:flex;flex-wrap:wrap;gap:8px}
   .wf-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#e2e8f0;color:var(--wf-text)}
   .wf-pill-primary{background:var(--wf-primary-soft);color:var(--wf-primary-ink)}
@@ -450,11 +451,11 @@ const panelStyles = String.raw`
   .wf-preview{display:grid;gap:12px}
   .wf-preview-box{border:1px solid var(--wf-border);border-radius:10px;background:var(--wf-surface-soft);padding:12px}
   .wf-kv{display:grid;gap:6px;font-size:13px}
-  .wf-steps{display:grid;gap:8px;margin-bottom:12px}
+  .wf-steps{display:grid;gap:8px;margin-bottom:12px;opacity:.88}
   .wf-step{display:flex;gap:8px;align-items:flex-start;padding:9px 10px;border-radius:10px;background:var(--wf-surface-soft);border:1px solid #e2e8f0}
-  .wf-step strong{font-size:14px;line-height:1.25}
+  .wf-step strong{font-size:13px;line-height:1.25}
   .wf-step-num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:999px;background:#dbeafe;color:#1d4ed8;font-size:12px;font-weight:800}
-  .wf-step.active{border-color:#93c5fd;background:#eff6ff}
+  .wf-step.active{border-color:#93c5fd;background:#eff6ff;opacity:1}
   .wf-step.completed{border-color:var(--wf-success-border);background:var(--wf-success-bg)}
   .wf-step.completed .wf-step-num{background:var(--wf-success-ink);color:#fff}
   .wf-step.state-ready{border-color:var(--wf-success-border);background:var(--wf-success-bg)}
@@ -3712,72 +3713,6 @@ export default function StagingWorkflowPanel() {
     );
   };
 
-  const stickyState = useMemo(() => {
-    if (draftConflict.active) {
-      return {
-        className: "wf-sticky wf-sticky-err",
-        title: "Conflicto de borrador",
-        detail: draftConflict.serverUpdatedAt
-          ? `Último guardado servidor: ${draftConflict.serverUpdatedAt}`
-          : draftConflict.message,
-      };
-    }
-    if (!panelReady) {
-      return {
-        className: "wf-sticky wf-sticky-warn",
-        title: "Panel no cargado",
-        detail: showAdvancedUi
-          ? "Define slug y asegúrate de tener sesión iniciada. Luego haz clic en Cargar panel."
-          : "Define el sitio y haz clic en Cargar panel.",
-      };
-    }
-    if (autosaving || flushingPublish) {
-      return {
-        className: "wf-sticky wf-sticky-warn",
-        title: flushingPublish ? "Esperando autoguardado para publicar..." : "Autoguardando...",
-        detail: autosaveHint,
-      };
-    }
-    if (dirty) {
-      return {
-        className: "wf-sticky wf-sticky-warn",
-        title: "Borrador con cambios pendientes",
-        detail: "Se guardará automáticamente o puedes usar Guardar borrador.",
-      };
-    }
-    if (panelReady && mode === "draft" && heroDiff) {
-      if (heroDiff.summary.hasChanges) {
-        return {
-          className: "wf-sticky wf-sticky-warn",
-          title: "Borrador con cambios vs publicado",
-          detail: `${heroDiff.summary.changedFields} campo(s) distinto(s) en Hero/Servicios/FAQ.`,
-        };
-      }
-      return {
-        className: "wf-sticky wf-sticky-ok",
-        title: "Sin diferencias con publicado",
-        detail: "El borrador coincide con la versión publicada.",
-      };
-    }
-    return {
-      className: "wf-sticky wf-sticky-ok",
-      title: "Borrador guardado",
-      detail: autosaveHint,
-    };
-  }, [
-    draftConflict.active,
-    draftConflict.message,
-    draftConflict.serverUpdatedAt,
-    panelReady,
-    autosaving,
-    flushingPublish,
-    autosaveHint,
-    dirty,
-    mode,
-    heroDiff,
-    showAdvancedUi,
-  ]);
-
   const workflowProgress = useMemo(() => {
       const hasIdentity = Boolean(siteSlug.trim() && userId.trim());
     const currentStep = !hasIdentity ? 1 : !panelReady ? 2 : 3;
@@ -3826,25 +3761,35 @@ export default function StagingWorkflowPanel() {
     if (!panelReady) {
       return {
         title: "Panel no cargado",
+        detail: "Carga la configuración del sitio para habilitar edición y acciones.",
         tone: "warn" as const,
+        action: "load_panel" as const,
       };
     }
     if (draftConflict.active) {
       return {
         title: "Conflicto de borrador detectado",
+        detail: "Recarga borrador para sincronizar antes de continuar.",
         tone: "warn" as const,
+        action: "reload_draft" as const,
       };
     }
     if (autosaving || flushingPublish) {
       return {
         title: flushingPublish ? "Preparando publicación" : "Guardando cambios",
+        detail: flushingPublish
+          ? "Esperando el guardado automático previo a publicar."
+          : "Se están guardando cambios en segundo plano.",
         tone: "warn" as const,
+        action: "none" as const,
       };
     }
     if (dirty) {
       return {
         title: "Borrador con cambios pendientes",
+        detail: "Guarda borrador o continúa editando antes de publicar.",
         tone: "warn" as const,
+        action: "none" as const,
       };
     }
     if (mode === "published") {
@@ -3852,12 +3797,16 @@ export default function StagingWorkflowPanel() {
         title: latestPublishedVersion
           ? `Publicado activo (v${latestPublishedVersion.version_number})`
           : "Publicado activo",
+        detail: "Vista en modo lectura de la versión publicada.",
         tone: "ok" as const,
+        action: "none" as const,
       };
     }
     return {
       title: latestDraftVersion ? `Borrador activo (v${latestDraftVersion.version_number})` : "Borrador activo",
+      detail: "Contenido listo para continuar edición o solicitar publicación.",
       tone: "ok" as const,
+      action: "none" as const,
     };
   }, [
     panelReady,
@@ -4291,15 +4240,6 @@ export default function StagingWorkflowPanel() {
         </div>
       </header>
 
-      <div
-        className={stickyState.className}
-        role={draftConflict.active ? "alert" : "status"}
-        aria-live={draftConflict.active ? "assertive" : "polite"}
-      >
-        <strong>{stickyState.title}</strong>
-        <small>{stickyState.detail}</small>
-      </div>
-
       <div className="wf-layout">
         <aside className="wf-card wf-sidebar">
           {sidebarGroups.map((group) => (
@@ -4357,9 +4297,10 @@ export default function StagingWorkflowPanel() {
             <div className="wf-editorial-status-title">
               <strong>Estado del contenido: {editorialStatus.title}</strong>
               <span className={`wf-pill ${editorialStatus.tone === "ok" ? "wf-pill-ok" : "wf-pill-warn"}`}>
-                Paso {workflowProgress.currentStep}/3 · {workflowCompletionPercent}%
+                Paso {workflowProgress.currentStep} de 3 · {workflowCompletionPercent}% completado
               </span>
             </div>
+            <div className="wf-editorial-status-desc">{editorialStatus.detail}</div>
             <div className="wf-editorial-status-meta">
               <span className="wf-pill wf-pill-primary">
                 {latestDraftVersion ? `Borrador v${latestDraftVersion.version_number}` : "Sin borrador activo"}
@@ -4372,6 +4313,20 @@ export default function StagingWorkflowPanel() {
               ) : null}
               {autosaving || flushingPublish ? (
                 <span className="wf-pill wf-pill-warn">{flushingPublish ? "Preparando publicación..." : "Guardando..."}</span>
+              ) : null}
+              {editorialStatus.action === "load_panel" ? (
+                <button className="wf-btn wf-btn-primary wf-btn-sm wf-btn-compact" onClick={loadPanel} disabled={busy}>
+                  Cargar panel
+                </button>
+              ) : null}
+              {editorialStatus.action === "reload_draft" ? (
+                <button
+                  className="wf-btn wf-btn-soft wf-btn-sm wf-btn-compact"
+                  onClick={reloadDraftAfterConflict}
+                  disabled={busy}
+                >
+                  Recargar borrador
+                </button>
               ) : null}
             </div>
           </div>
@@ -4459,17 +4414,6 @@ export default function StagingWorkflowPanel() {
               </button>
             ) : null}
             <span className="wf-muted">{actionContext.message}</span>
-            {draftConflict.active ? (
-              <>
-                <span className="wf-msg wf-err">
-                  {draftConflict.message}
-                  {draftConflict.serverUpdatedAt ? ` (Último guardado: ${draftConflict.serverUpdatedAt})` : ""}
-                </span>
-                <button className="wf-btn wf-btn-soft" onClick={reloadDraftAfterConflict} disabled={busy}>
-                  Recargar borrador
-                </button>
-              </>
-            ) : null}
           </div>
           <div className={`wf-action-help ${actionHelpIsError ? "err" : ""}`} aria-live="polite">
             {actionHelpText}
