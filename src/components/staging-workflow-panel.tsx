@@ -707,6 +707,12 @@ function mapPublishIssueToSection(
 ): { section: EditableSectionId; view: SidebarView; label: string } | null {
   const normalized = issue.toLowerCase();
   if (normalized.includes("hero")) return { section: "hero", view: "sections", label: "Ir a Hero" };
+  if (normalized.includes("empresa") || normalized.includes("audiencia")) {
+    return { section: "audience", view: "sections", label: "Ir a Empresa" };
+  }
+  if (normalized.includes("urgente")) {
+    return { section: "urgency_banner", view: "sections", label: "Ir a Banner urgente" };
+  }
   if (normalized.includes("servicio")) return { section: "services", view: "items", label: "Ir a Servicios" };
   if (normalized.includes("testimonio")) return { section: "testimonials", view: "items", label: "Ir a Testimonios" };
   if (normalized.includes("contact")) return { section: "contact_banner", view: "sections", label: "Ir a Contacto" };
