@@ -2823,7 +2823,13 @@ export default function StagingWorkflowPanel() {
                         title: "Nuevo servicio",
                         description: "",
                         features: ["Punto clave 1", "Punto clave 2"],
-                        cta: { text: "Llamar", url: "tel:+56900000000", kind: "tel", enabled: true },
+                        cta: {
+                          text: "Conocer más",
+                          url: "#contacto",
+                          kind: "anchor",
+                          sectionTarget: "",
+                          enabled: true,
+                        },
                       }
                     : {
                         id: createPanelItemId(),
@@ -2981,6 +2987,39 @@ export default function StagingWorkflowPanel() {
                         })
                       }
                     />
+                    <input
+                      className="wf-input"
+                      disabled={editingLocked}
+                      value={
+                        typeof (item.cta as { sectionTarget?: unknown } | undefined)?.sectionTarget === "string"
+                          ? ((item.cta as { sectionTarget?: string }).sectionTarget ?? "")
+                          : typeof item.targetSection === "string"
+                            ? item.targetSection
+                            : ""
+                      }
+                      placeholder="Target interno (consultoria|auditorias|certificacion|capacitacion)"
+                      onChange={(e) =>
+                        updateSettings((prev) => {
+                          const sec = getSection(prev, section.id);
+                          if (!sec) return prev;
+                          const nextItems = toSectionItems(sec).map((nextItem) =>
+                            String(nextItem.id) === itemId
+                              ? {
+                                  ...nextItem,
+                                  targetSection: e.target.value,
+                                  sectionTarget: e.target.value,
+                                  cta: {
+                                    ...((nextItem.cta as Record<string, unknown>) ?? {}),
+                                    sectionTarget: e.target.value,
+                                    targetSection: e.target.value,
+                                  },
+                                }
+                              : nextItem,
+                          );
+                          return setSectionItems(prev, section.id, nextItems);
+                        })
+                      }
+                    />
                     <select
                       className="wf-select"
                       disabled={editingLocked}
@@ -3041,6 +3080,9 @@ export default function StagingWorkflowPanel() {
                       CTA habilitada
                     </label>
                   </div>
+                  <p className="wf-muted">
+                    Para landing ABCIS usa: consultoria, auditorias, certificacion o capacitacion.
+                  </p>
                   <div className="wf-row-item" style={{ marginTop: 8 }}>
                     <div style={{ flex: 1, display: "grid", gap: 6 }}>
                       <div className="wf-row" style={{ justifyContent: "space-between" }}>
