@@ -3427,10 +3427,11 @@ export default function StagingWorkflowPanel() {
             }}
             onRemove={() =>
               updateSettings(
-                (prev) => ({
-                  ...prev,
-                  branding: { ...(prev.branding ?? {}), logoNavUrl: "" },
-                }),
+                (prev) => {
+                  const branding = { ...(prev.branding ?? {}) };
+                  delete branding.logoNavUrl;
+                  return { ...prev, branding };
+                },
                 { persistNow: true, note: "Autosave: logo navbar removed" },
               )
             }
@@ -3463,10 +3464,11 @@ export default function StagingWorkflowPanel() {
             }}
             onRemove={() =>
               updateSettings(
-                (prev) => ({
-                  ...prev,
-                  branding: { ...(prev.branding ?? {}), logoFooterUrl: "" },
-                }),
+                (prev) => {
+                  const branding = { ...(prev.branding ?? {}) };
+                  delete branding.logoFooterUrl;
+                  return { ...prev, branding };
+                },
                 { persistNow: true, note: "Autosave: logo footer removed" },
               )
             }
@@ -3500,10 +3502,11 @@ export default function StagingWorkflowPanel() {
             }}
             onRemove={() =>
               updateSettings(
-                (prev) => ({
-                  ...prev,
-                  branding: { ...(prev.branding ?? {}), faviconUrl: "" },
-                }),
+                (prev) => {
+                  const branding = { ...(prev.branding ?? {}) };
+                  delete branding.faviconUrl;
+                  return { ...prev, branding };
+                },
                 { persistNow: true, note: "Autosave: favicon removed" },
               )
             }
