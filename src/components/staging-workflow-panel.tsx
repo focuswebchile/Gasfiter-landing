@@ -3430,6 +3430,7 @@ export default function StagingWorkflowPanel() {
                 (prev) => {
                   const branding = { ...(prev.branding ?? {}) };
                   delete branding.logoNavUrl;
+                  delete branding.logoUrl;
                   return { ...prev, branding };
                 },
                 { persistNow: true, note: "Autosave: logo navbar removed" },
