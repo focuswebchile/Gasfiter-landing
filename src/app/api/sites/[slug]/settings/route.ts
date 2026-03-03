@@ -24,6 +24,54 @@ type DbItem = {
 
 const sectionNeedsItems = new Set(["services", "projects", "testimonials", "faq"]);
 
+const DEFAULT_ALLOWED_ORIGINS = [
+  "https://abcis.vercel.app",
+  "https://www.abcis.cl",
+  "https://abcis.cl",
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+];
+
+function resolveAllowedOrigins(): string[] {
+  const raw = process.env.CMS_CORS_ALLOWED_ORIGINS || process.env.CORS_ALLOWED_ORIGINS || "";
+  const custom = raw
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+  return custom.length > 0 ? custom : DEFAULT_ALLOWED_ORIGINS;
+}
+
+function buildCorsHeaders(request: Request): HeadersInit {
+  const requestOrigin = request.headers.get("origin") || "";
+  const allowedOrigins = resolveAllowedOrigins();
+  const allowOrigin = allowedOrigins.includes(requestOrigin) ? requestOrigin : "";
+
+  return {
+    ...(allowOrigin ? { "Access-Control-Allow-Origin": allowOrigin } : {}),
+    "Access-Control-Allow-Methods": "GET, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, x-user-id",
+    "Access-Control-Max-Age": "86400",
+    Vary: "Origin",
+  };
+}
+
+function jsonWithCors(request: Request, body: unknown, init?: ResponseInit) {
+  const nextHeaders = {
+    ...buildCorsHeaders(request),
+    ...(init?.headers || {}),
+  };
+  return NextResponse.json(body, { ...init, headers: nextHeaders });
+}
+
+export async function OPTIONS(request: Request) {
+  return new NextResponse(null, {
+    status: 204,
+    headers: buildCorsHeaders(request),
+  });
+}
+
 function normalizeSection(section: DbSection, items: DbItem[]) {
   const data = (section.data ?? {}) as Record<string, unknown>;
   const sectionItems = items
@@ -189,14 +237,15 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
       .maybeSingle();
 
     if (siteError) {
-      return NextResponse.json(
+      return jsonWithCors(
+        request,
         { error: "Unable to fetch site", details: siteError.message },
         { status: 500 },
       );
     }
 
     if (!site) {
-      return NextResponse.json({ error: "Site not found" }, { status: 404 });
+      return jsonWithCors(request, { error: "Site not found" }, { status: 404 });
     }
 
     const versioned = await getVersionedSettings(supabase, site.id, mode);
@@ -208,7 +257,8 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
             ? versioned.updatedAt
             : null;
 
-      return NextResponse.json(
+      return jsonWithCors(
+        request,
         {
           site: {
             slug: site.slug,
@@ -276,7 +326,8 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
 
     const parsed = settingsSchema.safeParse(payload);
     if (!parsed.success) {
-      return NextResponse.json(
+      return jsonWithCors(
+        request,
         {
           error: "Invalid settings payload",
           issues: parsed.error.issues.map((issue) => ({
@@ -290,7 +341,8 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
 
     const fallbackDraftUpdatedAt = mode === "draft" ? await getLatestDraftUpdatedAt(supabase, site.id) : null;
 
-    return NextResponse.json(
+    return jsonWithCors(
+      request,
       {
         site: {
           slug: site.slug,
@@ -308,7 +360,8 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
     );
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown server error";
-    return NextResponse.json(
+    return jsonWithCors(
+      request,
       { error: "Unable to fetch settings", details: message },
       {
         status: 500,
