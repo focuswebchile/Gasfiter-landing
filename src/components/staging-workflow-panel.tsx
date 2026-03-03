@@ -335,8 +335,8 @@ const STORAGE_KEY = "gasfiter_panel_v2_state";
 
 const panelStyles = String.raw`
   :root{color-scheme:light}
-  .wf-shell{max-width:1320px;margin:20px auto;padding:0 20px 24px;font-family:Inter,sans-serif;color:#0f172a}
-  .wf-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;align-items:flex-end;margin-bottom:14px}
+  .wf-shell{max-width:1480px;margin:20px auto;padding:0 18px 24px;font-family:Inter,sans-serif;color:#0f172a}
+  .wf-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:14px;align-items:flex-end;margin-bottom:16px}
   .wf-title{margin:0;font-size:26px;line-height:1.1;font-weight:800}
   .wf-sub{margin:4px 0 0;color:#64748b;font-size:14px}
   .wf-flowbar{border:1px solid #dbe3f0;background:#f8fafc;border-radius:10px;padding:10px 12px;margin:0 0 12px}
@@ -349,18 +349,30 @@ const panelStyles = String.raw`
   .wf-badge-env{background:#fef3c7;color:#92400e}
   .wf-badge-role{background:#dbeafe;color:#1e3a8a}
   .wf-badge-warn{background:#ffedd5;color:#9a3412}
-  .wf-layout{display:grid;gap:14px}
-  @media(min-width:1080px){.wf-layout{grid-template-columns:220px minmax(0,1fr)}}
-  .wf-workspace{max-width:1360px}
-  .wf-card{border:1px solid #dbe3f0;border-radius:14px;background:#fff;padding:14px}
-  .wf-sidebar{display:grid;gap:8px;align-content:start}
+  .wf-layout{display:grid;gap:16px}
+  @media(min-width:1180px){.wf-layout{grid-template-columns:250px minmax(0,1fr);align-items:start}}
+  .wf-workspace{min-width:0}
+  .wf-card{border:1px solid #dbe3f0;border-radius:14px;background:#fff;padding:16px}
+  .wf-sidebar{display:grid;gap:10px;align-content:start}
+  @media(min-width:1180px){
+    .wf-sidebar{
+      position:sticky;
+      top:14px;
+      max-height:calc(100vh - 32px);
+      overflow:auto;
+    }
+  }
   .wf-nav-group{display:grid;gap:6px}
   .wf-nav-group + .wf-nav-group{margin-top:6px;padding-top:10px;border-top:1px solid #e2e8f0}
   .wf-nav-group-title{font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:#64748b;font-weight:800;padding:0 4px}
   .wf-nav-btn{display:flex;justify-content:space-between;align-items:center;border:1px solid #dbe3f0;background:#f8fafc;border-radius:10px;padding:10px 12px;font-weight:700;color:#334155;cursor:pointer}
   .wf-nav-btn.active{background:#e0ebff;border-color:#9db4ee;color:#1e3a8a}
-  .wf-grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .wf-grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   .wf-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .wf-toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;border:1px solid #e2e8f0;border-radius:12px;background:#f8fafc;padding:10px 12px}
+  .wf-toolbar-main .wf-input{min-width:260px}
+  .wf-toolbar-actions .wf-select{min-width:170px}
+  .wf-toolbar-status{display:flex;gap:8px;flex-wrap:wrap;padding:2px 0}
   .wf-input,.wf-select,.wf-textarea{border:1px solid #cbd5e1;border-radius:10px;padding:10px 12px;font:inherit;background:#fff}
   .wf-input,.wf-select{height:40px}
   .wf-input{min-width:200px;flex:1}
@@ -467,7 +479,7 @@ const panelStyles = String.raw`
     white-space:nowrap!important;
     border:0!important;
   }
-  @media(max-width:1079px){
+  @media(max-width:1179px){
     .wf-shell{padding:0 14px 20px}
     .wf-layout{grid-template-columns:1fr}
     .wf-sidebar{position:sticky;top:8px;z-index:20;background:#fff}
@@ -484,8 +496,10 @@ const panelStyles = String.raw`
     .wf-head{align-items:flex-start}
     .wf-title{font-size:22px}
     .wf-row{align-items:stretch}
+    .wf-toolbar{padding:10px}
     .wf-input,.wf-select{min-width:0;width:100%}
     .wf-btn{width:100%}
+    .wf-toolbar-actions .wf-muted,.wf-toolbar-actions .wf-progress{width:100%}
     .wf-status .wf-badge{width:max-content}
     .wf-step{padding:10px}
     .wf-checklist-item{flex-direction:column;align-items:flex-start}
@@ -4218,7 +4232,7 @@ export default function StagingWorkflowPanel() {
             </div>
           </div>
 
-          <div className="wf-row" style={{ marginBottom: 10 }}>
+          <div className="wf-row wf-toolbar wf-toolbar-main" style={{ marginBottom: 10 }}>
             <input className="wf-input" value={siteSlug} onChange={(e) => setSiteSlug(e.target.value)} placeholder="slug del sitio" />
             <input
               className="wf-input"
@@ -4227,7 +4241,7 @@ export default function StagingWorkflowPanel() {
             />
           </div>
 
-          <div className="wf-row" style={{ marginBottom: 12 }}>
+          <div className="wf-row wf-toolbar wf-toolbar-actions" style={{ marginBottom: 12 }}>
             <select className="wf-select" value={mode} onChange={(e) => handleModeChange(e.target.value as Mode)}>
               <option value="published">Publicado</option>
               <option value="draft">Borrador</option>
@@ -4239,7 +4253,7 @@ export default function StagingWorkflowPanel() {
             <span className="wf-progress">Paso {workflowProgress.currentStep} de 3</span>
           </div>
 
-          <div className="wf-status" style={{ marginBottom: 12 }}>
+          <div className="wf-status wf-toolbar-status" style={{ marginBottom: 12 }}>
             {publishedReadOnly ? <span className="wf-badge wf-badge-env">Lectura: versión publicada</span> : null}
             <span className="wf-badge">{dirty ? "BORRADOR CON CAMBIOS" : "BORRADOR GUARDADO"}</span>
             {showAdvancedUi ? (
