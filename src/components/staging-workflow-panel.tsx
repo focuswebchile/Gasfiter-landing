@@ -3997,6 +3997,26 @@ export default function StagingWorkflowPanel() {
     [publishChecklist],
   );
 
+  const contentReadyForNextAction = useMemo(
+    () =>
+      panelReady &&
+      publishChecklist.length > 0 &&
+      checklistCompleted === publishChecklist.length &&
+      publishValidationMissing.length === 0,
+    [panelReady, publishChecklist.length, checklistCompleted, publishValidationMissing.length],
+  );
+
+  const actionAvailableLabel = useMemo(() => {
+    if (!contentReadyForNextAction) return "Acción disponible: Completar pendientes";
+    if (membership?.role === "owner" || membership?.role === "admin") {
+      return "Acción disponible: Publicar";
+    }
+    if (membership?.role === "editor") {
+      return "Acción disponible: Solicitar publicación";
+    }
+    return "Acción disponible: Revisar estado";
+  }, [contentReadyForNextAction, membership?.role]);
+
   const publishWarnings = useMemo<PublishWarningItem[]>(() => {
     if (!settings) return [];
 
@@ -4189,9 +4209,7 @@ export default function StagingWorkflowPanel() {
     actionContext.saveDisabledReason,
   ]);
 
-  const actionHelpIsError = Boolean(
-    actionContext.publishDisabledReason || actionContext.requestDisabledReason || actionContext.saveDisabledReason,
-  );
+  const actionHelpIsError = Boolean(draftConflict.active);
   const sidebarGroups = (
     showAdvancedUi
       ? [
@@ -4304,6 +4322,10 @@ export default function StagingWorkflowPanel() {
             </div>
             <div className="wf-editorial-status-desc">{editorialStatus.detail}</div>
             <div className="wf-editorial-status-meta">
+              <span className="wf-pill wf-pill-neutral">
+                Permiso actual: {getRoleDisplayLabel(membership?.role)}
+              </span>
+              <span className="wf-pill wf-pill-primary">{actionAvailableLabel}</span>
               <span className="wf-pill wf-pill-neutral">
                 {latestDraftVersion ? `Borrador v${latestDraftVersion.version_number}` : "Sin borrador activo"}
               </span>
