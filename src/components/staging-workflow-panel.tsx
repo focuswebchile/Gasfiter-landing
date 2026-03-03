@@ -703,9 +703,9 @@ function pickTimestamp(value: unknown, fallback: string | null = null): string |
 }
 
 function mapPublishIssueToSection(
-  issue: string,
+  issue: PublishValidationIssue,
 ): { section: EditableSectionId; view: SidebarView; label: string } | null {
-  const normalized = issue.toLowerCase();
+  const normalized = `${issue.code || ""} ${issue.path || ""} ${issue.label || ""} ${issue.message || ""}`.toLowerCase();
   if (normalized.includes("hero")) return { section: "hero", view: "sections", label: "Ir a Hero" };
   if (normalized.includes("empresa") || normalized.includes("audiencia")) {
     return { section: "audience", view: "sections", label: "Ir a Empresa" };
@@ -783,7 +783,7 @@ export default function StagingWorkflowPanel() {
   const [showDiffOverlay, setShowDiffOverlay] = useState(false);
   const [uploadingAsset, setUploadingAsset] = useState<"logoNav" | "logoFooter" | "favicon" | null>(null);
   const [uploadingContentAssetKey, setUploadingContentAssetKey] = useState<string | null>(null);
-  const [publishValidationMissing, setPublishValidationMissing] = useState<string[]>([]);
+  const [publishValidationMissing, setPublishValidationMissing] = useState<PublishValidationIssue[]>([]);
 
   const baseUrl = useMemo(() => {
     if (typeof window === "undefined") {
@@ -1411,12 +1411,16 @@ export default function StagingWorkflowPanel() {
           message?: string;
           missing?: PublishValidationIssue[];
         };
-        const labels = (payload.missing ?? [])
-          .map((issue) => issue?.label || issue?.message)
+        const missingIssues = (payload.missing ?? []).filter(
+          (issue): issue is PublishValidationIssue =>
+            Boolean(issue && (issue.label || issue.message || issue.code)),
+        );
+        const labels = missingIssues
+          .map((issue) => issue?.label || issue?.message || issue?.code)
           .filter((value): value is string => typeof value === "string" && value.trim().length > 0);
         const uniqueLabels = Array.from(new Set(labels));
         const details = uniqueLabels.length > 0 ? `Falta: ${uniqueLabels.join(", ")}.` : "";
-        setPublishValidationMissing(uniqueLabels);
+        setPublishValidationMissing(missingIssues);
         setError(`${payload.message || "No se puede publicar."} ${details}`.trim());
         return;
       }
@@ -4436,8 +4440,11 @@ export default function StagingWorkflowPanel() {
             <div className="wf-alert" style={{ marginBottom: 12 }}>
               <div className="wf-alert-title">Falta contenido mínimo para publicar</div>
               <ul className="wf-alert-list">
-                {publishValidationMissing.map((item) => (
-                  <li key={item}>{item}</li>
+                {publishValidationMissing.map((item, index) => (
+                  <li key={`${item.code || item.path || "issue"}-${index}`}>
+                    {item.message || item.label || item.code || "Validación incompleta"}
+                    {item.path ? ` (${item.path})` : ""}
+                  </li>
                 ))}
               </ul>
               {publishFixActions.length > 0 ? (
