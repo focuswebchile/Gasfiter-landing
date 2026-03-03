@@ -402,6 +402,15 @@ const panelStyles = String.raw`
   .wf-toolbar-main .wf-input{min-width:260px}
   .wf-toolbar-actions .wf-select{min-width:170px}
   .wf-toolbar-status{display:flex;gap:8px;flex-wrap:wrap;padding:2px 0}
+  .wf-editorial-status{display:grid;gap:8px;border:1px solid var(--wf-border);border-radius:12px;background:var(--wf-surface-soft);padding:12px 14px;margin-bottom:12px}
+  .wf-editorial-status-title{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .wf-editorial-status-title strong{font-size:15px;line-height:1.25}
+  .wf-editorial-status-meta{display:flex;flex-wrap:wrap;gap:8px}
+  .wf-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#e2e8f0;color:var(--wf-text)}
+  .wf-pill-primary{background:var(--wf-primary-soft);color:var(--wf-primary-ink)}
+  .wf-pill-neutral{background:#edf2f7;color:#334155}
+  .wf-pill-warn{background:var(--wf-warn-bg);color:#9a3412}
+  .wf-pill-ok{background:var(--wf-success-bg);color:var(--wf-success-ink)}
   .wf-input,.wf-select,.wf-textarea{border:1px solid var(--wf-border-strong);border-radius:10px;padding:10px 12px;font:inherit;font-size:14px;line-height:1.35;background:var(--wf-surface)}
   .wf-input,.wf-select{height:40px}
   .wf-input{min-width:200px;flex:1}
@@ -536,6 +545,7 @@ const panelStyles = String.raw`
     .wf-btn{width:100%}
     .wf-btn-compact{width:auto}
     .wf-toolbar-actions .wf-muted,.wf-toolbar-actions .wf-progress{width:100%}
+    .wf-editorial-status-title{flex-direction:column;align-items:flex-start}
     .wf-status .wf-badge{width:max-content}
     .wf-step{padding:10px}
     .wf-checklist-item{flex-direction:column;align-items:flex-start}
@@ -3812,6 +3822,54 @@ export default function StagingWorkflowPanel() {
     [workflowProgress.currentStep, workflowProgress.steps.length],
   );
 
+  const editorialStatus = useMemo(() => {
+    if (!panelReady) {
+      return {
+        title: "Panel no cargado",
+        tone: "warn" as const,
+      };
+    }
+    if (draftConflict.active) {
+      return {
+        title: "Conflicto de borrador detectado",
+        tone: "warn" as const,
+      };
+    }
+    if (autosaving || flushingPublish) {
+      return {
+        title: flushingPublish ? "Preparando publicación" : "Guardando cambios",
+        tone: "warn" as const,
+      };
+    }
+    if (dirty) {
+      return {
+        title: "Borrador con cambios pendientes",
+        tone: "warn" as const,
+      };
+    }
+    if (mode === "published") {
+      return {
+        title: latestPublishedVersion
+          ? `Publicado activo (v${latestPublishedVersion.version_number})`
+          : "Publicado activo",
+        tone: "ok" as const,
+      };
+    }
+    return {
+      title: latestDraftVersion ? `Borrador activo (v${latestDraftVersion.version_number})` : "Borrador activo",
+      tone: "ok" as const,
+    };
+  }, [
+    panelReady,
+    draftConflict.active,
+    autosaving,
+    flushingPublish,
+    dirty,
+    mode,
+    latestPublishedVersion,
+    latestDraftVersion,
+  ]);
+
   const actionContext = useMemo(() => {
     const inDraft = mode === "draft";
     const inPublished = mode === "published";
@@ -4293,40 +4351,29 @@ export default function StagingWorkflowPanel() {
             <button className="wf-btn wf-btn-soft" onClick={loadPanel} disabled={busy}>
               Cargar panel
             </button>
-            <span className="wf-muted">{autosaveHint}</span>
-            <span className="wf-progress">Paso {workflowProgress.currentStep} de 3</span>
           </div>
 
-          <div className="wf-status wf-toolbar-status" style={{ marginBottom: 12 }}>
-            {publishedReadOnly ? <span className="wf-badge wf-badge-env">Lectura: versión publicada</span> : null}
-            <span className="wf-badge">{dirty ? "BORRADOR CON CAMBIOS" : "BORRADOR GUARDADO"}</span>
-            {showAdvancedUi ? (
-              <span className="wf-badge">
-                {latestDraftVersion ? `Borrador v${latestDraftVersion.version_number}` : "Sin borrador"}
+          <div className="wf-editorial-status">
+            <div className="wf-editorial-status-title">
+              <strong>Estado del contenido: {editorialStatus.title}</strong>
+              <span className={`wf-pill ${editorialStatus.tone === "ok" ? "wf-pill-ok" : "wf-pill-warn"}`}>
+                Paso {workflowProgress.currentStep}/3 · {workflowCompletionPercent}%
               </span>
-            ) : (
-              <span className="wf-badge">
-                {latestDraftVersion ? "Borrador activo" : "Sin borrador"}
+            </div>
+            <div className="wf-editorial-status-meta">
+              <span className="wf-pill wf-pill-primary">
+                {latestDraftVersion ? `Borrador v${latestDraftVersion.version_number}` : "Sin borrador activo"}
               </span>
-            )}
-            {showAdvancedUi ? (
-              <span className="wf-badge">
-                {latestPublishedVersion ? `Publicado v${latestPublishedVersion.version_number}` : "Sin publicado"}
+              <span className="wf-pill wf-pill-neutral">
+                {latestPublishedVersion ? `Publicado v${latestPublishedVersion.version_number}` : "Sin versión publicada"}
               </span>
-            ) : (
-              <span className="wf-badge">
-                {latestPublishedVersion ? "Publicado activo" : "Sin publicado"}
-              </span>
-            )}
-            {hasActivePublishRequest ? (
-              <span className="wf-badge wf-badge-warn">
-                Solicitud pendiente
-                {showAdvancedUi && latestDraftVersion?.publish_requested_by
-                  ? ` · ${latestDraftVersion.publish_requested_by.slice(0, 8)}…`
-                  : ""}
-              </span>
-            ) : null}
-            {autosaving ? <span className="wf-badge wf-badge-role">Autoguardando...</span> : null}
+              {hasActivePublishRequest ? (
+                <span className="wf-pill wf-pill-warn">Solicitud de publicación pendiente</span>
+              ) : null}
+              {autosaving || flushingPublish ? (
+                <span className="wf-pill wf-pill-warn">{flushingPublish ? "Preparando publicación..." : "Guardando..."}</span>
+              ) : null}
+            </div>
           </div>
 
           <div className="wf-steps">
