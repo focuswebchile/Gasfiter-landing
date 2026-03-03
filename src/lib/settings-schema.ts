@@ -11,16 +11,6 @@ export const sectionIdSchema = z.enum([
   "faq",
 ]);
 
-const ctaUrlSchema = z
-  .string()
-  .trim()
-  .refine((value) => /^(tel:|https?:\/\/|#)/i.test(value), "CTA URL must start with tel:, http(s):// or #");
-
-const ctaSchema = z.object({
-  text: z.string().trim().min(1),
-  url: ctaUrlSchema,
-});
-
 const baseItemSchema = z.object({
   enabled: z.boolean().default(true),
   order: z.number().int().default(100),
@@ -115,67 +105,6 @@ export const settingsSchema = z
     for (const section of sections) {
       if (!section.enabled) continue;
       const data = section.data;
-
-      if (section.id === "hero") {
-        if (typeof data.title !== "string" || !data.title.trim()) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            path: ["content", "sections", sections.indexOf(section), "data", "title"],
-            message: "Hero requires title when enabled",
-          });
-        }
-        if (data.cta_primary) {
-          const parsed = ctaSchema.safeParse(data.cta_primary);
-          if (!parsed.success) {
-            ctx.addIssue({
-              code: z.ZodIssueCode.custom,
-              path: ["content", "sections", sections.indexOf(section), "data", "cta_primary"],
-              message: "Hero cta_primary is invalid",
-            });
-          }
-        }
-      }
-
-      if (["services", "projects", "testimonials", "faq"].includes(section.id)) {
-        const items = Array.isArray(data.items) ? data.items : [];
-        if (items.length < 1) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            path: ["content", "sections", sections.indexOf(section), "data", "items"],
-            message: `${section.id} requires at least one item when enabled`,
-          });
-        }
-      }
-
-      if (section.id === "urgency_banner") {
-        if (typeof data.title !== "string" || !data.title.trim()) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            path: ["content", "sections", sections.indexOf(section), "data", "title"],
-            message: "urgency_banner requires title",
-          });
-        }
-        if (data.cta_primary) {
-          const parsed = ctaSchema.safeParse(data.cta_primary);
-          if (!parsed.success) {
-            ctx.addIssue({
-              code: z.ZodIssueCode.custom,
-              path: ["content", "sections", sections.indexOf(section), "data", "cta_primary"],
-              message: "urgency_banner cta_primary is invalid",
-            });
-          }
-        }
-      }
-
-      if (section.id === "contact_banner") {
-        if (typeof data.title !== "string" || !data.title.trim()) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            path: ["content", "sections", sections.indexOf(section), "data", "title"],
-            message: "contact_banner requires title",
-          });
-        }
-      }
 
       if (Array.isArray(data.badges)) {
         data.badges.forEach((badge, i) => {
