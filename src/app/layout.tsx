@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Gasfiter | Gasfitería Profesional 24/7",
+  title: "ABcis-Gobierno y Compliance",
   description:
     "Gasfitería profesional 24/7. Instalaciones, reparaciones y mantenciones rápidas en tu zona. Llama ahora o solicita una cotización gratis.",
   keywords: [
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "Gasfiter" }],
   openGraph: {
-    title: "Gasfiter | Gasfitería Profesional 24/7",
+    title: "ABcis-Gobierno y Compliance",
     description:
       "Servicio rápido y confiable de gasfitería en tu zona. Técnicos certificados y 5 estrellas en Google Reviews.",
     type: "website",
