@@ -89,7 +89,7 @@ export async function POST(request: Request, context: { params: Promise<{ slug: 
       return NextResponse.json({ error: "Draft snapshot is invalid" }, { status: 422 });
     }
 
-    const requirementIssues = validatePublishRequirements(draftSettings);
+    const requirementIssues = validatePublishRequirements(draftSettings, { siteSlug: slug });
     if (requirementIssues.length > 0) {
       return NextResponse.json(
         {

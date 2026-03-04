@@ -200,9 +200,18 @@ const CONTENT_IMAGE_MIME_TYPES = ["image/png", "image/jpeg", "image/jpg", "image
 const LOGO_MIME_TYPES = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/svg+xml"];
 const FAVICON_MIME_TYPES = ["image/png", "image/x-icon", "image/vnd.microsoft.icon"];
 const FAVICON_EXTENSIONS = ["png", "ico"];
+const REQUEST_REMINDER_COOLDOWN_MINUTES = 30;
 
 function bytesToMbText(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(0)}MB`;
+}
+
+function getRetryAfterMinutes(iso: string | null | undefined, cooldownMinutes: number, nowTs: number): number {
+  if (!iso) return 0;
+  const ts = Date.parse(iso);
+  if (Number.isNaN(ts)) return 0;
+  const elapsedMinutes = (nowTs - ts) / 1000 / 60;
+  return Math.max(0, Math.ceil(cooldownMinutes - elapsedMinutes));
 }
 
 function validateImageFile(
@@ -901,6 +910,8 @@ export default function StagingWorkflowPanel() {
   const [showDiffOverlay, setShowDiffOverlay] = useState(false);
   const [showRequestPublishOverlay, setShowRequestPublishOverlay] = useState(false);
   const [requestPublishNote, setRequestPublishNote] = useState("");
+  const [sendingRequestPublishReminder, setSendingRequestPublishReminder] = useState(false);
+  const [reminderClockTs, setReminderClockTs] = useState(() => Date.now());
   const [uploadingAsset, setUploadingAsset] = useState<"logoNav" | "logoFooter" | "favicon" | null>(null);
   const [uploadingContentAssetKey, setUploadingContentAssetKey] = useState<string | null>(null);
   const [publishValidationMissing, setPublishValidationMissing] = useState<PublishValidationIssue[]>([]);
@@ -985,7 +996,23 @@ export default function StagingWorkflowPanel() {
   const latestPublishedVersion = versions.find((version) => version.status === "published") ?? null;
   const latestDraftVersion = versions.find((version) => version.status === "draft") ?? null;
   const hasActivePublishRequest = Boolean(latestDraftVersion?.publish_requested_at);
+  const reminderRetryAfterMinutes = useMemo(
+    () =>
+      getRetryAfterMinutes(
+        latestDraftVersion?.publish_notified_at ?? null,
+        REQUEST_REMINDER_COOLDOWN_MINUTES,
+        reminderClockTs,
+      ),
+    [latestDraftVersion?.publish_notified_at, reminderClockTs],
+  );
+  const reminderCooldownActive = hasActivePublishRequest && reminderRetryAfterMinutes > 0;
   const latestDraftVersionToken = latestDraftVersion?.created_at ?? null;
+
+  useEffect(() => {
+    if (!hasActivePublishRequest) return;
+    const tick = window.setInterval(() => setReminderClockTs(Date.now()), 30000);
+    return () => window.clearInterval(tick);
+  }, [hasActivePublishRequest]);
 
   useEffect(() => {
     if (!toast) return;
@@ -1500,6 +1527,65 @@ export default function StagingWorkflowPanel() {
       setError(error instanceof Error ? error.message : "No se pudo solicitar publicación");
     } finally {
       setBusy(false);
+    }
+  };
+
+  const sendRequestPublishReminder = async () => {
+    if (!userId.trim()) return setError("No se detectó sesión de usuario. Inicia sesión nuevamente.");
+    if (!panelReady) return setError("Primero usa Cargar panel");
+    if (!hasActivePublishRequest) return setError("No hay una solicitud activa para reenviar.");
+    if (!canRequestPublish) return setError("Tu rol no puede reenviar recordatorios.");
+    if (reminderCooldownActive) {
+      return setOk(`Aún en cooldown. Disponible en ${reminderRetryAfterMinutes} min.`);
+    }
+
+    setSendingRequestPublishReminder(true);
+    setToast(null);
+    try {
+      const response = await fetch(`${endpointBase}/request-publish-reminder`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-id": userId.trim(),
+        },
+        body: JSON.stringify({
+          userId: userId.trim(),
+        }),
+      });
+      const payload = (await response.json().catch(() => ({}))) as {
+        error?: string;
+        message?: string;
+        request?: {
+          active?: boolean;
+          emailSent?: boolean;
+          emailReason?: string | null;
+          cooldownActive?: boolean;
+          retryAfterMinutes?: number;
+        };
+      };
+      if (!response.ok) throw new Error(payload?.error || payload?.message || "No se pudo reenviar recordatorio");
+
+      const cooldown = typeof payload?.request?.retryAfterMinutes === "number" ? payload.request.retryAfterMinutes : 0;
+      if (payload?.request?.cooldownActive && cooldown > 0) {
+        setOk(`Recordatorio en cooldown. Disponible en ${cooldown} min.`);
+      } else if (payload?.request?.emailSent) {
+        setOk("Recordatorio enviado a owner/admin.");
+      } else if (payload?.request?.emailReason) {
+        setOk(`Recordatorio registrado (${payload.request.emailReason}).`);
+      } else {
+        setOk("Recordatorio procesado.");
+      }
+
+      appendActionLog(
+        "request",
+        latestDraftVersion?.version_number ?? null,
+        `Recordatorio de publicación (${payload?.request?.emailSent ? "email enviado" : "sin email"})`,
+      );
+      await fetchVersions(true);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "No se pudo reenviar recordatorio");
+    } finally {
+      setSendingRequestPublishReminder(false);
     }
   };
 
@@ -4068,7 +4154,9 @@ export default function StagingWorkflowPanel() {
               : "";
 
     const requestDisabledReason = hasActivePublishRequest
-      ? "Ya hay una solicitud activa para este borrador."
+      ? reminderCooldownActive
+        ? `Ya hay una solicitud activa para este borrador (recordatorio en ${reminderRetryAfterMinutes} min).`
+        : "Ya hay una solicitud activa para este borrador."
       : !panelReady
         ? "Primero carga el panel."
         : draftConflict.active
@@ -4101,6 +4189,8 @@ export default function StagingWorkflowPanel() {
     canRequestPublish,
     canPublish,
     hasActivePublishRequest,
+    reminderCooldownActive,
+    reminderRetryAfterMinutes,
     busy,
     autosaving,
     flushingPublish,
@@ -4550,7 +4640,10 @@ export default function StagingWorkflowPanel() {
                 {latestPublishedVersion ? `Publicado v${latestPublishedVersion.version_number}` : "Sin versión publicada"}
               </span>
               {hasActivePublishRequest ? (
-                <span className="wf-pill wf-pill-neutral">Solicitud de publicación pendiente</span>
+                <span className="wf-pill wf-pill-neutral">
+                  Solicitud de publicación pendiente
+                  {reminderCooldownActive ? ` · recordatorio en ${reminderRetryAfterMinutes} min` : " · recordatorio disponible"}
+                </span>
               ) : null}
               {autosaving || flushingPublish ? (
                 <span className="wf-pill wf-pill-neutral">{flushingPublish ? "Preparando publicación..." : "Guardando..."}</span>
@@ -4630,6 +4723,32 @@ export default function StagingWorkflowPanel() {
                 aria-describedby={actionContext.requestDisabled ? "panel-action-help" : undefined}
               >
                 Solicitar publicación
+              </button>
+            ) : null}
+            {hasActivePublishRequest && canRequestPublish ? (
+              <button
+                className="wf-btn wf-btn-soft"
+                onClick={sendRequestPublishReminder}
+                disabled={
+                  !panelReady ||
+                  busy ||
+                  autosaving ||
+                  flushingPublish ||
+                  draftConflict.active ||
+                  sendingRequestPublishReminder ||
+                  reminderCooldownActive
+                }
+                title={
+                  reminderCooldownActive
+                    ? `Disponible en ${reminderRetryAfterMinutes} min`
+                    : "Reenviar recordatorio a owner/admin"
+                }
+              >
+                {sendingRequestPublishReminder
+                  ? "Enviando recordatorio..."
+                  : reminderCooldownActive
+                    ? `Reenviar en ${reminderRetryAfterMinutes} min`
+                    : "Reenviar recordatorio"}
               </button>
             ) : null}
             {showAdvancedUi ? (

@@ -25,6 +25,10 @@ export type PublishRequirementIssue = {
   message: string;
 };
 
+type PublishValidationContext = {
+  siteSlug?: string;
+};
+
 function isNonEmptyString(value: unknown): value is string {
   return typeof value === "string" && value.trim().length > 0;
 }
@@ -80,11 +84,20 @@ function isValidCtaUrl(value: unknown): boolean {
   return normalizeInternalTarget(raw).length > 0;
 }
 
-export function validatePublishRequirements(settings: SettingsPayload): PublishRequirementIssue[] {
+function isTestimonialsRequired(siteSlug?: string): boolean {
+  const normalized = String(siteSlug || "").trim().toLowerCase();
+  return normalized !== "abcis";
+}
+
+export function validatePublishRequirements(
+  settings: SettingsPayload,
+  context: PublishValidationContext = {},
+): PublishRequirementIssue[] {
   const issues: PublishRequirementIssue[] = [];
   const sections = Array.isArray(settings.content?.sections) ? settings.content.sections : [];
   const findSection = (id: string) =>
     sections.find((section) => section && section.id === id && section.enabled !== false) ?? null;
+  const testimonialsRequired = isTestimonialsRequired(context.siteSlug);
 
   const hero = findSection("hero");
   if (!hero) {
@@ -233,23 +246,25 @@ export function validatePublishRequirements(settings: SettingsPayload): PublishR
     }
   }
 
-  const testimonials = findSection("testimonials");
-  if (!testimonials) {
-    issues.push({
-      code: "TESTIMONIALS_SECTION_MISSING",
-      label: "Un testimonio",
-      path: "content.sections.testimonials",
-      message: "Activa la sección Testimonials para publicar.",
-    });
-  } else {
-    const count = enabledItemsCount(asRecord(testimonials.data));
-    if (count < 1) {
+  if (testimonialsRequired) {
+    const testimonials = findSection("testimonials");
+    if (!testimonials) {
       issues.push({
-        code: "TESTIMONIALS_ITEMS_MISSING",
+        code: "TESTIMONIALS_SECTION_MISSING",
         label: "Un testimonio",
-        path: "content.sections.testimonials.data.items",
-        message: "Agrega y habilita al menos un testimonio.",
+        path: "content.sections.testimonials",
+        message: "Activa la sección Testimonials para publicar.",
       });
+    } else {
+      const count = enabledItemsCount(asRecord(testimonials.data));
+      if (count < 1) {
+        issues.push({
+          code: "TESTIMONIALS_ITEMS_MISSING",
+          label: "Un testimonio",
+          path: "content.sections.testimonials.data.items",
+          message: "Agrega y habilita al menos un testimonio.",
+        });
+      }
     }
   }
 
