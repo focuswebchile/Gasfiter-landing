@@ -857,6 +857,10 @@ export default function StagingWorkflowPanel() {
   const [publishValidationMissing, setPublishValidationMissing] = useState<PublishValidationIssue[]>([]);
   const normalizedSiteSlug = siteSlug.trim().toLowerCase();
   const hideFaqAndTestimonialsInItems = normalizedSiteSlug === "abcis";
+  const hiddenSectionsInSectionsView = useMemo(
+    () => (normalizedSiteSlug === "abcis" ? new Set<EditableSectionId>(["urgency_banner", "faq", "testimonials"]) : null),
+    [normalizedSiteSlug],
+  );
 
   const baseUrl = useMemo(() => {
     if (typeof window === "undefined") {
@@ -963,6 +967,12 @@ export default function StagingWorkflowPanel() {
     return supported.includes(sectionId as EditableSectionId) ? (sectionId as EditableSectionId) : "hero";
   };
 
+  const visibleSectionsForSectionsView = useMemo(() => {
+    const sections = settings?.content?.sections ?? [];
+    if (!hiddenSectionsInSectionsView) return sections;
+    return sections.filter((section) => !hiddenSectionsInSectionsView.has(section.id as EditableSectionId));
+  }, [settings?.content?.sections, hiddenSectionsInSectionsView]);
+
   useEffect(() => {
     if (!hideFaqAndTestimonialsInItems) return;
     if (view !== "items") return;
@@ -974,6 +984,13 @@ export default function StagingWorkflowPanel() {
       setEditableSection("projects");
     }
   }, [editableSection, hideFaqAndTestimonialsInItems, view]);
+
+  useEffect(() => {
+    if (!hiddenSectionsInSectionsView) return;
+    if (view !== "sections") return;
+    if (!hiddenSectionsInSectionsView.has(editableSection)) return;
+    setEditableSection("hero");
+  }, [editableSection, hiddenSectionsInSectionsView, view]);
 
   const handleModeChange = (nextMode: Mode) => {
     if (nextMode === mode) return;
@@ -4588,7 +4605,7 @@ export default function StagingWorkflowPanel() {
             <>
               <h2 className="wf-h3">Secciones</h2>
               <div className="wf-sections" style={{ marginBottom: 12 }}>
-                {(settings?.content?.sections ?? []).map((section) => (
+                {visibleSectionsForSectionsView.map((section) => (
                   <div
                     key={section.id}
                     className={`wf-row-item ${draggingSectionId === section.id ? "dragging" : ""} ${editableSection === section.id ? "active" : ""}`}
@@ -4612,7 +4629,7 @@ export default function StagingWorkflowPanel() {
                     </label>
                   </div>
                 ))}
-                {!settings?.content?.sections?.length ? <p className="wf-muted">Carga el panel para editar secciones.</p> : null}
+                {!visibleSectionsForSectionsView.length ? <p className="wf-muted">Carga el panel para editar secciones.</p> : null}
               </div>
               {renderSectionEditor()}
             </>
