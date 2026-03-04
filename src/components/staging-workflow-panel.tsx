@@ -876,6 +876,8 @@ export default function StagingWorkflowPanel() {
   const [loadingDiff, setLoadingDiff] = useState(false);
   const [showPreviewOverlay, setShowPreviewOverlay] = useState(false);
   const [showDiffOverlay, setShowDiffOverlay] = useState(false);
+  const [showRequestPublishOverlay, setShowRequestPublishOverlay] = useState(false);
+  const [requestPublishNote, setRequestPublishNote] = useState("");
   const [uploadingAsset, setUploadingAsset] = useState<"logoNav" | "logoFooter" | "favicon" | null>(null);
   const [uploadingContentAssetKey, setUploadingContentAssetKey] = useState<string | null>(null);
   const [publishValidationMissing, setPublishValidationMissing] = useState<PublishValidationIssue[]>([]);
@@ -1409,20 +1411,19 @@ export default function StagingWorkflowPanel() {
     }
   }, [panelReady, canSaveDraft, draftConflict.active, saveDraftInternal]);
 
-  const requestPublish = async () => {
+  const openRequestPublishDialog = () => {
     if (!userId.trim()) return setError("No se detectó sesión de usuario. Inicia sesión nuevamente.");
     if (!panelReady) return setError("Primero usa Cargar panel");
     if (!canRequestPublish) return setError("Tu rol no puede solicitar publicación");
     if (hasActivePublishRequest) return setOk("Ya existe una solicitud de publicación activa.");
     if (mode !== "draft") return setError("Activa modo borrador para solicitar publicación");
     if (draftConflict.active) return setError("Conflicto de draft: recarga borrador antes de solicitar.");
+    setRequestPublishNote("");
+    setShowRequestPublishOverlay(true);
+  };
 
-    let note = "";
-    if (typeof window !== "undefined") {
-      const maybeNote = window.prompt("Nota opcional para owner/admin (ej: listo para publicar):", "");
-      if (maybeNote === null) return;
-      note = maybeNote.trim();
-    }
+  const requestPublish = async (noteInput: string) => {
+    const note = noteInput.trim().slice(0, 500);
 
     setBusy(true);
     setToast(null);
@@ -1454,6 +1455,8 @@ export default function StagingWorkflowPanel() {
       if (payload?.request?.alreadyRequested) {
         setOk("Solicitud ya activa: pendiente de revisión.");
         appendActionLog("request", latestDraftVersion?.version_number ?? null, "Solicitud ya activa");
+        setShowRequestPublishOverlay(false);
+        setRequestPublishNote("");
       } else {
         const emailText = payload?.request?.emailSent
           ? "Correo enviado a owner/admin."
@@ -1466,6 +1469,8 @@ export default function StagingWorkflowPanel() {
           latestDraftVersion?.version_number ?? null,
           `Solicitud de publicación (${payload?.request?.emailSent ? "email enviado" : "sin email"})`,
         );
+        setShowRequestPublishOverlay(false);
+        setRequestPublishNote("");
       }
       await fetchVersions(true);
     } catch (error) {
@@ -4554,7 +4559,7 @@ export default function StagingWorkflowPanel() {
             {actionContext.showRequestPublish ? (
               <button
                 className="wf-btn wf-btn-soft"
-                onClick={requestPublish}
+                onClick={openRequestPublishDialog}
                 disabled={actionContext.requestDisabled}
                 title={actionContext.requestDisabled ? actionContext.requestDisabledReason : "Solicitar publicación"}
                 aria-describedby={actionContext.requestDisabled ? "panel-action-help" : undefined}
@@ -4858,6 +4863,52 @@ export default function StagingWorkflowPanel() {
               Usa "Ver diferencias" para comparar borrador y publicado.
             </p>
           )}
+        </div>
+      </OverlayPanel>
+
+      <OverlayPanel
+        open={showRequestPublishOverlay}
+        onClose={() => {
+          if (busy) return;
+          setShowRequestPublishOverlay(false);
+        }}
+        title="Solicitar publicación"
+      >
+        <div className="wf-preview-box">
+          <div className="wf-kv">
+            <div><strong>Se enviará una solicitud a owner/admin para revisión.</strong></div>
+            <div className="wf-muted">Puedes agregar una nota opcional con contexto de los cambios (máx 500 caracteres).</div>
+          </div>
+          <textarea
+            className="wf-textarea"
+            placeholder="Ej: listo para publicar, se actualizó hero y servicios."
+            value={requestPublishNote}
+            disabled={busy}
+            maxLength={500}
+            onChange={(event) => setRequestPublishNote(event.target.value)}
+            style={{ marginTop: 10 }}
+          />
+          <div className="wf-row" style={{ justifyContent: "space-between", marginTop: 8 }}>
+            <span className="wf-muted">{requestPublishNote.length}/500</span>
+            <div className="wf-row">
+              <button
+                className="wf-btn wf-btn-soft"
+                disabled={busy}
+                onClick={() => setShowRequestPublishOverlay(false)}
+              >
+                Cancelar
+              </button>
+              <button
+                className="wf-btn wf-btn-primary"
+                disabled={busy}
+                onClick={() => {
+                  void requestPublish(requestPublishNote);
+                }}
+              >
+                {busy ? "Enviando..." : "Enviar solicitud"}
+              </button>
+            </div>
+          </div>
         </div>
       </OverlayPanel>
 
