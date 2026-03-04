@@ -514,6 +514,16 @@ const panelStyles = String.raw`
   .wf-overlay-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-bottom:1px solid #e2e8f0}
   .wf-overlay-head h3{margin:0;font-size:20px;line-height:1.2;font-weight:800}
   .wf-overlay-body{overflow:auto;padding:14px;display:grid;gap:12px}
+  .wf-style-stack{display:grid;gap:12px}
+  .wf-style-card{border:1px solid var(--wf-border);border-radius:12px;background:var(--wf-surface-soft);padding:12px;display:grid;gap:10px}
+  .wf-style-head{display:grid;gap:4px}
+  .wf-style-title{margin:0;font-size:16px;line-height:1.3;font-weight:800;letter-spacing:-.01em}
+  .wf-style-help{margin:0;color:var(--wf-muted);font-size:12px;line-height:1.45}
+  .wf-style-field{display:grid;gap:6px}
+  .wf-style-label{font-size:12px;color:#334155;font-weight:700;letter-spacing:.01em}
+  .wf-color-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .wf-color-field{display:grid;gap:6px}
+  .wf-style-subsection{display:grid;gap:8px;padding-top:8px;border-top:1px solid #e2e8f0}
   .wf-sr-only{
     position:absolute!important;
     width:1px!important;
@@ -536,6 +546,7 @@ const panelStyles = String.raw`
     .wf-workspace{max-width:100%}
     .wf-flowbar-head{align-items:flex-start;flex-direction:column}
     .wf-grid2{grid-template-columns:1fr}
+    .wf-color-grid{grid-template-columns:1fr}
     .wf-overlay-panel{width:min(820px,100vw)}
   }
   @media(max-width:768px){
@@ -3430,10 +3441,20 @@ export default function StagingWorkflowPanel() {
 
   const renderStyleEditor = () => {
     if (!settings) return <p className="wf-muted">Carga panel para editar estilo.</p>;
-  const colors = settings.colors ?? {};
-  const typography = settings.typography ?? {};
-  const branding = settings.branding ?? {};
-  const contact = branding.contact ?? {};
+    const colors = settings.colors ?? {};
+    const typography = settings.typography ?? {};
+    const branding = settings.branding ?? {};
+    const contact = branding.contact ?? {};
+    const colorFields: Array<{
+      key: "primary" | "secondary" | "background" | "text";
+      label: string;
+      help: string;
+    }> = [
+      { key: "primary", label: "Primario", help: "Botones y acciones principales." },
+      { key: "secondary", label: "Secundario", help: "Superficies de apoyo y bloques alternos." },
+      { key: "background", label: "Fondo", help: "Base general de la interfaz." },
+      { key: "text", label: "Acento", help: "Textos destacados y contrastes visuales." },
+    ];
 
     const updateColor = (key: "primary" | "secondary" | "background" | "text", value: string) => {
       const normalized = normalizeColorValue(value);
@@ -3448,193 +3469,247 @@ export default function StagingWorkflowPanel() {
     };
 
     return (
-      <div className="wf-sections">
-        <h3 className="wf-h3">Colores</h3>
-        <div className="wf-grid2">
-          {(["primary", "secondary", "background", "text"] as const).map((key) => (
-            <div key={key} className="wf-row">
-              <input
-                type="color"
-                className="wf-input"
+      <div className="wf-style-stack">
+        <section className="wf-style-card">
+          <div className="wf-style-head">
+            <h3 className="wf-style-title">Colores de marca</h3>
+            <p className="wf-style-help">Define la paleta base de la landing. Usa formato hexadecimal `#RRGGBB`.</p>
+          </div>
+          <div className="wf-color-grid">
+            {colorFields.map((field) => (
+              <div key={field.key} className="wf-color-field">
+                <span className="wf-style-label">{field.label}</span>
+                <div className="wf-row">
+                  <input
+                    type="color"
+                    className="wf-input"
+                    disabled={editingLocked}
+                    value={isHexColor(colors[field.key] ?? "") ? (colors[field.key] as string) : "#000000"}
+                    onChange={(e) => updateColor(field.key, e.target.value)}
+                    style={{ minWidth: 60, maxWidth: 72, padding: 4 }}
+                  />
+                  <input
+                    className="wf-input"
+                    disabled={editingLocked}
+                    placeholder={`${field.label} (#RRGGBB)`}
+                    value={colors[field.key] ?? ""}
+                    onChange={(e) =>
+                      updateSettings((prev) => ({
+                        ...prev,
+                        colors: { ...(prev.colors ?? {}), [field.key]: e.target.value },
+                      }))
+                    }
+                    onBlur={(e) => {
+                      if (!e.target.value.trim()) return;
+                      updateColor(field.key, e.target.value);
+                    }}
+                  />
+                </div>
+                <p className="wf-style-help">{field.help}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="wf-style-card">
+          <div className="wf-style-head">
+            <h3 className="wf-style-title">Tipografía</h3>
+            <p className="wf-style-help">Configura la fuente principal y parámetros base de lectura.</p>
+          </div>
+          <div className="wf-grid2">
+            <label className="wf-style-field">
+              <span className="wf-style-label">Familia tipográfica</span>
+              <select
+                className="wf-select"
                 disabled={editingLocked}
-                value={isHexColor(colors[key] ?? "") ? (colors[key] as string) : "#000000"}
-                onChange={(e) => updateColor(key, e.target.value)}
-                style={{ minWidth: 60, maxWidth: 72, padding: 4 }}
-              />
-              <input
-                className="wf-input"
-                disabled={editingLocked}
-                placeholder={`${key} (#RRGGBB)`}
-                value={colors[key] ?? ""}
+                value={typography.fontFamily ?? ""}
                 onChange={(e) =>
                   updateSettings((prev) => ({
                     ...prev,
-                    colors: { ...(prev.colors ?? {}), [key]: e.target.value },
+                    typography: {
+                      ...(prev.typography ?? {}),
+                      fontFamily: e.target.value,
+                      font: e.target.value,
+                    },
+                  }))
+                }
+              >
+                <option value="">Selecciona tipografía</option>
+                <option value="Inter">Inter</option>
+                <option value="Poppins">Poppins</option>
+                <option value="Roboto">Roboto</option>
+                <option value="Montserrat">Montserrat</option>
+                <option value="Barlow Condensed">Barlow Condensed</option>
+              </select>
+            </label>
+
+            <label className="wf-style-field">
+              <span className="wf-style-label">Fuente override (opcional)</span>
+              <input
+                className="wf-input"
+                disabled={editingLocked}
+                placeholder="URL de fuente u override"
+                value={typography.font ?? ""}
+                onChange={(e) =>
+                  updateSettings((prev) => ({
+                    ...prev,
+                    typography: { ...(prev.typography ?? {}), font: e.target.value },
+                  }))
+                }
+              />
+            </label>
+
+            <label className="wf-style-field">
+              <span className="wf-style-label">Tamaño base</span>
+              <input
+                className="wf-input"
+                disabled={editingLocked}
+                placeholder="Ej: 16px"
+                value={typography.baseSize ?? ""}
+                onChange={(e) =>
+                  updateSettings((prev) => ({
+                    ...prev,
+                    typography: { ...(prev.typography ?? {}), baseSize: e.target.value },
                   }))
                 }
                 onBlur={(e) => {
-                  if (!e.target.value.trim()) return;
-                  updateColor(key, e.target.value);
+                  const v = e.target.value.trim();
+                  if (v && !/^\d+(\.\d+)?px$/i.test(v)) {
+                    setError("baseSize debe ser en px, por ejemplo 16px");
+                  }
                 }}
               />
-            </div>
-          ))}
-        </div>
-        <h3 className="wf-h3">Tipografía</h3>
-        <div className="wf-grid2">
-          <select
-            className="wf-select"
-            disabled={editingLocked}
-            value={typography.fontFamily ?? ""}
-            onChange={(e) =>
-              updateSettings((prev) => ({
-                ...prev,
-                typography: {
-                  ...(prev.typography ?? {}),
-                  fontFamily: e.target.value,
-                  font: e.target.value,
-                },
-              }))
-            }
-          >
-            <option value="">Selecciona tipografía</option>
-            <option value="Inter">Inter</option>
-            <option value="Poppins">Poppins</option>
-            <option value="Roboto">Roboto</option>
-            <option value="Montserrat">Montserrat</option>
-            <option value="Barlow Condensed">Barlow Condensed</option>
-          </select>
-          <input
-            className="wf-input"
-            disabled={editingLocked}
-            placeholder="URL de fuente u override"
-            value={typography.font ?? ""}
-            onChange={(e) =>
-              updateSettings((prev) => ({
-                ...prev,
-                typography: { ...(prev.typography ?? {}), font: e.target.value },
-              }))
-            }
-          />
-          <input
-            className="wf-input"
-            disabled={editingLocked}
-            placeholder="Tamaño base (ej: 16px)"
-            value={typography.baseSize ?? ""}
-            onChange={(e) =>
-              updateSettings((prev) => ({
-                ...prev,
-                typography: { ...(prev.typography ?? {}), baseSize: e.target.value },
-              }))
-            }
-            onBlur={(e) => {
-              const v = e.target.value.trim();
-              if (v && !/^\d+(\.\d+)?px$/i.test(v)) {
-                setError("baseSize debe ser en px, por ejemplo 16px");
+            </label>
+
+            <label className="wf-style-field">
+              <span className="wf-style-label">Interlineado</span>
+              <input
+                className="wf-input"
+                disabled={editingLocked}
+                placeholder="Ej: 1.5"
+                value={typography.lineHeight ?? ""}
+                onChange={(e) =>
+                  updateSettings((prev) => ({
+                    ...prev,
+                    typography: { ...(prev.typography ?? {}), lineHeight: e.target.value },
+                  }))
+                }
+                onBlur={(e) => {
+                  const v = Number(e.target.value);
+                  if (e.target.value.trim() && (!Number.isFinite(v) || v < 1 || v > 2.4)) {
+                    setError("lineHeight debe estar entre 1 y 2.4");
+                  }
+                }}
+              />
+            </label>
+          </div>
+        </section>
+
+        <section className="wf-style-card">
+          <div className="wf-style-head">
+            <h3 className="wf-style-title">Logos</h3>
+            <p className="wf-style-help">Sube o pega URL pública de logo para navbar y footer. Formatos png, jpg, webp o svg (máx 2MB).</p>
+          </div>
+          <div className="wf-grid2">
+            <ImageUploadField
+              value={branding.logoNavUrl ?? branding.logoUrl ?? ""}
+              placeholder="Logo navbar URL"
+              disabled={editingLocked || uploadingAsset === "logoNav"}
+              removeDisabled={editingLocked || !(branding.logoNavUrl ?? branding.logoUrl ?? "").trim()}
+              uploading={uploadingAsset === "logoNav"}
+              uploadingText="Subiendo logo..."
+              fallbackText="Sin logo navbar"
+              guidanceText="Logo navbar recomendado: 320x80px. Formatos png, jpg, webp, svg. Máximo 2MB."
+              previewAlt="logo navbar preview"
+              previewWidth={240}
+              previewHeight={42}
+              previewStyle={{ maxHeight: 42, width: "auto", objectFit: "contain" }}
+              accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
+              allowedMimeTypes={LOGO_MIME_TYPES}
+              maxSizeBytes={LOGO_MAX_BYTES}
+              onValueChange={(nextValue) =>
+                updateSettings((prev) => ({
+                  ...prev,
+                  branding: { ...(prev.branding ?? {}), logoNavUrl: nextValue },
+                }))
               }
-            }}
-          />
-          <input
-            className="wf-input"
-            disabled={editingLocked}
-            placeholder="Interlineado (ej: 1.5)"
-            value={typography.lineHeight ?? ""}
-            onChange={(e) =>
-              updateSettings((prev) => ({
-                ...prev,
-                typography: { ...(prev.typography ?? {}), lineHeight: e.target.value },
-              }))
-            }
-            onBlur={(e) => {
-              const v = Number(e.target.value);
-              if (e.target.value.trim() && (!Number.isFinite(v) || v < 1 || v > 2.4)) {
-                setError("lineHeight debe estar entre 1 y 2.4");
+              onReplace={(file) => {
+                void uploadBrandingAsset("logo", file, "logoNavUrl");
+              }}
+              onRemove={() =>
+                updateSettings(
+                  (prev) => {
+                    const branding = { ...(prev.branding ?? {}) };
+                    delete branding.logoNavUrl;
+                    delete branding.logoUrl;
+                    return { ...prev, branding };
+                  },
+                  { persistNow: true, note: "Autosave: logo navbar removed" },
+                )
               }
-            }}
-          />
-        </div>
+            />
 
-        <h3 className="wf-h3">Branding</h3>
-        <div className="wf-note" style={{ marginBottom: 10 }}>
-          <strong>Nota:</strong> logo recomendado en PNG/WebP/SVG (máx 2MB) y favicon en PNG/ICO (máx 1MB).
-          Si pegas URL manual, debe ser pública y apuntar a un archivo de imagen válido.
-        </div>
-        <div className="wf-grid2">
-          <ImageUploadField
-            value={branding.logoNavUrl ?? branding.logoUrl ?? ""}
-            placeholder="Logo navbar URL"
-            disabled={editingLocked || uploadingAsset === "logoNav"}
-            removeDisabled={editingLocked || !(branding.logoNavUrl ?? branding.logoUrl ?? "").trim()}
-            uploading={uploadingAsset === "logoNav"}
-            uploadingText="Subiendo logo..."
-            fallbackText="Sin logo navbar"
-            guidanceText="Logo navbar recomendado: 320x80px. Formatos png, jpg, webp, svg. Máximo 2MB."
-            previewAlt="logo navbar preview"
-            previewWidth={240}
-            previewHeight={42}
-            previewStyle={{ maxHeight: 42, width: "auto", objectFit: "contain" }}
-            accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
-            allowedMimeTypes={LOGO_MIME_TYPES}
-            maxSizeBytes={LOGO_MAX_BYTES}
-            onValueChange={(nextValue) =>
-              updateSettings((prev) => ({
-                ...prev,
-                branding: { ...(prev.branding ?? {}), logoNavUrl: nextValue },
-              }))
-            }
-            onReplace={(file) => {
-              void uploadBrandingAsset("logo", file, "logoNavUrl");
-            }}
-            onRemove={() =>
-              updateSettings(
-                (prev) => {
-                  const branding = { ...(prev.branding ?? {}) };
-                  delete branding.logoNavUrl;
-                  delete branding.logoUrl;
-                  return { ...prev, branding };
-                },
-                { persistNow: true, note: "Autosave: logo navbar removed" },
-              )
-            }
-          />
+            <ImageUploadField
+              value={branding.logoFooterUrl ?? ""}
+              placeholder="Logo footer URL (opcional)"
+              disabled={editingLocked || uploadingAsset === "logoFooter"}
+              removeDisabled={editingLocked || !(branding.logoFooterUrl ?? "").trim()}
+              uploading={uploadingAsset === "logoFooter"}
+              uploadingText="Subiendo logo..."
+              fallbackText="Sin logo footer (usa logo navbar por fallback)"
+              guidanceText="Logo footer recomendado: 260x72px. Formatos png, jpg, webp, svg. Máximo 2MB."
+              previewAlt="logo footer preview"
+              previewWidth={220}
+              previewHeight={34}
+              previewStyle={{ maxHeight: 34, width: "auto", objectFit: "contain" }}
+              accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
+              allowedMimeTypes={LOGO_MIME_TYPES}
+              maxSizeBytes={LOGO_MAX_BYTES}
+              onValueChange={(nextValue) =>
+                updateSettings((prev) => ({
+                  ...prev,
+                  branding: { ...(prev.branding ?? {}), logoFooterUrl: nextValue },
+                }))
+              }
+              onReplace={(file) => {
+                void uploadBrandingAsset("logo", file, "logoFooterUrl");
+              }}
+              onRemove={() =>
+                updateSettings(
+                  (prev) => {
+                    const branding = { ...(prev.branding ?? {}) };
+                    delete branding.logoFooterUrl;
+                    return { ...prev, branding };
+                  },
+                  { persistNow: true, note: "Autosave: logo footer removed" },
+                )
+              }
+            />
+          </div>
+          <label className="wf-checkbox">
+            <input
+              type="checkbox"
+              checked={Boolean(branding.hideNavLogo)}
+              disabled={editingLocked}
+              onChange={(e) =>
+                updateSettings((prev) => ({
+                  ...prev,
+                  branding: {
+                    ...(prev.branding ?? {}),
+                    hideNavLogo: e.target.checked,
+                  },
+                }))
+              }
+            />
+            <span>Ocultar logo en navbar (solo landing)</span>
+          </label>
+        </section>
 
-          <ImageUploadField
-            value={branding.logoFooterUrl ?? ""}
-            placeholder="Logo footer URL (opcional)"
-            disabled={editingLocked || uploadingAsset === "logoFooter"}
-            removeDisabled={editingLocked || !(branding.logoFooterUrl ?? "").trim()}
-            uploading={uploadingAsset === "logoFooter"}
-            uploadingText="Subiendo logo..."
-            fallbackText="Sin logo footer (usa logo navbar por fallback)"
-            guidanceText="Logo footer recomendado: 260x72px. Formatos png, jpg, webp, svg. Máximo 2MB."
-            previewAlt="logo footer preview"
-            previewWidth={220}
-            previewHeight={34}
-            previewStyle={{ maxHeight: 34, width: "auto", objectFit: "contain" }}
-            accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
-            allowedMimeTypes={LOGO_MIME_TYPES}
-            maxSizeBytes={LOGO_MAX_BYTES}
-            onValueChange={(nextValue) =>
-              updateSettings((prev) => ({
-                ...prev,
-                branding: { ...(prev.branding ?? {}), logoFooterUrl: nextValue },
-              }))
-            }
-            onReplace={(file) => {
-              void uploadBrandingAsset("logo", file, "logoFooterUrl");
-            }}
-            onRemove={() =>
-              updateSettings(
-                (prev) => {
-                  const branding = { ...(prev.branding ?? {}) };
-                  delete branding.logoFooterUrl;
-                  return { ...prev, branding };
-                },
-                { persistNow: true, note: "Autosave: logo footer removed" },
-              )
-            }
-          />
-
+        <section className="wf-style-card">
+          <div className="wf-style-head">
+            <h3 className="wf-style-title">Favicon</h3>
+            <p className="wf-style-help">Sube o pega URL pública del favicon. Recomendado 48x48px (mín. 32x32), formato png/ico (máx 1MB).</p>
+          </div>
           <ImageUploadField
             value={branding.faviconUrl ?? ""}
             placeholder="Favicon URL"
@@ -3672,76 +3747,67 @@ export default function StagingWorkflowPanel() {
               )
             }
           />
-        </div>
 
-        <div style={{ marginTop: 10, marginBottom: 14 }}>
-          <label className="wf-checkbox">
-            <input
-              type="checkbox"
-              checked={Boolean(branding.hideNavLogo)}
-              disabled={editingLocked}
-              onChange={(e) =>
-                updateSettings((prev) => ({
-                  ...prev,
-                  branding: {
-                    ...(prev.branding ?? {}),
-                    hideNavLogo: e.target.checked,
-                  },
-                }))
-              }
-            />
-            <span>Ocultar logo en navbar (solo landing)</span>
-          </label>
-        </div>
-
-        <h3 className="wf-h3">Contacto básico (opcional)</h3>
-        <div className="wf-grid2">
-          <input
-            className="wf-input"
-            disabled={editingLocked}
-            placeholder="WhatsApp (https://wa.me/...)"
-            value={contact.whatsapp ?? ""}
-            onChange={(e) =>
-              updateSettings((prev) => ({
-                ...prev,
-                branding: {
-                  ...(prev.branding ?? {}),
-                  contact: { ...(prev.branding?.contact ?? {}), whatsapp: e.target.value },
-                },
-              }))
-            }
-          />
-          <input
-            className="wf-input"
-            disabled={editingLocked}
-            placeholder="Email"
-            value={contact.email ?? ""}
-            onChange={(e) =>
-              updateSettings((prev) => ({
-                ...prev,
-                branding: {
-                  ...(prev.branding ?? {}),
-                  contact: { ...(prev.branding?.contact ?? {}), email: e.target.value },
-                },
-              }))
-            }
-          />
-          <input
-            className="wf-input"
-            disabled={editingLocked}
-            placeholder="Dirección"
-            value={contact.address ?? ""}
-            onChange={(e) =>
-              updateSettings((prev) => ({
-                ...prev,
-                branding: {
-                  ...(prev.branding ?? {}),
-                  contact: { ...(prev.branding?.contact ?? {}), address: e.target.value },
-                },
-              }))
-            }
-          />
-        </div>
+          <div className="wf-style-subsection">
+            <h4 className="wf-style-title">Contacto básico (opcional)</h4>
+            <div className="wf-grid2">
+              <label className="wf-style-field">
+                <span className="wf-style-label">WhatsApp (opcional)</span>
+                <input
+                  className="wf-input"
+                  disabled={editingLocked}
+                  placeholder="https://wa.me/..."
+                  value={contact.whatsapp ?? ""}
+                  onChange={(e) =>
+                    updateSettings((prev) => ({
+                      ...prev,
+                      branding: {
+                        ...(prev.branding ?? {}),
+                        contact: { ...(prev.branding?.contact ?? {}), whatsapp: e.target.value },
+                      },
+                    }))
+                  }
+                />
+              </label>
+              <label className="wf-style-field">
+                <span className="wf-style-label">Email (opcional)</span>
+                <input
+                  className="wf-input"
+                  disabled={editingLocked}
+                  placeholder="Email"
+                  value={contact.email ?? ""}
+                  onChange={(e) =>
+                    updateSettings((prev) => ({
+                      ...prev,
+                      branding: {
+                        ...(prev.branding ?? {}),
+                        contact: { ...(prev.branding?.contact ?? {}), email: e.target.value },
+                      },
+                    }))
+                  }
+                />
+              </label>
+              <label className="wf-style-field">
+                <span className="wf-style-label">Dirección (opcional)</span>
+                <input
+                  className="wf-input"
+                  disabled={editingLocked}
+                  placeholder="Dirección"
+                  value={contact.address ?? ""}
+                  onChange={(e) =>
+                    updateSettings((prev) => ({
+                      ...prev,
+                      branding: {
+                        ...(prev.branding ?? {}),
+                        contact: { ...(prev.branding?.contact ?? {}), address: e.target.value },
+                      },
+                    }))
+                  }
+                />
+              </label>
+            </div>
+          </div>
+        </section>
       </div>
     );
   };
