@@ -3494,17 +3494,25 @@ export default function StagingWorkflowPanel() {
       { key: "background", label: "Fondo", help: "Base general de la interfaz." },
       { key: "text", label: "Acento", help: "Textos destacados y contrastes visuales." },
     ];
-    const suggestedPalette = {
-      primary: "#df7c0c",
-      secondary: "#d4cf69",
-      background: "#faf9fa",
-      text: "#875e5e",
-    } as const;
+    const suggestedPalette =
+      normalizedSiteSlug === "abcis"
+        ? ({
+            primary: "#c9982a",
+            secondary: "#faf7f0",
+            background: "#ffffff",
+            text: "#1a1a1a",
+          } as const)
+        : ({
+            primary: "#df7c0c",
+            secondary: "#d4cf69",
+            background: "#faf9fa",
+            text: "#875e5e",
+          } as const);
     const supportedFontFamilies = ["Inter", "Poppins", "Roboto", "Montserrat", "Barlow Condensed"];
     const currentTypographyLabel =
       inferTypographyLabel(typography.fontFamily) ||
       inferTypographyLabel(typography.font) ||
-      "Inter";
+      (normalizedSiteSlug === "abcis" ? "Montserrat" : "Inter");
 
     const updateColor = (key: "primary" | "secondary" | "background" | "text", value: string) => {
       const normalized = normalizeColorValue(value);
