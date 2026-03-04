@@ -426,7 +426,7 @@ const panelStyles = String.raw`
   .wf-input{min-width:200px;flex:1}
   .wf-select{min-width:150px}
   .wf-textarea{width:100%;min-height:88px;resize:vertical}
-  .wf-btn{height:38px;border:0;border-radius:10px;padding:0 12px;font-weight:700;font-size:13px;letter-spacing:.01em;cursor:pointer}
+  .wf-btn{height:38px;border:0;border-radius:10px;padding:0 12px;font-weight:700;font-size:13px;letter-spacing:.01em;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;line-height:1;text-align:center;vertical-align:middle}
   .wf-btn-sm{height:32px;padding:0 10px;font-size:12px}
   .wf-btn-compact{width:auto;min-width:max-content}
   .wf-btn:disabled{opacity:.5;cursor:not-allowed}
@@ -536,6 +536,8 @@ const panelStyles = String.raw`
   .wf-color-field{display:grid;gap:6px}
   .wf-style-subsection{display:grid;gap:8px;padding-top:8px;border-top:1px solid #e2e8f0}
   .wf-asset-preview-shell{display:flex;align-items:center;min-height:74px;border:1px solid #dbe3f0;border-radius:10px;padding:10px 12px;background:#f8fafc}
+  .wf-checkbox{display:inline-flex;align-items:center;gap:10px;font-size:13px;line-height:1.35}
+  .wf-checkbox input{margin:0;width:16px;height:16px;flex:0 0 auto}
   .wf-sr-only{
     position:absolute!important;
     width:1px!important;
@@ -3513,6 +3515,7 @@ export default function StagingWorkflowPanel() {
       inferTypographyLabel(typography.fontFamily) ||
       inferTypographyLabel(typography.font) ||
       (normalizedSiteSlug === "abcis" ? "Montserrat" : "Inter");
+    const showBasicContactSection = normalizedSiteSlug !== "abcis";
 
     const updateColor = (key: "primary" | "secondary" | "background" | "text", value: string) => {
       const normalized = normalizeColorValue(value);
@@ -3841,65 +3844,67 @@ export default function StagingWorkflowPanel() {
             }
           />
 
-          <div className="wf-style-subsection">
-            <h4 className="wf-style-title">Contacto básico (opcional)</h4>
-            <div className="wf-grid2">
-              <label className="wf-style-field">
-                <span className="wf-style-label">WhatsApp (opcional)</span>
-                <input
-                  className="wf-input"
-                  disabled={editingLocked}
-                  placeholder="https://wa.me/..."
-                  value={contact.whatsapp ?? ""}
-                  onChange={(e) =>
-                    updateSettings((prev) => ({
-                      ...prev,
-                      branding: {
-                        ...(prev.branding ?? {}),
-                        contact: { ...(prev.branding?.contact ?? {}), whatsapp: e.target.value },
-                      },
-                    }))
-                  }
-                />
-              </label>
-              <label className="wf-style-field">
-                <span className="wf-style-label">Email (opcional)</span>
-                <input
-                  className="wf-input"
-                  disabled={editingLocked}
-                  placeholder="Email"
-                  value={contact.email ?? ""}
-                  onChange={(e) =>
-                    updateSettings((prev) => ({
-                      ...prev,
-                      branding: {
-                        ...(prev.branding ?? {}),
-                        contact: { ...(prev.branding?.contact ?? {}), email: e.target.value },
-                      },
-                    }))
-                  }
-                />
-              </label>
-              <label className="wf-style-field">
-                <span className="wf-style-label">Dirección (opcional)</span>
-                <input
-                  className="wf-input"
-                  disabled={editingLocked}
-                  placeholder="Dirección"
-                  value={contact.address ?? ""}
-                  onChange={(e) =>
-                    updateSettings((prev) => ({
-                      ...prev,
-                      branding: {
-                        ...(prev.branding ?? {}),
-                        contact: { ...(prev.branding?.contact ?? {}), address: e.target.value },
-                      },
-                    }))
-                  }
-                />
-              </label>
+          {showBasicContactSection ? (
+            <div className="wf-style-subsection">
+              <h4 className="wf-style-title">Contacto básico (opcional)</h4>
+              <div className="wf-grid2">
+                <label className="wf-style-field">
+                  <span className="wf-style-label">WhatsApp (opcional)</span>
+                  <input
+                    className="wf-input"
+                    disabled={editingLocked}
+                    placeholder="https://wa.me/..."
+                    value={contact.whatsapp ?? ""}
+                    onChange={(e) =>
+                      updateSettings((prev) => ({
+                        ...prev,
+                        branding: {
+                          ...(prev.branding ?? {}),
+                          contact: { ...(prev.branding?.contact ?? {}), whatsapp: e.target.value },
+                        },
+                      }))
+                    }
+                  />
+                </label>
+                <label className="wf-style-field">
+                  <span className="wf-style-label">Email (opcional)</span>
+                  <input
+                    className="wf-input"
+                    disabled={editingLocked}
+                    placeholder="Email"
+                    value={contact.email ?? ""}
+                    onChange={(e) =>
+                      updateSettings((prev) => ({
+                        ...prev,
+                        branding: {
+                          ...(prev.branding ?? {}),
+                          contact: { ...(prev.branding?.contact ?? {}), email: e.target.value },
+                        },
+                      }))
+                    }
+                  />
+                </label>
+                <label className="wf-style-field">
+                  <span className="wf-style-label">Dirección (opcional)</span>
+                  <input
+                    className="wf-input"
+                    disabled={editingLocked}
+                    placeholder="Dirección"
+                    value={contact.address ?? ""}
+                    onChange={(e) =>
+                      updateSettings((prev) => ({
+                        ...prev,
+                        branding: {
+                          ...(prev.branding ?? {}),
+                          contact: { ...(prev.branding?.contact ?? {}), address: e.target.value },
+                        },
+                      }))
+                    }
+                  />
+                </label>
+              </div>
             </div>
-          </div>
+          ) : null}
           </div>
         </section>
         </div>
