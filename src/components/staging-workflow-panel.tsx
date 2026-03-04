@@ -643,6 +643,27 @@ function normalizeColorValue(value: string) {
   return trimmed.startsWith("#") ? trimmed : `#${trimmed}`;
 }
 
+function inferTypographyLabel(fontValue: string | null | undefined) {
+  const raw = (fontValue ?? "").trim();
+  if (!raw) return "";
+
+  if (/^https?:\/\//i.test(raw)) {
+    try {
+      const parsed = new URL(raw);
+      const familyParam = parsed.searchParams.get("family");
+      if (familyParam) {
+        const family = familyParam.split(":")[0]?.replace(/\+/g, " ").trim();
+        if (family) return family;
+      }
+    } catch {
+      // ignore malformed URL
+    }
+  }
+
+  const first = raw.split(",")[0]?.trim().replace(/^['"]|['"]$/g, "");
+  return first || raw;
+}
+
 function sortByOrder<T extends { order: number }>(items: T[]) {
   return [...items].sort((a, b) => a.order - b.order);
 }
@@ -3473,6 +3494,17 @@ export default function StagingWorkflowPanel() {
       { key: "background", label: "Fondo", help: "Base general de la interfaz." },
       { key: "text", label: "Acento", help: "Textos destacados y contrastes visuales." },
     ];
+    const suggestedPalette = {
+      primary: "#df7c0c",
+      secondary: "#d4cf69",
+      background: "#faf9fa",
+      text: "#875e5e",
+    } as const;
+    const supportedFontFamilies = ["Inter", "Poppins", "Roboto", "Montserrat", "Barlow Condensed"];
+    const currentTypographyLabel =
+      inferTypographyLabel(typography.fontFamily) ||
+      inferTypographyLabel(typography.font) ||
+      "Inter";
 
     const updateColor = (key: "primary" | "secondary" | "background" | "text", value: string) => {
       const normalized = normalizeColorValue(value);
@@ -3494,6 +3526,23 @@ export default function StagingWorkflowPanel() {
           <div className="wf-style-head">
             <h3 className="wf-style-title">Colores de marca</h3>
             <p className="wf-style-help">Define la paleta base de la landing. Usa formato hexadecimal `#RRGGBB`.</p>
+            <div className="wf-row">
+              <button
+                className="wf-btn wf-btn-soft wf-btn-sm wf-btn-compact"
+                disabled={editingLocked}
+                onClick={() =>
+                  updateSettings((prev) => ({
+                    ...prev,
+                    colors: {
+                      ...(prev.colors ?? {}),
+                      ...suggestedPalette,
+                    },
+                  }))
+                }
+              >
+                Aplicar paleta sugerida ABCIS
+              </button>
+            </div>
           </div>
           <div className="wf-style-body">
           <div className="wf-color-grid">
@@ -3557,12 +3606,15 @@ export default function StagingWorkflowPanel() {
                   }))
                 }
               >
-                <option value="">Selecciona tipografía</option>
-                <option value="Inter">Inter</option>
-                <option value="Poppins">Poppins</option>
-                <option value="Roboto">Roboto</option>
-                <option value="Montserrat">Montserrat</option>
-                <option value="Barlow Condensed">Barlow Condensed</option>
+                <option value="">{`Tipografía actual: ${currentTypographyLabel}`}</option>
+                {supportedFontFamilies.includes(currentTypographyLabel) ? null : (
+                  <option value={currentTypographyLabel}>{currentTypographyLabel}</option>
+                )}
+                {supportedFontFamilies.map((fontOption) => (
+                  <option key={fontOption} value={fontOption}>
+                    {fontOption}
+                  </option>
+                ))}
               </select>
             </label>
 
