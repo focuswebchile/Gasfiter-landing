@@ -855,6 +855,8 @@ export default function StagingWorkflowPanel() {
   const [uploadingAsset, setUploadingAsset] = useState<"logoNav" | "logoFooter" | "favicon" | null>(null);
   const [uploadingContentAssetKey, setUploadingContentAssetKey] = useState<string | null>(null);
   const [publishValidationMissing, setPublishValidationMissing] = useState<PublishValidationIssue[]>([]);
+  const normalizedSiteSlug = siteSlug.trim().toLowerCase();
+  const hideFaqAndTestimonialsInItems = normalizedSiteSlug === "abcis";
 
   const baseUrl = useMemo(() => {
     if (typeof window === "undefined") {
@@ -960,6 +962,18 @@ export default function StagingWorkflowPanel() {
     ];
     return supported.includes(sectionId as EditableSectionId) ? (sectionId as EditableSectionId) : "hero";
   };
+
+  useEffect(() => {
+    if (!hideFaqAndTestimonialsInItems) return;
+    if (view !== "items") return;
+    if (editableSection === "faq") {
+      setEditableSection("services");
+      return;
+    }
+    if (editableSection === "testimonials") {
+      setEditableSection("projects");
+    }
+  }, [editableSection, hideFaqAndTestimonialsInItems, view]);
 
   const handleModeChange = (nextMode: Mode) => {
     if (nextMode === mode) return;
@@ -4609,9 +4623,13 @@ export default function StagingWorkflowPanel() {
               <h2 className="wf-h3">Elementos</h2>
               <div className="wf-row" style={{ marginBottom: 10 }}>
                 <button className="wf-btn wf-btn-soft" onClick={() => setEditableSection("services")}>Servicios</button>
-                <button className="wf-btn wf-btn-soft" onClick={() => setEditableSection("faq")}>FAQ</button>
                 <button className="wf-btn wf-btn-soft" onClick={() => setEditableSection("projects")}>Clientes</button>
-                <button className="wf-btn wf-btn-soft" onClick={() => setEditableSection("testimonials")}>Testimonios</button>
+                {!hideFaqAndTestimonialsInItems ? (
+                  <button className="wf-btn wf-btn-soft" onClick={() => setEditableSection("faq")}>FAQ</button>
+                ) : null}
+                {!hideFaqAndTestimonialsInItems ? (
+                  <button className="wf-btn wf-btn-soft" onClick={() => setEditableSection("testimonials")}>Testimonios</button>
+                ) : null}
               </div>
               {renderSectionEditor()}
             </>
