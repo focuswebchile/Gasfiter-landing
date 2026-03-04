@@ -910,6 +910,8 @@ export default function StagingWorkflowPanel() {
   const [showDiffOverlay, setShowDiffOverlay] = useState(false);
   const [showRequestPublishOverlay, setShowRequestPublishOverlay] = useState(false);
   const [requestPublishNote, setRequestPublishNote] = useState("");
+  const [requestActiveFallback, setRequestActiveFallback] = useState(false);
+  const [requestReminderAvailableAtMs, setRequestReminderAvailableAtMs] = useState<number | null>(null);
   const [sendingRequestPublishReminder, setSendingRequestPublishReminder] = useState(false);
   const [reminderClockTs, setReminderClockTs] = useState(() => Date.now());
   const [uploadingAsset, setUploadingAsset] = useState<"logoNav" | "logoFooter" | "favicon" | null>(null);
@@ -996,22 +998,37 @@ export default function StagingWorkflowPanel() {
   const latestPublishedVersion = versions.find((version) => version.status === "published") ?? null;
   const latestDraftVersion = versions.find((version) => version.status === "draft") ?? null;
   const hasActivePublishRequest = Boolean(latestDraftVersion?.publish_requested_at);
+  const effectiveHasActivePublishRequest = hasActivePublishRequest || requestActiveFallback;
+  const fallbackRetryAfterMinutes = useMemo(() => {
+    if (!requestReminderAvailableAtMs) return 0;
+    return Math.max(0, Math.ceil((requestReminderAvailableAtMs - reminderClockTs) / 60000));
+  }, [requestReminderAvailableAtMs, reminderClockTs]);
   const reminderRetryAfterMinutes = useMemo(
-    () =>
-      getRetryAfterMinutes(
-        latestDraftVersion?.publish_notified_at ?? null,
-        REQUEST_REMINDER_COOLDOWN_MINUTES,
-        reminderClockTs,
-      ),
-    [latestDraftVersion?.publish_notified_at, reminderClockTs],
+    () => {
+      if (hasActivePublishRequest) {
+        return getRetryAfterMinutes(
+          latestDraftVersion?.publish_notified_at ?? null,
+          REQUEST_REMINDER_COOLDOWN_MINUTES,
+          reminderClockTs,
+        );
+      }
+      return fallbackRetryAfterMinutes;
+    },
+    [hasActivePublishRequest, latestDraftVersion?.publish_notified_at, reminderClockTs, fallbackRetryAfterMinutes],
   );
-  const reminderCooldownActive = hasActivePublishRequest && reminderRetryAfterMinutes > 0;
+  const reminderCooldownActive = effectiveHasActivePublishRequest && reminderRetryAfterMinutes > 0;
   const latestDraftVersionToken = latestDraftVersion?.created_at ?? null;
 
   useEffect(() => {
-    if (!hasActivePublishRequest) return;
+    if (!effectiveHasActivePublishRequest) return;
     const tick = window.setInterval(() => setReminderClockTs(Date.now()), 30000);
     return () => window.clearInterval(tick);
+  }, [effectiveHasActivePublishRequest]);
+
+  useEffect(() => {
+    if (!hasActivePublishRequest) return;
+    setRequestActiveFallback(false);
+    setRequestReminderAvailableAtMs(null);
   }, [hasActivePublishRequest]);
 
   useEffect(() => {
@@ -1498,9 +1515,21 @@ export default function StagingWorkflowPanel() {
           requestedAt?: string | null;
           emailSent?: boolean;
           emailReason?: string | null;
+          retryAfterMinutes?: number;
         };
       };
       if (!response.ok) throw new Error(payload?.error || payload?.message || "No se pudo solicitar publicación");
+
+      const retryAfterMinutes =
+        typeof payload?.request?.retryAfterMinutes === "number"
+          ? Math.max(0, payload.request.retryAfterMinutes)
+          : 0;
+      if (payload?.request?.active) {
+        setRequestActiveFallback(true);
+      }
+      setRequestReminderAvailableAtMs(
+        retryAfterMinutes > 0 ? Date.now() + retryAfterMinutes * 60_000 : null,
+      );
 
       if (payload?.request?.alreadyRequested) {
         setOk("Solicitud ya activa: pendiente de revisión.");
@@ -1533,7 +1562,7 @@ export default function StagingWorkflowPanel() {
   const sendRequestPublishReminder = async () => {
     if (!userId.trim()) return setError("No se detectó sesión de usuario. Inicia sesión nuevamente.");
     if (!panelReady) return setError("Primero usa Cargar panel");
-    if (!hasActivePublishRequest) return setError("No hay una solicitud activa para reenviar.");
+    if (!effectiveHasActivePublishRequest) return setError("No hay una solicitud activa para reenviar.");
     if (!canRequestPublish) return setError("Tu rol no puede reenviar recordatorios.");
     if (reminderCooldownActive) {
       return setOk(`Aún en cooldown. Disponible en ${reminderRetryAfterMinutes} min.`);
@@ -1566,6 +1595,10 @@ export default function StagingWorkflowPanel() {
       if (!response.ok) throw new Error(payload?.error || payload?.message || "No se pudo reenviar recordatorio");
 
       const cooldown = typeof payload?.request?.retryAfterMinutes === "number" ? payload.request.retryAfterMinutes : 0;
+      if (payload?.request?.active) {
+        setRequestActiveFallback(true);
+      }
+      setRequestReminderAvailableAtMs(cooldown > 0 ? Date.now() + cooldown * 60_000 : null);
       if (payload?.request?.cooldownActive && cooldown > 0) {
         setOk(`Recordatorio en cooldown. Disponible en ${cooldown} min.`);
       } else if (payload?.request?.emailSent) {
@@ -4153,7 +4186,7 @@ export default function StagingWorkflowPanel() {
               ? "El rol o modo actual no permite publicar."
               : "";
 
-    const requestDisabledReason = hasActivePublishRequest
+    const requestDisabledReason = effectiveHasActivePublishRequest
       ? reminderCooldownActive
         ? `Ya hay una solicitud activa para este borrador (recordatorio en ${reminderRetryAfterMinutes} min).`
         : "Ya hay una solicitud activa para este borrador."
@@ -4176,7 +4209,7 @@ export default function StagingWorkflowPanel() {
       showEditDraft: inPublished && canSaveDraft,
       saveDisabled: blockedByState || !canEditDraftNow,
       publishDisabled: blockedByState || !canPublishNow,
-      requestDisabled: blockedByState || !canRequestNow || hasActivePublishRequest,
+      requestDisabled: blockedByState || !canRequestNow || effectiveHasActivePublishRequest,
       editDraftDisabled: busy || !panelReady || !canSaveDraft,
       saveDisabledReason,
       publishDisabledReason,
@@ -4188,7 +4221,7 @@ export default function StagingWorkflowPanel() {
     canSaveDraft,
     canRequestPublish,
     canPublish,
-    hasActivePublishRequest,
+    effectiveHasActivePublishRequest,
     reminderCooldownActive,
     reminderRetryAfterMinutes,
     busy,
@@ -4639,7 +4672,7 @@ export default function StagingWorkflowPanel() {
               <span className="wf-pill wf-pill-neutral">
                 {latestPublishedVersion ? `Publicado v${latestPublishedVersion.version_number}` : "Sin versión publicada"}
               </span>
-              {hasActivePublishRequest ? (
+              {effectiveHasActivePublishRequest ? (
                 <span className="wf-pill wf-pill-neutral">
                   Solicitud de publicación pendiente
                   {reminderCooldownActive ? ` · recordatorio en ${reminderRetryAfterMinutes} min` : " · recordatorio disponible"}
@@ -4725,7 +4758,7 @@ export default function StagingWorkflowPanel() {
                 Solicitar publicación
               </button>
             ) : null}
-            {hasActivePublishRequest && canRequestPublish ? (
+            {effectiveHasActivePublishRequest && canRequestPublish ? (
               <button
                 className="wf-btn wf-btn-soft"
                 onClick={sendRequestPublishReminder}
