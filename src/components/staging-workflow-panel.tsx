@@ -179,6 +179,8 @@ type ImageUploadFieldProps = {
   allowedMimeTypes: string[];
   allowedExtensions?: string[];
   maxSizeBytes: number;
+  hideUrlInput?: boolean;
+  controlsInline?: boolean;
   onValueChange: (nextValue: string) => void;
   onReplace: (file: File | null) => void;
   onRemove: () => void;
@@ -254,21 +256,39 @@ function ImageUploadField({
   allowedMimeTypes,
   allowedExtensions,
   maxSizeBytes,
+  hideUrlInput = false,
+  controlsInline = false,
   onValueChange,
   onReplace,
   onRemove,
 }: ImageUploadFieldProps) {
   const [validationError, setValidationError] = useState<string | null>(null);
+  const hasValue = value.trim().length > 0;
+  const previewNode = hasValue ? (
+    <Image
+      src={value}
+      alt={previewAlt}
+      width={previewWidth}
+      height={previewHeight}
+      unoptimized
+      style={previewStyle ?? { maxHeight: previewHeight, width: "auto", objectFit: "contain" }}
+    />
+  ) : (
+    <span className="wf-muted">{fallbackText}</span>
+  );
 
   return (
     <div style={{ display: "grid", gap: 8 }}>
-      <input
-        className="wf-input"
-        disabled={disabled}
-        value={value}
-        placeholder={placeholder}
-        onChange={(e) => onValueChange(e.target.value)}
-      />
+      {!hideUrlInput ? (
+        <input
+          className="wf-input"
+          disabled={disabled}
+          value={value}
+          placeholder={placeholder}
+          onChange={(e) => onValueChange(e.target.value)}
+        />
+      ) : null}
+      {controlsInline ? <div className="wf-asset-preview-shell">{previewNode}</div> : null}
       <div className="wf-row" style={{ gap: 8, flexWrap: "wrap" }}>
         <label className="wf-btn wf-btn-soft" style={{ cursor: disabled ? "default" : "pointer" }}>
           Reemplazar
@@ -298,18 +318,7 @@ function ImageUploadField({
       </div>
       {validationError ? <span className="wf-upload-error">{validationError}</span> : null}
       {guidanceText ? <span className="wf-muted">{guidanceText}</span> : null}
-      {value.trim() ? (
-        <Image
-          src={value}
-          alt={previewAlt}
-          width={previewWidth}
-          height={previewHeight}
-          unoptimized
-          style={previewStyle ?? { maxHeight: previewHeight, width: "auto", objectFit: "contain" }}
-        />
-      ) : (
-        <span className="wf-muted">{fallbackText}</span>
-      )}
+      {!controlsInline ? previewNode : null}
     </div>
   );
 }
@@ -515,8 +524,10 @@ const panelStyles = String.raw`
   .wf-overlay-head h3{margin:0;font-size:20px;line-height:1.2;font-weight:800}
   .wf-overlay-body{overflow:auto;padding:14px;display:grid;gap:12px}
   .wf-style-stack{display:grid;gap:12px}
-  .wf-style-card{border:1px solid var(--wf-border);border-radius:12px;background:var(--wf-surface-soft);padding:12px;display:grid;gap:10px}
-  .wf-style-head{display:grid;gap:4px}
+  .wf-style-layout{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .wf-style-card{border:1px solid var(--wf-border);border-radius:12px;background:var(--wf-surface-soft);display:grid;gap:10px;align-content:start}
+  .wf-style-head{display:grid;gap:4px;padding:12px 12px 0}
+  .wf-style-body{display:grid;gap:10px;padding:0 12px 12px}
   .wf-style-title{margin:0;font-size:16px;line-height:1.3;font-weight:800;letter-spacing:-.01em}
   .wf-style-help{margin:0;color:var(--wf-muted);font-size:12px;line-height:1.45}
   .wf-style-field{display:grid;gap:6px}
@@ -524,6 +535,7 @@ const panelStyles = String.raw`
   .wf-color-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   .wf-color-field{display:grid;gap:6px}
   .wf-style-subsection{display:grid;gap:8px;padding-top:8px;border-top:1px solid #e2e8f0}
+  .wf-asset-preview-shell{display:flex;align-items:center;min-height:74px;border:1px solid #dbe3f0;border-radius:10px;padding:10px 12px;background:#f8fafc}
   .wf-sr-only{
     position:absolute!important;
     width:1px!important;
@@ -546,6 +558,7 @@ const panelStyles = String.raw`
     .wf-workspace{max-width:100%}
     .wf-flowbar-head{align-items:flex-start;flex-direction:column}
     .wf-grid2{grid-template-columns:1fr}
+    .wf-style-layout{grid-template-columns:1fr}
     .wf-color-grid{grid-template-columns:1fr}
     .wf-overlay-panel{width:min(820px,100vw)}
   }
@@ -3470,11 +3483,14 @@ export default function StagingWorkflowPanel() {
 
     return (
       <div className="wf-style-stack">
+        <h3 className="wf-h3" style={{ marginBottom: 0 }}>Apariencia del sitio</h3>
+        <div className="wf-style-layout">
         <section className="wf-style-card">
           <div className="wf-style-head">
             <h3 className="wf-style-title">Colores de marca</h3>
             <p className="wf-style-help">Define la paleta base de la landing. Usa formato hexadecimal `#RRGGBB`.</p>
           </div>
+          <div className="wf-style-body">
           <div className="wf-color-grid">
             {colorFields.map((field) => (
               <div key={field.key} className="wf-color-field">
@@ -3509,6 +3525,7 @@ export default function StagingWorkflowPanel() {
               </div>
             ))}
           </div>
+          </div>
         </section>
 
         <section className="wf-style-card">
@@ -3516,6 +3533,7 @@ export default function StagingWorkflowPanel() {
             <h3 className="wf-style-title">Tipografía</h3>
             <p className="wf-style-help">Configura la fuente principal y parámetros base de lectura.</p>
           </div>
+          <div className="wf-style-body">
           <div className="wf-grid2">
             <label className="wf-style-field">
               <span className="wf-style-label">Familia tipográfica</span>
@@ -3603,6 +3621,7 @@ export default function StagingWorkflowPanel() {
               />
             </label>
           </div>
+          </div>
         </section>
 
         <section className="wf-style-card">
@@ -3610,6 +3629,7 @@ export default function StagingWorkflowPanel() {
             <h3 className="wf-style-title">Logos</h3>
             <p className="wf-style-help">Sube o pega URL pública de logo para navbar y footer. Formatos png, jpg, webp o svg (máx 2MB).</p>
           </div>
+          <div className="wf-style-body">
           <div className="wf-grid2">
             <ImageUploadField
               value={branding.logoNavUrl ?? branding.logoUrl ?? ""}
@@ -3627,6 +3647,8 @@ export default function StagingWorkflowPanel() {
               accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
               allowedMimeTypes={LOGO_MIME_TYPES}
               maxSizeBytes={LOGO_MAX_BYTES}
+              hideUrlInput
+              controlsInline
               onValueChange={(nextValue) =>
                 updateSettings((prev) => ({
                   ...prev,
@@ -3665,6 +3687,8 @@ export default function StagingWorkflowPanel() {
               accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
               allowedMimeTypes={LOGO_MIME_TYPES}
               maxSizeBytes={LOGO_MAX_BYTES}
+              hideUrlInput
+              controlsInline
               onValueChange={(nextValue) =>
                 updateSettings((prev) => ({
                   ...prev,
@@ -3703,6 +3727,7 @@ export default function StagingWorkflowPanel() {
             />
             <span>Ocultar logo en navbar (solo landing)</span>
           </label>
+          </div>
         </section>
 
         <section className="wf-style-card">
@@ -3710,6 +3735,7 @@ export default function StagingWorkflowPanel() {
             <h3 className="wf-style-title">Favicon</h3>
             <p className="wf-style-help">Sube o pega URL pública del favicon. Recomendado 48x48px (mín. 32x32), formato png/ico (máx 1MB).</p>
           </div>
+          <div className="wf-style-body">
           <ImageUploadField
             value={branding.faviconUrl ?? ""}
             placeholder="Favicon URL"
@@ -3727,6 +3753,8 @@ export default function StagingWorkflowPanel() {
             allowedMimeTypes={FAVICON_MIME_TYPES}
             allowedExtensions={FAVICON_EXTENSIONS}
             maxSizeBytes={FAVICON_MAX_BYTES}
+            hideUrlInput
+            controlsInline
             onValueChange={(nextValue) =>
               updateSettings((prev) => ({
                 ...prev,
@@ -3807,7 +3835,9 @@ export default function StagingWorkflowPanel() {
               </label>
             </div>
           </div>
+          </div>
         </section>
+        </div>
       </div>
     );
   };
