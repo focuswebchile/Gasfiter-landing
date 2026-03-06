@@ -932,10 +932,13 @@ export default function StagingWorkflowPanel() {
     const sameOrigin = window.location.origin;
     if (!configuredBaseUrl) return sameOrigin;
     try {
-      const configuredHost = new URL(configuredBaseUrl).hostname;
-      const isConfiguredLocal = /^(localhost|127\.0\.0\.1)$/.test(configuredHost);
-      const isCurrentLocal = /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname);
-      if (isConfiguredLocal && !isCurrentLocal) return sameOrigin;
+      const configuredHost = new URL(configuredBaseUrl).hostname.toLowerCase();
+      const currentHost = window.location.hostname.toLowerCase();
+      const isCurrentLocal = /^(localhost|127\.0\.0\.1)$/.test(currentHost);
+
+      // Local dev can target a remote backend; deployed hosts should prefer same-origin.
+      if (isCurrentLocal) return configuredBaseUrl;
+      if (configuredHost !== currentHost) return sameOrigin;
       return configuredBaseUrl;
     } catch {
       return sameOrigin;
