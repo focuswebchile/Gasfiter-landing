@@ -891,7 +891,7 @@ export default function StagingWorkflowPanel() {
 
   const [siteSlug, setSiteSlug] = useState(defaultSlug);
   const [userId, setUserId] = useState(defaultUserId);
-  const [mode, setMode] = useState<Mode>("published");
+  const [mode, setMode] = useState<Mode>("draft");
   const [view, setView] = useState<SidebarView>("sections");
   const [editableSection, setEditableSection] = useState<EditableSectionId>("hero");
   const [settings, setSettings] = useState<SettingsPayload | null>(null);
@@ -4798,13 +4798,16 @@ export default function StagingWorkflowPanel() {
 
           <div className="wf-row wf-toolbar wf-toolbar-actions" style={{ marginBottom: 12 }}>
             <select className="wf-select" value={mode} onChange={(e) => handleModeChange(e.target.value as Mode)}>
-              <option value="published">Publicado</option>
-              <option value="draft">Borrador</option>
+              <option value="draft">Borrador (editable)</option>
+              <option value="published">Publicado (solo referencia)</option>
             </select>
             <button className="wf-btn wf-btn-soft" onClick={loadPanel} disabled={busy}>
               Cargar panel
             </button>
           </div>
+          <p className="wf-muted" style={{ marginTop: -6, marginBottom: 12 }}>
+            Usa <strong>Borrador</strong> para editar. Usa <strong>Publicado</strong> solo para revisar la versión en vivo.
+          </p>
 
           <div className="wf-editorial-status">
             <div className="wf-editorial-status-title">
