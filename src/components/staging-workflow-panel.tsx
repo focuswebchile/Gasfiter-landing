@@ -203,6 +203,15 @@ const FAVICON_MIME_TYPES = ["image/png", "image/x-icon", "image/vnd.microsoft.ic
 const FAVICON_EXTENSIONS = ["png", "ico"];
 const REQUEST_REMINDER_COOLDOWN_MINUTES = 30;
 
+function isValidHttpUrl(value: string): boolean {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 function bytesToMbText(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(0)}MB`;
 }
@@ -876,7 +885,7 @@ export default function StagingWorkflowPanel() {
   const defaultUserId = process.env.NEXT_PUBLIC_CMS_DEFAULT_USER_ID?.trim() || "";
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() || "";
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() || "";
-  const authEnabled = Boolean(supabaseUrl && supabaseAnonKey);
+  const authEnabled = Boolean(isValidHttpUrl(supabaseUrl) && supabaseAnonKey);
   const allowLegacyIdentityFallback = Boolean(defaultUserId);
 
   const [siteSlug, setSiteSlug] = useState(defaultSlug);
