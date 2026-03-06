@@ -883,6 +883,7 @@ export default function StagingWorkflowPanel() {
   const defaultSlug = process.env.NEXT_PUBLIC_SITE_SLUG?.trim() || "gasfiter-staging";
   const configuredBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.trim() || "";
   const defaultUserId = process.env.NEXT_PUBLIC_CMS_DEFAULT_USER_ID?.trim() || "";
+  const configuredAuthRedirectBase = process.env.NEXT_PUBLIC_CMS_AUTH_REDIRECT_BASE_URL?.trim() || "";
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() || "";
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() || "";
   const authEnabled = Boolean(isValidHttpUrl(supabaseUrl) && supabaseAnonKey);
@@ -1077,7 +1078,10 @@ export default function StagingWorkflowPanel() {
     }
     setSendingMagicLink(true);
     try {
-      const redirectUrl = `${window.location.origin}/staging?slug=${encodeURIComponent(siteSlug.trim() || defaultSlug)}`;
+      const redirectBase = isValidHttpUrl(configuredAuthRedirectBase)
+        ? configuredAuthRedirectBase.replace(/\/$/, "")
+        : window.location.origin;
+      const redirectUrl = `${redirectBase}/staging?slug=${encodeURIComponent(siteSlug.trim() || defaultSlug)}`;
       const { error } = await supabaseClient.auth.signInWithOtp({
         email,
         options: { emailRedirectTo: redirectUrl },
@@ -1090,7 +1094,7 @@ export default function StagingWorkflowPanel() {
     } finally {
       setSendingMagicLink(false);
     }
-  }, [authEmail, defaultSlug, setError, setOk, siteSlug, supabaseClient]);
+  }, [authEmail, configuredAuthRedirectBase, defaultSlug, setError, setOk, siteSlug, supabaseClient]);
 
   const closeSession = useCallback(async () => {
     if (!supabaseClient) return;
