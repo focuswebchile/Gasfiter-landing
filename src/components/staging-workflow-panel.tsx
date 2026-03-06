@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
 type Mode = "draft" | "published";
@@ -873,6 +874,10 @@ export default function StagingWorkflowPanel() {
   const defaultSlug = process.env.NEXT_PUBLIC_SITE_SLUG?.trim() || "gasfiter-staging";
   const configuredBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.trim() || "";
   const defaultUserId = process.env.NEXT_PUBLIC_CMS_DEFAULT_USER_ID?.trim() || "";
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() || "";
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() || "";
+  const authEnabled = Boolean(supabaseUrl && supabaseAnonKey);
+  const allowLegacyIdentityFallback = Boolean(defaultUserId);
 
   const [siteSlug, setSiteSlug] = useState(defaultSlug);
   const [userId, setUserId] = useState(defaultUserId);
@@ -918,6 +923,10 @@ export default function StagingWorkflowPanel() {
   const [uploadingAsset, setUploadingAsset] = useState<"logoNav" | "logoFooter" | "favicon" | null>(null);
   const [uploadingContentAssetKey, setUploadingContentAssetKey] = useState<string | null>(null);
   const [publishValidationMissing, setPublishValidationMissing] = useState<PublishValidationIssue[]>([]);
+  const [authEmail, setAuthEmail] = useState("");
+  const [authUserEmail, setAuthUserEmail] = useState("");
+  const [authBootstrapped, setAuthBootstrapped] = useState(false);
+  const [sendingMagicLink, setSendingMagicLink] = useState(false);
   const querySlugRef = useRef<string | null>(null);
   const queryUserIdRef = useRef<string | null>(null);
   const normalizedSiteSlug = siteSlug.trim().toLowerCase();
@@ -956,18 +965,22 @@ export default function StagingWorkflowPanel() {
     return `${window.location.origin}/api/sites/${encodeURIComponent(siteSlug)}`;
   }, [endpointBase, siteSlug]);
   const envBadge = detectEnvBadge(siteSlug);
+  const supabaseClient: SupabaseClient | null = useMemo(() => {
+    if (!authEnabled) return null;
+    return createClient(supabaseUrl, supabaseAnonKey);
+  }, [authEnabled, supabaseUrl, supabaseAnonKey]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     const querySlug = params.get("slug")?.trim() || "";
-    const queryUserId = (params.get("userId") ?? params.get("uid") ?? "").trim();
+    const queryUserId = allowLegacyIdentityFallback ? (params.get("userId") ?? params.get("uid") ?? "").trim() : "";
     querySlugRef.current = querySlug || null;
     queryUserIdRef.current = queryUserId || null;
 
     if (querySlug) setSiteSlug(querySlug);
     if (queryUserId) setUserId(queryUserId);
-    else if (defaultUserId) setUserId((current) => current.trim() || defaultUserId);
+    else if (allowLegacyIdentityFallback && defaultUserId) setUserId((current) => current.trim() || defaultUserId);
 
     if (params.has("slug") || params.has("userId") || params.has("uid")) {
       params.delete("slug");
@@ -977,7 +990,7 @@ export default function StagingWorkflowPanel() {
       const cleanUrl = `${window.location.pathname}${nextQuery ? `?${nextQuery}` : ""}${window.location.hash || ""}`;
       window.history.replaceState({}, "", cleanUrl);
     }
-  }, [defaultUserId]);
+  }, [allowLegacyIdentityFallback, defaultUserId]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -986,13 +999,51 @@ export default function StagingWorkflowPanel() {
     try {
       const parsed = JSON.parse(stored) as { siteSlug?: string; userId?: string; mode?: Mode };
       if (parsed.siteSlug && !querySlugRef.current) setSiteSlug(parsed.siteSlug);
-      if (parsed.userId && !queryUserIdRef.current) setUserId(parsed.userId);
-      else if (defaultUserId) setUserId(defaultUserId);
+      if (allowLegacyIdentityFallback) {
+        if (parsed.userId && !queryUserIdRef.current) setUserId(parsed.userId);
+        else if (defaultUserId) setUserId(defaultUserId);
+      }
       if (parsed.mode === "draft" || parsed.mode === "published") setMode(parsed.mode);
     } catch {
       // ignore invalid storage
     }
-  }, [defaultUserId]);
+  }, [allowLegacyIdentityFallback, defaultUserId]);
+
+  useEffect(() => {
+    if (!supabaseClient) {
+      setAuthBootstrapped(true);
+      return;
+    }
+    let active = true;
+    void supabaseClient.auth.getSession().then(({ data }) => {
+      if (!active) return;
+      const session = data.session;
+      if (session?.user?.id) {
+        setUserId(session.user.id);
+        setAuthUserEmail(session.user.email ?? "");
+      } else if (!allowLegacyIdentityFallback) {
+        setUserId("");
+        setAuthUserEmail("");
+      }
+      setAuthBootstrapped(true);
+    });
+
+    const { data } = supabaseClient.auth.onAuthStateChange((_event, session) => {
+      if (!active) return;
+      if (session?.user?.id) {
+        setUserId(session.user.id);
+        setAuthUserEmail(session.user.email ?? "");
+      } else if (!allowLegacyIdentityFallback) {
+        setUserId("");
+        setAuthUserEmail("");
+      }
+    });
+
+    return () => {
+      active = false;
+      data.subscription.unsubscribe();
+    };
+  }, [allowLegacyIdentityFallback, supabaseClient]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -1004,6 +1055,43 @@ export default function StagingWorkflowPanel() {
   }, []);
   const setError = useCallback((text: string) => showToast({ type: "error", text }), [showToast]);
   const setOk = useCallback((text: string) => showToast({ type: "success", text }), [showToast]);
+
+  const sendMagicLink = useCallback(async () => {
+    if (!supabaseClient) {
+      setError("Auth no configurado: faltan variables NEXT_PUBLIC_SUPABASE_URL/NEXT_PUBLIC_SUPABASE_ANON_KEY.");
+      return;
+    }
+    const email = authEmail.trim().toLowerCase();
+    if (!email || !email.includes("@")) {
+      setError("Ingresa un correo válido para enviar el magic link.");
+      return;
+    }
+    setSendingMagicLink(true);
+    try {
+      const redirectUrl = `${window.location.origin}/staging?slug=${encodeURIComponent(siteSlug.trim() || defaultSlug)}`;
+      const { error } = await supabaseClient.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: redirectUrl },
+      });
+      if (error) throw error;
+      setOk("Magic link enviado. Revisa tu correo para iniciar sesión.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "No se pudo enviar el magic link.";
+      setError(message);
+    } finally {
+      setSendingMagicLink(false);
+    }
+  }, [authEmail, defaultSlug, setError, setOk, siteSlug, supabaseClient]);
+
+  const closeSession = useCallback(async () => {
+    if (!supabaseClient) return;
+    await supabaseClient.auth.signOut();
+    setUserId("");
+    setAuthUserEmail("");
+    setMembership(null);
+    setPanelReady(false);
+    setOk("Sesión cerrada.");
+  }, [setOk, supabaseClient]);
 
   const canSaveDraft = membership?.permissions.canSaveDraft ?? false;
   const canPublish = membership?.permissions.canPublish ?? false;
@@ -4660,6 +4748,39 @@ export default function StagingWorkflowPanel() {
               value={userId ? "Sesión de usuario conectada" : "Sesión de usuario no detectada"}
               disabled
             />
+          </div>
+
+          <div className="wf-row wf-toolbar wf-toolbar-actions" style={{ marginBottom: 12 }}>
+            {authEnabled ? (
+              authUserEmail ? (
+                <>
+                  <input className="wf-input" value={`Sesión: ${authUserEmail}`} disabled />
+                  <button className="wf-btn wf-btn-soft" onClick={closeSession} disabled={busy}>
+                    Cerrar sesión
+                  </button>
+                </>
+              ) : (
+                <>
+                  <input
+                    className="wf-input"
+                    type="email"
+                    value={authEmail}
+                    onChange={(event) => setAuthEmail(event.target.value)}
+                    placeholder="tu-correo@abcis.cl"
+                    disabled={!authBootstrapped || busy}
+                  />
+                  <button
+                    className="wf-btn wf-btn-primary"
+                    onClick={sendMagicLink}
+                    disabled={!authBootstrapped || busy || sendingMagicLink}
+                  >
+                    {sendingMagicLink ? "Enviando..." : "Enviar magic link"}
+                  </button>
+                </>
+              )
+            ) : (
+              <span className="wf-muted">Auth por magic link no configurado en este entorno.</span>
+            )}
           </div>
 
           <div className="wf-row wf-toolbar wf-toolbar-actions" style={{ marginBottom: 12 }}>
