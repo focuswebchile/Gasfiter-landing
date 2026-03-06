@@ -918,6 +918,8 @@ export default function StagingWorkflowPanel() {
   const [uploadingAsset, setUploadingAsset] = useState<"logoNav" | "logoFooter" | "favicon" | null>(null);
   const [uploadingContentAssetKey, setUploadingContentAssetKey] = useState<string | null>(null);
   const [publishValidationMissing, setPublishValidationMissing] = useState<PublishValidationIssue[]>([]);
+  const querySlugRef = useRef<string | null>(null);
+  const queryUserIdRef = useRef<string | null>(null);
   const normalizedSiteSlug = siteSlug.trim().toLowerCase();
   const hideFaqAndTestimonialsInItems = normalizedSiteSlug === "abcis";
   const hiddenSectionsInSectionsView = useMemo(
@@ -957,30 +959,40 @@ export default function StagingWorkflowPanel() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const querySlug = params.get("slug")?.trim() || "";
+    const queryUserId = (params.get("userId") ?? params.get("uid") ?? "").trim();
+    querySlugRef.current = querySlug || null;
+    queryUserIdRef.current = queryUserId || null;
+
+    if (querySlug) setSiteSlug(querySlug);
+    if (queryUserId) setUserId(queryUserId);
+    else if (defaultUserId) setUserId((current) => current.trim() || defaultUserId);
+
+    if (params.has("slug") || params.has("userId") || params.has("uid")) {
+      params.delete("slug");
+      params.delete("userId");
+      params.delete("uid");
+      const nextQuery = params.toString();
+      const cleanUrl = `${window.location.pathname}${nextQuery ? `?${nextQuery}` : ""}${window.location.hash || ""}`;
+      window.history.replaceState({}, "", cleanUrl);
+    }
+  }, [defaultUserId]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
     const stored = window.localStorage.getItem(STORAGE_KEY);
     if (!stored) return;
     try {
       const parsed = JSON.parse(stored) as { siteSlug?: string; userId?: string; mode?: Mode };
-      if (parsed.siteSlug) setSiteSlug(parsed.siteSlug);
-      if (parsed.userId) setUserId(parsed.userId);
+      if (parsed.siteSlug && !querySlugRef.current) setSiteSlug(parsed.siteSlug);
+      if (parsed.userId && !queryUserIdRef.current) setUserId(parsed.userId);
       else if (defaultUserId) setUserId(defaultUserId);
       if (parsed.mode === "draft" || parsed.mode === "published") setMode(parsed.mode);
     } catch {
       // ignore invalid storage
     }
   }, [defaultUserId]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (userId.trim()) return;
-    const params = new URLSearchParams(window.location.search);
-    const queryUserId = params.get("userId") ?? params.get("uid");
-    if (queryUserId && queryUserId.trim()) {
-      setUserId(queryUserId.trim());
-      return;
-    }
-    if (defaultUserId) setUserId(defaultUserId);
-  }, [userId, defaultUserId]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
