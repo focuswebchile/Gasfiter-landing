@@ -872,9 +872,10 @@ function getSectionDisplayName(sectionId: string): string {
 export default function StagingWorkflowPanel() {
   const defaultSlug = process.env.NEXT_PUBLIC_SITE_SLUG?.trim() || "gasfiter-staging";
   const configuredBaseUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.trim() || "";
+  const defaultUserId = process.env.NEXT_PUBLIC_CMS_DEFAULT_USER_ID?.trim() || "";
 
   const [siteSlug, setSiteSlug] = useState(defaultSlug);
-  const [userId, setUserId] = useState("");
+  const [userId, setUserId] = useState(defaultUserId);
   const [mode, setMode] = useState<Mode>("published");
   const [view, setView] = useState<SidebarView>("sections");
   const [editableSection, setEditableSection] = useState<EditableSectionId>("hero");
@@ -959,11 +960,12 @@ export default function StagingWorkflowPanel() {
       const parsed = JSON.parse(stored) as { siteSlug?: string; userId?: string; mode?: Mode };
       if (parsed.siteSlug) setSiteSlug(parsed.siteSlug);
       if (parsed.userId) setUserId(parsed.userId);
+      else if (defaultUserId) setUserId(defaultUserId);
       if (parsed.mode === "draft" || parsed.mode === "published") setMode(parsed.mode);
     } catch {
       // ignore invalid storage
     }
-  }, []);
+  }, [defaultUserId]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -972,8 +974,10 @@ export default function StagingWorkflowPanel() {
     const queryUserId = params.get("userId") ?? params.get("uid");
     if (queryUserId && queryUserId.trim()) {
       setUserId(queryUserId.trim());
+      return;
     }
-  }, [userId]);
+    if (defaultUserId) setUserId(defaultUserId);
+  }, [userId, defaultUserId]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;

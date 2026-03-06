@@ -19,6 +19,14 @@ type RequestPublishReminderBody = {
 
 const REQUEST_REMINDER_COOLDOWN_MINUTES = 30;
 
+function parseForcedRecipients(value: string | undefined) {
+  if (!value) return [] as string[];
+  return value
+    .split(/[;,]/)
+    .map((item) => item.trim().toLowerCase())
+    .filter((item) => item.length > 3 && item.includes("@"));
+}
+
 function minutesSince(iso: string | null | undefined) {
   if (!iso) return Number.POSITIVE_INFINITY;
   const timestamp = Date.parse(iso);
@@ -140,8 +148,13 @@ export async function POST(request: Request, context: { params: Promise<{ slug: 
         ? (parsedSettings?.content?.sections?.find((section) => section.id === "hero")?.data?.title as string)
         : null;
 
+    const forcedRecipients = parseForcedRecipients(
+      process.env.REQUEST_PUBLISH_NOTIFY_TO ?? process.env.PUBLISH_REVIEW_TO,
+    );
+    const reviewRecipients = forcedRecipients.length > 0 ? forcedRecipients : recipientEmails;
+
     const emailResult = await sendRequestPublishEmail({
-      recipients: recipientEmails,
+      recipients: reviewRecipients,
       siteSlug: site.slug,
       requestedByUserId: userId,
       requestedAtIso: latestDraft.publish_requested_at,
