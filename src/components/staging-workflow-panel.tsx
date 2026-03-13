@@ -940,11 +940,8 @@ export default function StagingWorkflowPanel() {
   const querySlugRef = useRef<string | null>(null);
   const queryUserIdRef = useRef<string | null>(null);
   const normalizedSiteSlug = siteSlug.trim().toLowerCase();
-  const hideFaqAndTestimonialsInItems = normalizedSiteSlug === "abcis";
-  const hiddenSectionsInSectionsView = useMemo(
-    () => (normalizedSiteSlug === "abcis" ? new Set<EditableSectionId>(["urgency_banner", "faq", "testimonials"]) : null),
-    [normalizedSiteSlug],
-  );
+  const hideFaqAndTestimonialsInItems = false;
+  const hiddenSectionsInSectionsView = useMemo(() => null, []);
 
   const baseUrl = useMemo(() => {
     if (typeof window === "undefined") {
@@ -3735,26 +3732,18 @@ export default function StagingWorkflowPanel() {
       { key: "background", label: "Fondo", help: "Base general de la interfaz." },
       { key: "text", label: "Acento", help: "Textos destacados y contrastes visuales." },
     ];
-    const suggestedPalette =
-      normalizedSiteSlug === "abcis"
-        ? ({
-            primary: "#c9982a",
-            secondary: "#faf7f0",
-            background: "#ffffff",
-            text: "#1a1a1a",
-          } as const)
-        : ({
-            primary: "#df7c0c",
-            secondary: "#d4cf69",
-            background: "#faf9fa",
-            text: "#875e5e",
-          } as const);
+    const suggestedPalette = {
+      primary: "#df7c0c",
+      secondary: "#d4cf69",
+      background: "#faf9fa",
+      text: "#875e5e",
+    } as const;
     const supportedFontFamilies = ["Inter", "Poppins", "Roboto", "Montserrat", "Barlow Condensed"];
     const currentTypographyLabel =
       inferTypographyLabel(typography.fontFamily) ||
       inferTypographyLabel(typography.font) ||
-      (normalizedSiteSlug === "abcis" ? "Montserrat" : "Inter");
-    const showBasicContactSection = normalizedSiteSlug !== "abcis";
+      "Inter";
+    const showBasicContactSection = true;
 
     const updateColor = (key: "primary" | "secondary" | "background" | "text", value: string) => {
       const normalized = normalizeColorValue(value);
@@ -4195,10 +4184,7 @@ export default function StagingWorkflowPanel() {
     [workflowProgress.currentStep, workflowProgress.steps.length],
   );
 
-  const testimonialsApplicable = useMemo(
-    () => String(siteSlug || "").trim().toLowerCase() !== "abcis",
-    [siteSlug],
-  );
+  const testimonialsApplicable = true;
 
   const editorialStatus = useMemo(() => {
     if (!panelReady) {
@@ -4779,7 +4765,7 @@ export default function StagingWorkflowPanel() {
                     type="email"
                     value={authEmail}
                     onChange={(event) => setAuthEmail(event.target.value)}
-                    placeholder="tu-correo@abcis.cl"
+                    placeholder="tu-correo@empresa.cl"
                     disabled={!authBootstrapped || busy}
                   />
                   <button
