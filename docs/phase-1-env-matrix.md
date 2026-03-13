@@ -1,5 +1,8 @@
 # Fase 1 - T2 - Matriz de variables productivas
 
+> Nota: esta matriz corresponde al estado previo al switch de `ABCIS` hacia `cms-abcis`.
+
+
 ## Objetivo
 
 Documentar las variables productivas relevantes para entender que deploy alimenta a cada sitio.
@@ -26,6 +29,7 @@ Documentar las variables productivas relevantes para entender que deploy aliment
 
 - `NEXT_PUBLIC_BACKEND_URL=https://gasfiter-landing-lilac.vercel.app`
 - `NEXT_PUBLIC_SITE_SLUG=abcis`
+  - estado historico previo al desacople
 - `NEXT_PUBLIC_SUPABASE_URL=existe`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY=existe`
 - `SUPABASE_URL=existe`
@@ -38,6 +42,7 @@ Documentar las variables productivas relevantes para entender que deploy aliment
 ## ABCIS - Vercel
 
 - `VITE_BACKEND_URL=https://gasfiter-landing-lilac.vercel.app`
+  - estado historico previo al switch
 - `VITE_DEFAULT_SITE_SLUG=abcis`
 - `VITE_RECAPTCHA_SITE_KEY=existe`
 

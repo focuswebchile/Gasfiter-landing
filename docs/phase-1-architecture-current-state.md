@@ -1,5 +1,8 @@
 # Fase 1 - T1 - Arquitectura actual
 
+> Nota: este documento es un snapshot previo al desacople de `ABCIS`. El estado vigente posterior al switch se documenta en Fase 3.
+
+
 ## Objetivo
 
 Documentar el estado real de la arquitectura antes de desacoplar `ABCIS` de `gasfiter-landing`.
@@ -24,7 +27,7 @@ Documentar el estado real de la arquitectura antes de desacoplar `ABCIS` de `gas
 ### ABCIS
 
 - Frontend: `ABCIS`
-- Backend URL actual: `https://gasfiter-landing-lilac.vercel.app`
+- Backend URL inicial: `https://gasfiter-landing-lilac.vercel.app`
 - Site slug: `abcis`
 - No depende de `focusweb-backend`
 - No aparece dentro del proyecto Supabase de Focus Web
