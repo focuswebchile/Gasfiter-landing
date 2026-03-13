@@ -74,3 +74,20 @@ El repo `Gasfiter` deja de contener:
 - slug por defecto `abcis`
 - fallbacks de cliente
 - comportamiento productivo especifico de `ABCIS`
+
+## Nota operativa adicional
+A la fecha de cierre de este bloque, el slug funcional vigente de Gasfiter en el proyecto Supabase staging es:
+- `gasfiter-staging`
+
+Esto implica:
+- el frontend/deploy `gasfiter-landing` debe apuntar a `gasfiter-staging`
+- no existe aun un slug productivo independiente llamado `gasfiter` en ese Supabase
+
+## Trabajo futuro sugerido
+Si mas adelante se quiere normalizar naming, se puede abrir una fase separada para:
+1. crear o migrar el slug `gasfiter`
+2. copiar settings/versiones necesarias
+3. mover el deploy desde `gasfiter-staging` a `gasfiter`
+4. retirar el slug transicional `gasfiter-staging`
+
+Ese trabajo no forma parte del desacople actual con `ABCIS`.
