@@ -941,7 +941,7 @@ export default function StagingWorkflowPanel() {
   const queryUserIdRef = useRef<string | null>(null);
   const normalizedSiteSlug = siteSlug.trim().toLowerCase();
   const hideFaqAndTestimonialsInItems = false;
-  const hiddenSectionsInSectionsView = useMemo(() => null, []);
+  const hiddenSectionsInSectionsView = useMemo<Set<EditableSectionId> | null>(() => null, []);
 
   const baseUrl = useMemo(() => {
     if (typeof window === "undefined") {
