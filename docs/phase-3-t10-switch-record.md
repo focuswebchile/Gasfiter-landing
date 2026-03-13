@@ -26,3 +26,18 @@ El switch productivo de `ABCIS` se considera completado y validado.
 
 ## Regla operativa desde ahora
 No volver a tratar `gasfiter-landing` como backend productivo de `ABCIS`.
+
+## Hito adicional validado
+- El dominio `cms.abcis.cl` fue movido desde `gasfiter-landing` hacia `cms-abcis`
+- `https://cms.abcis.cl/staging` carga correctamente
+- `https://cms.abcis.cl/api/sites/abcis/settings?mode=published` responde correctamente
+- `https://cms.abcis.cl/api/sites/abcis/settings?mode=draft` responde correctamente
+
+## Estado actualizado
+El desacople de `ABCIS` respecto de `gasfiter-landing` ya esta cerrado a nivel de:
+- backend consumido por el frontend
+- dominio CMS
+- endpoints criticos de configuracion
+
+## Validacion pendiente menor
+Queda solo la revalidacion manual del login por magic link y un cambio minimo desde CMS, una vez que el rate limit del correo permita repetir el flujo.
