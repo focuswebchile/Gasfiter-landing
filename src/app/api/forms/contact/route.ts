@@ -28,7 +28,7 @@ export async function POST(request: Request) {
     const email = asCleanString(body.email, 180).toLowerCase();
     const phone = asCleanString(body.phone, 80);
     const message = asCleanString(body.message, 5000);
-    const siteSlug = asCleanString(body.siteSlug, 80) || "abcis";
+    const siteSlug = asCleanString(body.siteSlug, 80) || "gasfiter";
 
     if (!firstName || !lastName || !email || !message) {
       return NextResponse.json(

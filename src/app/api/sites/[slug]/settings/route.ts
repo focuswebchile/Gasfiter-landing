@@ -25,9 +25,6 @@ type DbItem = {
 const sectionNeedsItems = new Set(["services", "projects", "testimonials", "faq"]);
 
 const DEFAULT_ALLOWED_ORIGINS = [
-  "https://abcis.vercel.app",
-  "https://www.abcis.cl",
-  "https://abcis.cl",
   "http://localhost:5173",
   "http://127.0.0.1:5173",
   "http://localhost:3000",

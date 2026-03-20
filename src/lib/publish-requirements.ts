@@ -84,9 +84,8 @@ function isValidCtaUrl(value: unknown): boolean {
   return normalizeInternalTarget(raw).length > 0;
 }
 
-function isTestimonialsRequired(siteSlug?: string): boolean {
-  const normalized = String(siteSlug || "").trim().toLowerCase();
-  return normalized !== "abcis";
+function isTestimonialsRequired(_siteSlug?: string): boolean {
+  return true;
 }
 
 export function validatePublishRequirements(
