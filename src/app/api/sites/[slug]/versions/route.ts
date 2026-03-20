@@ -21,9 +21,7 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
 
     const primaryQuery = await supabase
       .from("site_versions")
-      .select(
-        "id, version_number, status, created_at, updated_at, published_at, notes, publish_requested_at, publish_requested_by, publish_request_note, publish_notified_at",
-      )
+      .select("id, version_number, status, created_at, updated_at, published_at, notes")
       .eq("site_id", site.id)
       .order("version_number", { ascending: false });
 
@@ -36,13 +34,7 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
         .select("id, version_number, status, created_at, published_at, notes")
         .eq("site_id", site.id)
         .order("version_number", { ascending: false });
-      data = (fallbackQuery.data as Array<Record<string, unknown>> | null)?.map((row) => ({
-        ...row,
-        publish_requested_at: null,
-        publish_requested_by: null,
-        publish_request_note: null,
-        publish_notified_at: null,
-      })) ?? null;
+      data = (fallbackQuery.data as Array<Record<string, unknown>> | null) ?? null;
       error = fallbackQuery.error;
     }
 
@@ -63,7 +55,6 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
             canSaveDraft: ["owner", "admin", "editor"].includes(role),
             canPublish: ["owner", "admin"].includes(role),
             canRollback: ["owner", "admin"].includes(role),
-            canRequestPublish: ["owner", "admin", "editor"].includes(role),
             readOnly: role === "viewer",
           },
         },

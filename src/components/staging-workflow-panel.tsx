@@ -62,10 +62,6 @@ type VersionItem = {
   updated_at?: string;
   published_at: string | null;
   notes: string | null;
-  publish_requested_at?: string | null;
-  publish_requested_by?: string | null;
-  publish_request_note?: string | null;
-  publish_notified_at?: string | null;
 };
 
 type MembershipInfo = {
@@ -75,7 +71,6 @@ type MembershipInfo = {
     canSaveDraft: boolean;
     canPublish: boolean;
     canRollback: boolean;
-    canRequestPublish?: boolean;
     readOnly: boolean;
   };
 };
@@ -201,8 +196,6 @@ const CONTENT_IMAGE_MIME_TYPES = ["image/png", "image/jpeg", "image/jpg", "image
 const LOGO_MIME_TYPES = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/svg+xml"];
 const FAVICON_MIME_TYPES = ["image/png", "image/x-icon", "image/vnd.microsoft.icon"];
 const FAVICON_EXTENSIONS = ["png", "ico"];
-const REQUEST_REMINDER_COOLDOWN_MINUTES = 30;
-
 function isValidHttpUrl(value: string): boolean {
   try {
     const parsed = new URL(value);
@@ -214,14 +207,6 @@ function isValidHttpUrl(value: string): boolean {
 
 function bytesToMbText(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(0)}MB`;
-}
-
-function getRetryAfterMinutes(iso: string | null | undefined, cooldownMinutes: number, nowTs: number): number {
-  if (!iso) return 0;
-  const ts = Date.parse(iso);
-  if (Number.isNaN(ts)) return 0;
-  const elapsedMinutes = (nowTs - ts) / 1000 / 60;
-  return Math.max(0, Math.ceil(cooldownMinutes - elapsedMinutes));
 }
 
 function validateImageFile(
@@ -924,12 +909,7 @@ export default function StagingWorkflowPanel() {
   const [loadingDiff, setLoadingDiff] = useState(false);
   const [showPreviewOverlay, setShowPreviewOverlay] = useState(false);
   const [showDiffOverlay, setShowDiffOverlay] = useState(false);
-  const [showRequestPublishOverlay, setShowRequestPublishOverlay] = useState(false);
-  const [requestPublishNote, setRequestPublishNote] = useState("");
-  const [requestActiveFallback, setRequestActiveFallback] = useState(false);
-  const [requestReminderAvailableAtMs, setRequestReminderAvailableAtMs] = useState<number | null>(null);
   const [sendingRequestPublishReminder, setSendingRequestPublishReminder] = useState(false);
-  const [reminderClockTs, setReminderClockTs] = useState(() => Date.now());
   const [uploadingAsset, setUploadingAsset] = useState<"logoNav" | "logoFooter" | "favicon" | null>(null);
   const [uploadingContentAssetKey, setUploadingContentAssetKey] = useState<string | null>(null);
   const [publishValidationMissing, setPublishValidationMissing] = useState<PublishValidationIssue[]>([]);
@@ -1106,7 +1086,6 @@ export default function StagingWorkflowPanel() {
   const canSaveDraft = membership?.permissions.canSaveDraft ?? false;
   const canPublish = membership?.permissions.canPublish ?? false;
   const canRollback = membership?.permissions.canRollback ?? false;
-  const canRequestPublish = membership?.permissions.canRequestPublish ?? canSaveDraft;
   const roleResolved = membership !== null;
   const isAdvancedRole = membership?.role === "owner" || membership?.role === "admin";
   const showAdvancedUi = roleResolved && isAdvancedRole;
@@ -1114,39 +1093,9 @@ export default function StagingWorkflowPanel() {
   const editingLocked = !panelReady || publishedReadOnly || busy || autosaving || flushingPublish || draftConflict.active;
   const latestPublishedVersion = versions.find((version) => version.status === "published") ?? null;
   const latestDraftVersion = versions.find((version) => version.status === "draft") ?? null;
-  const hasActivePublishRequest = Boolean(latestDraftVersion?.publish_requested_at);
-  const effectiveHasActivePublishRequest = hasActivePublishRequest || requestActiveFallback;
-  const fallbackRetryAfterMinutes = useMemo(() => {
-    if (!requestReminderAvailableAtMs) return 0;
-    return Math.max(0, Math.ceil((requestReminderAvailableAtMs - reminderClockTs) / 60000));
-  }, [requestReminderAvailableAtMs, reminderClockTs]);
-  const reminderRetryAfterMinutes = useMemo(
-    () => {
-      if (hasActivePublishRequest) {
-        return getRetryAfterMinutes(
-          latestDraftVersion?.publish_notified_at ?? null,
-          REQUEST_REMINDER_COOLDOWN_MINUTES,
-          reminderClockTs,
-        );
-      }
-      return fallbackRetryAfterMinutes;
-    },
-    [hasActivePublishRequest, latestDraftVersion?.publish_notified_at, reminderClockTs, fallbackRetryAfterMinutes],
-  );
-  const reminderCooldownActive = effectiveHasActivePublishRequest && reminderRetryAfterMinutes > 0;
   const latestDraftVersionToken = latestDraftVersion?.created_at ?? null;
 
-  useEffect(() => {
-    if (!effectiveHasActivePublishRequest) return;
-    const tick = window.setInterval(() => setReminderClockTs(Date.now()), 30000);
-    return () => window.clearInterval(tick);
-  }, [effectiveHasActivePublishRequest]);
 
-  useEffect(() => {
-    if (!hasActivePublishRequest) return;
-    setRequestActiveFallback(false);
-    setRequestReminderAvailableAtMs(null);
-  }, [hasActivePublishRequest]);
 
   useEffect(() => {
     if (!toast) return;
@@ -1595,149 +1544,6 @@ export default function StagingWorkflowPanel() {
     }
   }, [panelReady, canSaveDraft, draftConflict.active, saveDraftInternal]);
 
-  const openRequestPublishDialog = () => {
-    if (!userId.trim()) return setError("No se detectó sesión de usuario. Inicia sesión nuevamente.");
-    if (!panelReady) return setError("Primero usa Cargar panel");
-    if (!canRequestPublish) return setError("Tu rol no puede solicitar publicación");
-    if (hasActivePublishRequest) return setOk("Ya existe una solicitud de publicación activa.");
-    if (mode !== "draft") return setError("Activa modo borrador para solicitar publicación");
-    if (draftConflict.active) return setError("Conflicto de draft: recarga borrador antes de solicitar.");
-    setRequestPublishNote("");
-    setShowRequestPublishOverlay(true);
-  };
-
-  const requestPublish = async (noteInput: string) => {
-    const note = noteInput.trim().slice(0, 500);
-
-    setBusy(true);
-    setToast(null);
-    try {
-      const response = await fetch(`${endpointBase}/request-publish`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-user-id": userId.trim(),
-        },
-        body: JSON.stringify({
-          userId: userId.trim(),
-          note: note || null,
-        }),
-      });
-      const payload = (await response.json().catch(() => ({}))) as {
-        error?: string;
-        message?: string;
-        request?: {
-          active?: boolean;
-          alreadyRequested?: boolean;
-          requestedAt?: string | null;
-          emailSent?: boolean;
-          emailReason?: string | null;
-          retryAfterMinutes?: number;
-        };
-      };
-      if (!response.ok) throw new Error(payload?.error || payload?.message || "No se pudo solicitar publicación");
-
-      const retryAfterMinutes =
-        typeof payload?.request?.retryAfterMinutes === "number"
-          ? Math.max(0, payload.request.retryAfterMinutes)
-          : 0;
-      if (payload?.request?.active) {
-        setRequestActiveFallback(true);
-      }
-      setRequestReminderAvailableAtMs(
-        retryAfterMinutes > 0 ? Date.now() + retryAfterMinutes * 60_000 : null,
-      );
-
-      if (payload?.request?.alreadyRequested) {
-        setOk("Solicitud ya activa: pendiente de revisión.");
-        appendActionLog("request", latestDraftVersion?.version_number ?? null, "Solicitud ya activa");
-        setShowRequestPublishOverlay(false);
-        setRequestPublishNote("");
-      } else {
-        const emailText = payload?.request?.emailSent
-          ? "Correo enviado a owner/admin."
-          : payload?.request?.emailReason
-            ? `Solicitud registrada (${payload.request.emailReason}).`
-            : "Solicitud registrada.";
-        setOk(`Solicitud de publicación enviada. ${emailText}`);
-        appendActionLog(
-          "request",
-          latestDraftVersion?.version_number ?? null,
-          `Solicitud de publicación (${payload?.request?.emailSent ? "email enviado" : "sin email"})`,
-        );
-        setShowRequestPublishOverlay(false);
-        setRequestPublishNote("");
-      }
-      await fetchVersions(true);
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "No se pudo solicitar publicación");
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const sendRequestPublishReminder = async () => {
-    if (!userId.trim()) return setError("No se detectó sesión de usuario. Inicia sesión nuevamente.");
-    if (!panelReady) return setError("Primero usa Cargar panel");
-    if (!effectiveHasActivePublishRequest) return setError("No hay una solicitud activa para reenviar.");
-    if (!canRequestPublish) return setError("Tu rol no puede reenviar recordatorios.");
-    if (reminderCooldownActive) {
-      return setOk(`Aún en cooldown. Disponible en ${reminderRetryAfterMinutes} min.`);
-    }
-
-    setSendingRequestPublishReminder(true);
-    setToast(null);
-    try {
-      const response = await fetch(`${endpointBase}/request-publish-reminder`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-user-id": userId.trim(),
-        },
-        body: JSON.stringify({
-          userId: userId.trim(),
-        }),
-      });
-      const payload = (await response.json().catch(() => ({}))) as {
-        error?: string;
-        message?: string;
-        request?: {
-          active?: boolean;
-          emailSent?: boolean;
-          emailReason?: string | null;
-          cooldownActive?: boolean;
-          retryAfterMinutes?: number;
-        };
-      };
-      if (!response.ok) throw new Error(payload?.error || payload?.message || "No se pudo reenviar recordatorio");
-
-      const cooldown = typeof payload?.request?.retryAfterMinutes === "number" ? payload.request.retryAfterMinutes : 0;
-      if (payload?.request?.active) {
-        setRequestActiveFallback(true);
-      }
-      setRequestReminderAvailableAtMs(cooldown > 0 ? Date.now() + cooldown * 60_000 : null);
-      if (payload?.request?.cooldownActive && cooldown > 0) {
-        setOk(`Recordatorio en cooldown. Disponible en ${cooldown} min.`);
-      } else if (payload?.request?.emailSent) {
-        setOk("Recordatorio enviado a owner/admin.");
-      } else if (payload?.request?.emailReason) {
-        setOk(`Recordatorio registrado (${payload.request.emailReason}).`);
-      } else {
-        setOk("Recordatorio procesado.");
-      }
-
-      appendActionLog(
-        "request",
-        latestDraftVersion?.version_number ?? null,
-        `Recordatorio de publicación (${payload?.request?.emailSent ? "email enviado" : "sin email"})`,
-      );
-      await fetchVersions(true);
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "No se pudo reenviar recordatorio");
-    } finally {
-      setSendingRequestPublishReminder(false);
-    }
-  };
 
   const publish = async () => {
     if (!userId.trim()) return setError("No se detectó sesión de usuario. Inicia sesión nuevamente.");
@@ -3529,7 +3335,7 @@ export default function StagingWorkflowPanel() {
                     </label>
                   </div>
                   <p className="wf-muted">
-                    Para landing ABCIS usa: consultoria, auditorias, certificacion o capacitacion.
+                    Para Gasfiter usa ids claros y descriptivos para cada servicio.
                   </p>
                   <div className="wf-row-item" style={{ marginTop: 8 }}>
                     <div style={{ flex: 1, display: "grid", gap: 6 }}>
@@ -3733,10 +3539,10 @@ export default function StagingWorkflowPanel() {
       { key: "text", label: "Acento", help: "Textos destacados y contrastes visuales." },
     ];
     const suggestedPalette = {
-      primary: "#df7c0c",
-      secondary: "#d4cf69",
-      background: "#faf9fa",
-      text: "#875e5e",
+      primary: "#0C4A6E",
+      secondary: "#2B6CB0",
+      background: "#EBF8FF",
+      text: "#1C3F72",
     } as const;
     const supportedFontFamilies = ["Inter", "Poppins", "Roboto", "Montserrat", "Barlow Condensed"];
     const currentTypographyLabel =
@@ -3779,7 +3585,7 @@ export default function StagingWorkflowPanel() {
                   }))
                 }
               >
-                Aplicar paleta sugerida ABCIS
+                Aplicar paleta sugerida Gasfiter
               </button>
             </div>
           </div>
@@ -4168,7 +3974,7 @@ export default function StagingWorkflowPanel() {
       {
         id: 3,
         title: "Editar/Publicar",
-        detail: "Completa contenido, guarda borrador y finaliza publicación según tu rol.",
+        detail: "Completa contenido, guarda borrador y publica cuando esté listo.",
         state: editState,
       },
     ].map((step) => ({
@@ -4253,7 +4059,6 @@ export default function StagingWorkflowPanel() {
     const inPublished = mode === "published";
     const canEditDraftNow = inDraft && canSaveDraft;
     const canPublishNow = inDraft && canPublish;
-    const canRequestNow = inDraft && canRequestPublish && !canPublish;
     const blockedByState = busy || autosaving || flushingPublish || draftConflict.active || !panelReady;
 
     const message = !panelReady
@@ -4262,8 +4067,6 @@ export default function StagingWorkflowPanel() {
         ? "Modo lectura publicado. Usa 'Editar borrador' para modificar."
         : !canSaveDraft && !canPublish
           ? "Tu cuenta no puede editar este sitio."
-          : canRequestNow
-            ? "Edita, guarda borrador y solicita publicación cuando esté listo."
           : autosaving || flushingPublish
             ? "Esperando guardado automático antes de continuar."
             : "Listo para editar y publicar.";
@@ -4292,44 +4095,21 @@ export default function StagingWorkflowPanel() {
               ? "El rol o modo actual no permite publicar."
               : "";
 
-    const requestDisabledReason = effectiveHasActivePublishRequest
-      ? reminderCooldownActive
-        ? `Ya hay una solicitud activa para este borrador (recordatorio en ${reminderRetryAfterMinutes} min).`
-        : "Ya hay una solicitud activa para este borrador."
-      : !panelReady
-        ? "Primero carga el panel."
-        : draftConflict.active
-          ? "Conflicto detectado: recarga borrador."
-          : autosaving || flushingPublish
-            ? "Esperando guardado automático."
-            : busy
-              ? "Hay una operación en curso."
-              : !canRequestNow
-                ? "El rol o modo actual no permite solicitar publicación."
-                : "";
-
     return {
       showSave: canEditDraftNow,
       showPublish: canPublishNow,
-      showRequestPublish: canRequestNow,
       showEditDraft: inPublished && canSaveDraft,
       saveDisabled: blockedByState || !canEditDraftNow,
       publishDisabled: blockedByState || !canPublishNow,
-      requestDisabled: blockedByState || !canRequestNow || effectiveHasActivePublishRequest,
       editDraftDisabled: busy || !panelReady || !canSaveDraft,
       saveDisabledReason,
       publishDisabledReason,
-      requestDisabledReason,
       message,
     };
   }, [
     mode,
     canSaveDraft,
-    canRequestPublish,
     canPublish,
-    effectiveHasActivePublishRequest,
-    reminderCooldownActive,
-    reminderRetryAfterMinutes,
     busy,
     autosaving,
     flushingPublish,
@@ -4446,11 +4226,8 @@ export default function StagingWorkflowPanel() {
 
   const actionAvailableLabel = useMemo(() => {
     if (!contentReadyForNextAction) return "Acción disponible: Completar pendientes";
-    if (membership?.role === "owner" || membership?.role === "admin") {
+    if (membership?.role === "owner" || membership?.role === "admin" || membership?.role === "editor") {
       return "Acción disponible: Publicar";
-    }
-    if (membership?.role === "editor") {
-      return "Acción disponible: Solicitar publicación";
     }
     return "Acción disponible: Revisar estado";
   }, [contentReadyForNextAction, membership?.role]);
@@ -4645,13 +4422,11 @@ export default function StagingWorkflowPanel() {
 
   const actionHelpText = useMemo(() => {
     if (actionContext.publishDisabledReason) return actionContext.publishDisabledReason;
-    if (actionContext.requestDisabledReason) return actionContext.requestDisabledReason;
     if (actionContext.saveDisabledReason) return actionContext.saveDisabledReason;
     return actionContext.message;
   }, [
     actionContext.message,
     actionContext.publishDisabledReason,
-    actionContext.requestDisabledReason,
     actionContext.saveDisabledReason,
   ]);
 
@@ -4696,8 +4471,8 @@ export default function StagingWorkflowPanel() {
 
       <header className="wf-head">
         <div>
-          <h1 className="wf-title">ABCIS Admin - Panel v2</h1>
-          <p className="wf-sub">Gestión de borradores, versiones, permisos y aprobación de cambios.</p>
+          <h1 className="wf-title">Gasfiter Admin - Panel</h1>
+          <p className="wf-sub">Gestiona borradores, versiones, permisos y publicación del sitio.</p>
         </div>
         <div className="wf-badges">
           {membership?.role ? (
@@ -4730,7 +4505,7 @@ export default function StagingWorkflowPanel() {
         <section className="wf-card wf-workspace">
           <div className="wf-flowbar">
             <div className="wf-flowbar-head">
-              <span className="wf-flowbar-title">Flujo: Completar → Revisar → Publicar</span>
+              <span className="wf-flowbar-title">Flujo: Completar → Publicar</span>
               <span className="wf-muted">
                 Paso {workflowProgress.currentStep} de {workflowProgress.steps.length}
               </span>
@@ -4814,12 +4589,7 @@ export default function StagingWorkflowPanel() {
               <span className="wf-pill wf-pill-neutral">
                 {latestPublishedVersion ? `Publicado v${latestPublishedVersion.version_number}` : "Sin versión publicada"}
               </span>
-              {effectiveHasActivePublishRequest ? (
-                <span className="wf-pill wf-pill-neutral">
-                  Solicitud de publicación pendiente
-                  {reminderCooldownActive ? ` · recordatorio en ${reminderRetryAfterMinutes} min` : " · recordatorio disponible"}
-                </span>
-              ) : null}
+
               {autosaving || flushingPublish ? (
                 <span className="wf-pill wf-pill-neutral">{flushingPublish ? "Preparando publicación..." : "Guardando..."}</span>
               ) : null}
@@ -4889,43 +4659,7 @@ export default function StagingWorkflowPanel() {
                 {flushingPublish ? "Esperando guardado..." : "Publicar"}
               </button>
             ) : null}
-            {actionContext.showRequestPublish ? (
-              <button
-                className="wf-btn wf-btn-soft"
-                onClick={openRequestPublishDialog}
-                disabled={actionContext.requestDisabled}
-                title={actionContext.requestDisabled ? actionContext.requestDisabledReason : "Solicitar publicación"}
-                aria-describedby={actionContext.requestDisabled ? "panel-action-help" : undefined}
-              >
-                Solicitar publicación
-              </button>
-            ) : null}
-            {effectiveHasActivePublishRequest && canRequestPublish ? (
-              <button
-                className="wf-btn wf-btn-soft"
-                onClick={sendRequestPublishReminder}
-                disabled={
-                  !panelReady ||
-                  busy ||
-                  autosaving ||
-                  flushingPublish ||
-                  draftConflict.active ||
-                  sendingRequestPublishReminder ||
-                  reminderCooldownActive
-                }
-                title={
-                  reminderCooldownActive
-                    ? `Disponible en ${reminderRetryAfterMinutes} min`
-                    : "Reenviar recordatorio a owner/admin"
-                }
-              >
-                {sendingRequestPublishReminder
-                  ? "Enviando recordatorio..."
-                  : reminderCooldownActive
-                    ? `Reenviar en ${reminderRetryAfterMinutes} min`
-                    : "Reenviar recordatorio"}
-              </button>
-            ) : null}
+
             {showAdvancedUi ? (
               <button className="wf-btn wf-btn-soft" onClick={openPublishedJson} disabled={!panelReady}>
                 Ver JSON de producción
@@ -5138,7 +4872,7 @@ export default function StagingWorkflowPanel() {
                   <div className="wf-kv">
                     <div><strong>Usuario:</strong> {membership.userId}</div>
                     <div><strong>Rol:</strong> {getRoleUxLabel(membership.role)}</div>
-                    <div><strong>Permisos:</strong> guardar_borrador={String(membership.permissions.canSaveDraft)} solicitar_publicacion={String(membership.permissions.canRequestPublish ?? membership.permissions.canSaveDraft)} publicar={String(membership.permissions.canPublish)} rollback={String(membership.permissions.canRollback)}</div>
+                    <div><strong>Permisos:</strong> guardar_borrador={String(membership.permissions.canSaveDraft)} publicar={String(membership.permissions.canPublish)} rollback={String(membership.permissions.canRollback)}</div>
                   </div>
                 ) : (
                   <p className="wf-muted">Carga panel para ver permisos.</p>
@@ -5225,51 +4959,6 @@ export default function StagingWorkflowPanel() {
         </div>
       </OverlayPanel>
 
-      <OverlayPanel
-        open={showRequestPublishOverlay}
-        onClose={() => {
-          if (busy) return;
-          setShowRequestPublishOverlay(false);
-        }}
-        title="Solicitar publicación"
-      >
-        <div className="wf-preview-box">
-          <div className="wf-kv">
-            <div><strong>Se enviará una solicitud a owner/admin para revisión.</strong></div>
-            <div className="wf-muted">Puedes agregar una nota opcional con contexto de los cambios (máx 500 caracteres).</div>
-          </div>
-          <textarea
-            className="wf-textarea"
-            placeholder="Ej: listo para publicar, se actualizó hero y servicios."
-            value={requestPublishNote}
-            disabled={busy}
-            maxLength={500}
-            onChange={(event) => setRequestPublishNote(event.target.value)}
-            style={{ marginTop: 10 }}
-          />
-          <div className="wf-row" style={{ justifyContent: "space-between", marginTop: 8 }}>
-            <span className="wf-muted">{requestPublishNote.length}/500</span>
-            <div className="wf-row">
-              <button
-                className="wf-btn wf-btn-soft"
-                disabled={busy}
-                onClick={() => setShowRequestPublishOverlay(false)}
-              >
-                Cancelar
-              </button>
-              <button
-                className="wf-btn wf-btn-primary"
-                disabled={busy}
-                onClick={() => {
-                  void requestPublish(requestPublishNote);
-                }}
-              >
-                {busy ? "Enviando..." : "Enviar solicitud"}
-              </button>
-            </div>
-          </div>
-        </div>
-      </OverlayPanel>
 
       {toast ? (
         <div className="wf-toast-stack" role="status" aria-live="polite">
