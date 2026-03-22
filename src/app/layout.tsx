@@ -1,5 +1,19 @@
 import type { Metadata } from "next";
+import { Inter, Oswald } from "next/font/google";
 import "./globals.css";
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-body",
+  display: "swap",
+});
+
+const oswald = Oswald({
+  subsets: ["latin"],
+  variable: "--font-display",
+  display: "swap",
+  weight: ["500", "600", "700"],
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://gasfiter-landing-lilac.vercel.app"),
@@ -39,7 +53,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body className="antialiased">{children}</body>
+      <body className={`${inter.variable} ${oswald.variable} antialiased`}>{children}</body>
     </html>
   );
 }

@@ -16,17 +16,19 @@ import {
 
 const landingStyles = String.raw`
       :root {
-        --navy: #0a1628;
-        --blue: #1565c0;
-        --orange: #ff6f00;
-        --text: #1f2937;
-        --muted: #64748b;
-        --bg: #f6f9ff;
-        --surface: #f2f4f7;
+        --navy: #0c4a6e;
+        --blue: #2b6cb0;
+        --orange: #f59e0b;
+        --text: #102033;
+        --muted: #516173;
+        --bg: #f4f7fb;
+        --surface: #ffffff;
+        --surface-alt: #eaf2fb;
+        --border-soft: #d6e2f0;
         --wa: #25d366;
         --btn-shadow: 0 12px 26px rgba(15, 23, 42, 0.16);
-        --font-body: "Inter", sans-serif;
-        --font-hero: "Barlow Condensed", sans-serif;
+        --landing-font-body: var(--font-body), system-ui, sans-serif;
+        --landing-font-hero: var(--font-display), sans-serif;
         --font-size-base: 16px;
         --line-height-base: 1.5;
       }
@@ -44,11 +46,11 @@ const landingStyles = String.raw`
       }
 
       body {
-        font-family: var(--font-body);
+        font-family: var(--landing-font-body);
         font-size: var(--font-size-base);
         line-height: var(--line-height-base);
         color: var(--text);
-        background: var(--surface);
+        background: var(--bg);
       }
 
       h1,
@@ -57,7 +59,7 @@ const landingStyles = String.raw`
         margin: 0;
         line-height: 1.05;
         letter-spacing: 0.2px;
-        font-family: var(--font-hero);
+        font-family: var(--landing-font-hero);
       }
 
       p {
@@ -71,7 +73,7 @@ const landingStyles = String.raw`
 
       .section {
         width: 100%;
-        padding: 72px 20px;
+        padding: 88px 20px;
       }
 
       .landing-shell {
@@ -131,7 +133,7 @@ const landingStyles = String.raw`
       }
 
       .brand {
-        font-family: var(--font-hero);
+        font-family: var(--landing-font-hero);
         font-size: 1.65rem;
         font-weight: 700;
         color: var(--navy);
@@ -184,21 +186,21 @@ const landingStyles = String.raw`
       }
 
       .btn-primary {
-        background: var(--orange);
-        color: #111827;
+        background: linear-gradient(180deg, #1d5f92 0%, #0c4a6e 100%);
+        color: #f8fbff;
       }
 
       .btn-ghost {
-        background: transparent;
-        color: var(--blue);
-        border: 2px solid rgba(21, 101, 192, 0.22);
+        background: rgba(43, 108, 176, 0.06);
+        color: var(--navy);
+        border: 2px solid rgba(43, 108, 176, 0.18);
       }
 
       .hero {
         min-height: 100vh;
         width: 100%;
         padding: 0;
-        background: var(--surface);
+        background: linear-gradient(180deg, #f8fbff 0%, #eef4fb 100%);
         overflow: hidden;
       }
 
@@ -226,7 +228,7 @@ const landingStyles = String.raw`
 
       .hero-content {
         padding: 28px 20px 34px;
-        background: var(--surface);
+        background: linear-gradient(180deg, #f7fbff 0%, #edf4fb 100%);
       }
 
       .hero-content-inner {
@@ -240,9 +242,9 @@ const landingStyles = String.raw`
 
       .eyebrow {
         display: inline-flex;
-        background: rgba(255, 111, 0, 0.12);
-        color: var(--orange);
-        border: 1px solid rgba(255, 111, 0, 0.28);
+        background: rgba(245, 158, 11, 0.12);
+        color: #b45309;
+        border: 1px solid rgba(245, 158, 11, 0.32);
         border-radius: 999px;
         padding: 6px 12px;
         font-size: 12px;
@@ -332,7 +334,7 @@ const landingStyles = String.raw`
 
       .hero-stat strong {
         display: block;
-        font-family: var(--font-hero);
+        font-family: var(--landing-font-hero);
         font-size: 2.25rem;
         line-height: 1;
         color: var(--navy);
@@ -652,16 +654,16 @@ const landingStyles = String.raw`
         z-index: 1;
         color: #2b3440;
         font-size: 2rem;
-        font-family: var(--font-hero);
+        font-family: var(--landing-font-hero);
         font-weight: 700;
       }
 
       .card {
         background: var(--surface);
-        border: 1px solid #e2e8f0;
+        border: 1px solid var(--border-soft);
         border-radius: 18px;
         padding: 18px;
-        box-shadow: 0 10px 24px rgba(10, 22, 40, 0.06);
+        box-shadow: 0 16px 34px rgba(15, 23, 42, 0.06);
       }
 
       .services-grid {
@@ -689,63 +691,116 @@ const landingStyles = String.raw`
       }
 
       .service-card {
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        border-radius: 20px;
-        padding: 20px 20px 16px;
-      }
-
-      .service-card h3 {
-        color: var(--navy);
-        font-size: clamp(2rem, 2.7vw, 2.55rem);
-        line-height: 1.05;
-        min-height: 2.2em;
-      }
-
-      .service-card > p {
-        margin-top: 12px;
-        color: #475569;
-        line-height: 1.5;
-        min-height: 4.1em;
-      }
-
-      .service-icon {
-        width: 50px;
-        height: 50px;
+        position: relative;
         display: grid;
-        place-items: center;
-        border-radius: 12px;
-        background: #eaf2ff;
-        color: var(--blue);
-        font-size: 20px;
-        margin-bottom: 12px;
+        grid-template-rows: minmax(280px, 1fr) auto;
+        min-height: 460px;
+        overflow: hidden;
+        border-radius: 28px;
+        padding: 0;
+        border: 1px solid rgba(12, 74, 110, 0.12);
+        background: #ffffff;
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+      }
+
+      .service-card-media {
+        position: relative;
+        min-height: 320px;
+        overflow: hidden;
+      }
+
+      .service-card-media::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(12, 24, 42, 0.02) 0%, rgba(12, 24, 42, 0.42) 100%);
+      }
+
+      .service-card-media img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.45s ease;
+      }
+
+      .service-card:hover .service-card-media img {
+        transform: scale(1.04);
+      }
+
+      .service-card-footer {
+        position: relative;
+        z-index: 2;
+        display: grid;
+        gap: 10px;
+        padding: 20px 22px 22px;
+        background: linear-gradient(180deg, #0f243d 0%, #0c1c30 100%);
+      }
+
+      .service-card-footer h3 {
+        color: #f8fbff;
+        font-size: clamp(1.55rem, 2.25vw, 2rem);
+        line-height: 1.04;
+        min-height: 2.15em;
+        display: flex;
+        align-items: flex-start;
+      }
+
+      .service-card-label {
+        display: inline-flex;
+        align-items: center;
+        width: fit-content;
+        padding: 7px 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        color: #d9e6f3;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.7px;
+        text-transform: uppercase;
+      }
+
+      .service-card-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 3;
+        display: grid;
+        align-content: end;
+        gap: 12px;
+        padding: 22px;
+        background: linear-gradient(180deg, rgba(8, 24, 43, 0.18) 0%, rgba(8, 24, 43, 0.94) 100%);
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+        transition: opacity 0.28s ease, transform 0.28s ease;
+      }
+
+      .service-card-overlay p {
+        color: rgba(241, 245, 249, 0.9);
+        line-height: 1.55;
+        margin: 0;
       }
 
       .checklist {
-        margin: 14px 0 20px;
+        margin: 0;
         padding: 0;
         list-style: none;
         display: grid;
-        gap: 8px;
-        flex: 1;
+        gap: 9px;
       }
 
       .checklist li {
         font-size: 14px;
-        color: #334155;
+        color: #f8fbff;
       }
 
       .checklist i {
-        color: var(--orange);
+        color: #fbbf24;
         margin-right: 8px;
       }
 
-      .service-card .btn {
-        margin-top: auto;
-        min-height: 50px;
-        width: 100%;
-      }
+
 
       .projects-section {
         background: var(--bg);
@@ -863,7 +918,7 @@ const landingStyles = String.raw`
         color: #ffffff;
         font-size: clamp(1.35rem, 2.1vw, 2rem);
         line-height: 1.02;
-        font-family: "Inter", sans-serif;
+        font-family: var(--landing-font-body);
         font-weight: 800;
         max-width: 16ch;
         text-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
@@ -936,7 +991,7 @@ const landingStyles = String.raw`
 
       .contact-section {
         position: relative;
-        background: url("/images/contact.jpg") center/cover no-repeat;
+        background: linear-gradient(135deg, rgba(12, 74, 110, 0.96) 0%, rgba(18, 54, 90, 0.96) 100%), url("/images/contact.jpg") center/cover no-repeat;
         margin-top: clamp(56px, 7vw, 90px);
       }
 
@@ -1153,7 +1208,7 @@ const landingStyles = String.raw`
 
       .phone-big {
         color: var(--orange);
-        font-family: var(--font-hero);
+        font-family: var(--landing-font-hero);
         font-weight: 800;
         font-size: 2rem;
       }
@@ -1265,6 +1320,20 @@ const landingStyles = String.raw`
 
         .services-grid {
           grid-template-columns: repeat(3, 1fr);
+        }
+
+        @media (hover: hover) and (pointer: fine) {
+          .service-card-overlay {
+            opacity: 0;
+            transform: translateY(16px);
+            pointer-events: none;
+          }
+
+          .service-card:hover .service-card-overlay {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+          }
         }
 
         .clients-grid {
@@ -1484,12 +1553,11 @@ const landingMarkup = String.raw`
       <div class="top-nav-inner">
         <a class="brand" href="#inicio" data-default-brand="Gasfiter 24/7" data-logo-height="42">Gasfiter 24/7</a>
         <div class="nav-links">
-          <a href="#inicio">Inicio</a>
           <a href="#servicios">Servicios</a>
-          <a href="#trabajos">Trabajos</a>
-          <a href="#testimonios">Clientes</a>
-          <a href="#faq">FAQ</a>
+          <a href="#trabajos">Proyectos</a>
+          <a href="#experiencia">Experiencia</a>
           <a href="#contacto">Contacto</a>
+          <a href="https://wa.me/569XXXXXXX" target="_blank" rel="noopener noreferrer">WhatsApp</a>
         </div>
         <a class="btn btn-primary" href="tel:+569XXXXXXX" data-quick-call style="padding: 10px 14px; font-size: 13px">Llamar</a>
       </div>
@@ -1548,39 +1616,72 @@ const landingMarkup = String.raw`
       </div>
     </section>
 
-    <section class="section band-dark reveal">
-      <div class="container audience-wrap">
-        <div class="audience-copy">
-          <span class="audience-kicker">¿Para quién es este servicio?</span>
-          <h2>Atención urgente para hogares y negocios en Santiago</h2>
-          <p>
-            Atendemos dueños de casa, arrendatarios, pymes y administradores de edificios en Santiago que necesitan
-            solución hoy, no mañana.
+    <section class="section about-section reveal" id="quienes-somos">
+      <div class="container about-grid">
+        <div class="about-copy">
+          <span class="section-kicker" data-about-kicker>QUIÉNES SOMOS</span>
+          <h2 data-about-title>Respuesta técnica con criterio, orden y ejecución limpia</h2>
+          <p data-about-description>
+            Operamos como un servicio técnico en terreno, no como una visita improvisada. Priorizamos diagnóstico claro,
+            comunicación directa y cierre correcto para que el cliente entienda qué se hizo y qué queda resuelto.
           </p>
-          <ul class="audience-list">
-            <li><i class="fa-solid fa-circle-check"></i>Respuesta rápida con horario 24/7 real</li>
-            <li><i class="fa-solid fa-circle-check"></i>Diagnóstico claro antes de intervenir</li>
-            <li><i class="fa-solid fa-circle-check"></i>Trabajo limpio y garantía por escrito</li>
-          </ul>
-          <div class="audience-cta">
-            <a class="btn btn-primary" href="tel:+569XXXXXXX">+56 9 XXXX XXXX</a>
-            <a class="btn btn-ghost" href="#contacto">Agendar visita</a>
+          <div class="about-points">
+            <article class="about-point" data-about-highlight>
+              <strong>Diagnóstico claro</strong>
+              <span>Explicamos el origen del problema y la solución antes de intervenir.</span>
+            </article>
+            <article class="about-point" data-about-highlight>
+              <strong>Trabajo limpio</strong>
+              <span>Ejecutamos con orden, pruebas de funcionamiento y cierre prolijo del espacio.</span>
+            </article>
+            <article class="about-point" data-about-highlight>
+              <strong>Seguimiento y respaldo</strong>
+              <span>Dejamos recomendaciones, garantía y trazabilidad básica después del servicio.</span>
+            </article>
           </div>
         </div>
-        <figure class="audience-visual">
-          <img
-            class="audience-image audience-image-back"
-            src="/images/gasfiter-calefont.webp"
-            alt="Sistema de cañerías y válvulas en instalación de gasfitería"
-            loading="lazy"
-          />
-          <img
-            class="audience-image audience-image-front"
-            src="/images/gasfiter-emergencias.webp"
-            alt="Cliente estrechando la mano a técnico gasfiter"
-            loading="lazy"
-          />
-        </figure>
+        <div class="about-visual">
+          <figure class="about-image about-image-primary">
+            <img src="/images/gasfiter-emergencias.webp" alt="Técnico revisando instalación en terreno" loading="lazy" />
+          </figure>
+          <figure class="about-image about-image-secondary">
+            <img src="/images/gasfiter-calefont.webp" alt="Detalle de instalación de gasfitería" loading="lazy" />
+          </figure>
+          <div class="about-badge">
+            <strong>24/7</strong>
+            <span>Respuesta en Santiago con criterio técnico</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section trust-section reveal" id="certificacion">
+      <div class="container">
+        <div class="section-head section-head-centered">
+          <span class="section-kicker" data-trust-kicker>CERTIFICACIÓN Y SEGURIDAD</span>
+          <h2 data-trust-title>Respaldo técnico para trabajos que no admiten improvisación</h2>
+          <p class="section-subtitle" data-trust-subtitle>
+            La confianza no se comunica con promesas. Se comunica con procesos claros, seguridad operativa y ejecución
+            consistente en terreno.
+          </p>
+        </div>
+        <div class="trust-grid">
+          <article class="card trust-card" data-trust-item>
+            <div class="trust-icon"><i class="fa-solid fa-shield-halved"></i></div>
+            <h3>Protocolos de seguridad</h3>
+            <p>Intervención ordenada, revisión de riesgos y pruebas de funcionamiento antes del cierre.</p>
+          </article>
+          <article class="card trust-card" data-trust-item>
+            <div class="trust-icon"><i class="fa-solid fa-file-shield"></i></div>
+            <h3>Respaldo y garantía</h3>
+            <p>Cada trabajo queda con trazabilidad básica, recomendaciones y garantía sobre la intervención.</p>
+          </article>
+          <article class="card trust-card" data-trust-item>
+            <div class="trust-icon"><i class="fa-solid fa-user-check"></i></div>
+            <h3>Técnicos preparados</h3>
+            <p>Equipo orientado a diagnóstico, urgencias y solución efectiva en domicilio o comercio.</p>
+          </article>
+        </div>
       </div>
     </section>
 
@@ -1589,43 +1690,92 @@ const landingMarkup = String.raw`
         <h2 style="font-size: clamp(2rem, 6vw, 3.5rem); color: var(--navy)" data-services-title>¿Qué problema tienes ahora?</h2>
         <p class="section-subtitle" data-services-subtitle>Servicios más solicitados</p>
         <div class="services-grid">
-          <article class="card service-card" data-service-card>
-            <div class="service-icon"><i class="fa-solid fa-droplet"></i></div>
-            <h3 data-service-title>Filtraciones y fugas</h3>
-            <p data-service-description>Detección rápida y reparación inmediata para evitar daños mayores en muros, pisos y techos.</p>
-            <ul class="checklist" data-service-features>
-              <li><i class="fa-solid fa-circle-check"></i>Fugas visibles y ocultas</li>
-              <li><i class="fa-solid fa-circle-check"></i>Reparación de llaves y cañerías</li>
-              <li><i class="fa-solid fa-circle-check"></i>Control de humedad inicial</li>
-              <li><i class="fa-solid fa-circle-check"></i>Prueba de funcionamiento</li>
-            </ul>
-            <a class="btn btn-primary" href="tel:+569XXXXXXX" data-service-cta>Llamar por esto</a>
+          <article class="service-card" data-service-card>
+            <div class="service-card-media">
+              <img data-service-image src="/images/gasfiter-fugas.webp" alt="Servicio de filtraciones y fugas" loading="lazy" />
+              <div class="service-card-overlay">
+                <p data-service-description>Detectamos fugas y resolvemos filtraciones antes de que generen daños mayores.</p>
+                <ul class="checklist" data-service-features>
+                  <li><i class="fa-solid fa-circle-check"></i>Fugas visibles y ocultas</li>
+                  <li><i class="fa-solid fa-circle-check"></i>Reparación de llaves y conexiones</li>
+                  <li><i class="fa-solid fa-circle-check"></i>Prueba de funcionamiento final</li>
+                </ul>
+              </div>
+            </div>
+            <div class="service-card-footer">
+              <h3 data-service-title>Filtraciones y fugas</h3>
+              <span class="service-card-label">Atención en terreno</span>
+            </div>
           </article>
 
-          <article class="card service-card" data-service-card>
-            <div class="service-icon"><i class="fa-solid fa-toilet"></i></div>
-            <h3 data-service-title>Destapes urgentes</h3>
-            <p data-service-description>Atendemos obstrucciones críticas en cocina, baño y desagües con herramientas profesionales.</p>
-            <ul class="checklist" data-service-features>
-              <li><i class="fa-solid fa-circle-check"></i>Destape de lavaplatos</li>
-              <li><i class="fa-solid fa-circle-check"></i>Destape de WC</li>
-              <li><i class="fa-solid fa-circle-check"></i>Limpieza de sifones</li>
-              <li><i class="fa-solid fa-circle-check"></i>Prevención de rebalses</li>
-            </ul>
-            <a class="btn btn-primary" href="tel:+569XXXXXXX" data-service-cta>Llamar por esto</a>
+          <article class="service-card" data-service-card>
+            <div class="service-card-media">
+              <img data-service-image src="/images/gasfiter-destape.webp" alt="Servicio de destapes urgentes" loading="lazy" />
+              <div class="service-card-overlay">
+                <p data-service-description>Atendemos obstrucciones urgentes en cocina, baño y desagües con intervención rápida.</p>
+                <ul class="checklist" data-service-features>
+                  <li><i class="fa-solid fa-circle-check"></i>Destape de lavaplatos</li>
+                  <li><i class="fa-solid fa-circle-check"></i>Destape de WC</li>
+                  <li><i class="fa-solid fa-circle-check"></i>Limpieza de sifones</li>
+                </ul>
+              </div>
+            </div>
+            <div class="service-card-footer">
+              <h3 data-service-title>Destapes urgentes</h3>
+              <span class="service-card-label">Respuesta rápida</span>
+            </div>
           </article>
 
-          <article class="card service-card" data-service-card>
-            <div class="service-icon"><i class="fa-solid fa-screwdriver-wrench"></i></div>
-            <h3 data-service-title>Instalaciones y reparaciones</h3>
-            <p data-service-description>Grifería, lavamanos, calefont y artefactos sanitarios con instalación segura y rápida.</p>
-            <ul class="checklist" data-service-features>
-              <li><i class="fa-solid fa-circle-check"></i>Instalación de grifería</li>
-              <li><i class="fa-solid fa-circle-check"></i>Reparación de calefont</li>
-              <li><i class="fa-solid fa-circle-check"></i>Cambio de conexiones</li>
-              <li><i class="fa-solid fa-circle-check"></i>Ajustes y sellado final</li>
-            </ul>
-            <a class="btn btn-primary" href="tel:+569XXXXXXX" data-service-cta>Llamar por esto</a>
+          <article class="service-card" data-service-card>
+            <div class="service-card-media">
+              <img data-service-image src="/images/gasfiter-griferia.webp" alt="Servicio de instalaciones y reparaciones" loading="lazy" />
+              <div class="service-card-overlay">
+                <p data-service-description>Instalamos y reparamos grifería, calefont y artefactos sanitarios con estándar técnico.</p>
+                <ul class="checklist" data-service-features>
+                  <li><i class="fa-solid fa-circle-check"></i>Instalación de grifería</li>
+                  <li><i class="fa-solid fa-circle-check"></i>Reparación de calefont</li>
+                  <li><i class="fa-solid fa-circle-check"></i>Cambio de conexiones</li>
+                </ul>
+              </div>
+            </div>
+            <div class="service-card-footer">
+              <h3 data-service-title>Instalaciones y reparaciones</h3>
+              <span class="service-card-label">Solución técnica</span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section process-section reveal" id="proceso">
+      <div class="container">
+        <div class="section-head">
+          <span class="section-kicker" data-process-kicker>PROCESO DE TRABAJO</span>
+          <h2 data-process-title>Un flujo simple para resolver rápido y bien</h2>
+          <p class="section-subtitle" data-process-subtitle>
+            La urgencia no justifica el desorden. El proceso está pensado para dar velocidad sin perder control técnico.
+          </p>
+        </div>
+        <div class="process-grid">
+          <article class="process-step" data-process-step>
+            <span class="process-number">01</span>
+            <h3>Recepción y priorización</h3>
+            <p>Tomamos el caso, definimos el tipo de urgencia y coordinamos disponibilidad por comuna.</p>
+          </article>
+          <article class="process-step" data-process-step>
+            <span class="process-number">02</span>
+            <h3>Diagnóstico en terreno</h3>
+            <p>Identificamos el origen del problema y explicamos la intervención antes de avanzar.</p>
+          </article>
+          <article class="process-step" data-process-step>
+            <span class="process-number">03</span>
+            <h3>Ejecución y prueba</h3>
+            <p>Realizamos la reparación o instalación y validamos funcionamiento real antes del cierre.</p>
+          </article>
+          <article class="process-step" data-process-step>
+            <span class="process-number">04</span>
+            <h3>Cierre y recomendaciones</h3>
+            <p>Entregamos respaldo, garantía y recomendaciones para evitar reincidencias futuras.</p>
           </article>
         </div>
       </div>
@@ -2386,7 +2536,7 @@ export default function DynamicLanding() {
           const titleEl = card.querySelector("[data-service-title]");
           const descEl = card.querySelector("[data-service-description]");
           const featuresEl = card.querySelector("[data-service-features]");
-          const ctaEl = card.querySelector("[data-service-cta]");
+
           if (titleEl && item.title) {
             titleEl.textContent = item.title;
           }
@@ -2400,11 +2550,6 @@ export default function DynamicLanding() {
                     `<li><i class="fa-solid fa-circle-check"></i>${escapeHtml(feature)}</li>`,
                 )
                 .join("");
-          }
-          if (ctaEl && ctaEl instanceof HTMLAnchorElement) {
-            ctaEl.textContent = item.cta.text;
-            ctaEl.setAttribute("href", item.cta.url);
-            ctaEl.style.display = item.cta.enabled ? "" : "none";
           }
         });
       }
@@ -2628,11 +2773,11 @@ export default function DynamicLanding() {
             const parsedFamily = parseGoogleFamilyFromUrl(value);
             if (parsedFamily) {
               root.style.setProperty("--font-body", `"${parsedFamily}", Inter, sans-serif`);
-              root.style.setProperty("--font-hero", `"${parsedFamily}", "Barlow Condensed", sans-serif`);
+              root.style.setProperty("--font-hero", `"${parsedFamily}", var(--font-display), sans-serif`);
             }
           } else {
             root.style.setProperty("--font-body", `${value}, Inter, sans-serif`);
-            root.style.setProperty("--font-hero", `${value}, "Barlow Condensed", sans-serif`);
+            root.style.setProperty("--font-hero", `${value}, var(--font-display), sans-serif`);
           }
         }
       }
