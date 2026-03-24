@@ -48,6 +48,8 @@ export type CmsSettings = {
 };
 
 export type HeroDefaults = {
+  title: string;
+  subtitle: string;
   eyebrow: string;
   image: string;
   primaryUrl: string;
@@ -352,10 +354,14 @@ export const resolveHeroFromSettings = ({
   const secondaryUrlFallback = getTrimmedString(fallbackWhatsappUrl) || defaults.secondaryUrl;
 
   return {
-    title: getTrimmedString((sectionData as { title?: unknown }).title) || getTrimmedString(legacyHero.title),
+    title:
+      getTrimmedString((sectionData as { title?: unknown }).title) ||
+      getTrimmedString(legacyHero.title) ||
+      defaults.title,
     subtitle:
       getTrimmedString((sectionData as { subtitle?: unknown }).subtitle) ||
-      getTrimmedString(legacyHero.subtitle),
+      getTrimmedString(legacyHero.subtitle) ||
+      defaults.subtitle,
     eyebrow: getTrimmedString((sectionData as { eyebrow?: unknown }).eyebrow) || defaults.eyebrow,
     image:
       getTrimmedString((sectionData as { image?: unknown }).image) ||

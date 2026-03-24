@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { Inter, Oswald } from "next/font/google";
 import {
   resolveContactBannerFromSettings,
   fetchSettingsBySlug,
@@ -14,8 +15,21 @@ import {
   type CmsSettings,
 } from "@/lib/cms-settings-client";
 
+const landingBodyFont = Inter({
+  subsets: ["latin"],
+  variable: "--landing-body-font",
+  display: "swap",
+});
+
+const landingDisplayFont = Oswald({
+  subsets: ["latin"],
+  variable: "--landing-display-font",
+  display: "swap",
+  weight: ["500", "600", "700"],
+});
+
 const landingStyles = String.raw`
-      :root {
+      .landing-shell {
         --navy: #0c4a6e;
         --blue: #2b6cb0;
         --orange: #f59e0b;
@@ -27,8 +41,8 @@ const landingStyles = String.raw`
         --border-soft: #d6e2f0;
         --wa: #25d366;
         --btn-shadow: 0 12px 26px rgba(15, 23, 42, 0.16);
-        --landing-font-body: var(--font-body), system-ui, sans-serif;
-        --landing-font-hero: var(--font-display), sans-serif;
+        --landing-font-body: var(--landing-body-font), "Inter", system-ui, sans-serif;
+        --landing-font-hero: var(--landing-display-font), "Oswald", sans-serif;
         --font-size-base: 16px;
         --line-height-base: 1.5;
       }
@@ -59,7 +73,7 @@ const landingStyles = String.raw`
         margin: 0;
         line-height: 1.05;
         letter-spacing: 0.2px;
-        font-family: var(--landing-font-hero);
+        font-family: var(--landing-font-hero) !important;
       }
 
       p {
@@ -77,13 +91,11 @@ const landingStyles = String.raw`
       }
 
       .landing-shell {
-        visibility: hidden;
-        opacity: 0;
+        visibility: visible;
+        opacity: 1;
       }
 
       .landing-shell.is-ready {
-        visibility: visible;
-        opacity: 1;
         transition: opacity 0.18s ease;
       }
 
@@ -133,7 +145,7 @@ const landingStyles = String.raw`
       }
 
       .brand {
-        font-family: var(--landing-font-hero);
+        font-family: var(--landing-font-hero) !important;
         font-size: 1.65rem;
         font-weight: 700;
         color: var(--navy);
@@ -255,16 +267,18 @@ const landingStyles = String.raw`
 
       .hero h1 {
         margin-top: 12px;
-        font-size: clamp(2.2rem, 8.5vw, 4.8rem);
+        font-size: clamp(2.1rem, 7.6vw, 4.45rem);
         color: var(--text);
         max-width: none;
-        letter-spacing: -0.4px;
-        line-height: 0.94;
-        visibility: hidden;
+        letter-spacing: -0.02em;
+        line-height: 0.98;
+        font-family: var(--landing-font-hero) !important;
+        visibility: visible;
       }
 
       .hero-line {
         display: block;
+        font-family: var(--landing-font-hero) !important;
       }
 
       .hero-lead {
@@ -320,31 +334,36 @@ const landingStyles = String.raw`
       }
 
       .hero-stats {
-        margin-top: 24px;
+        margin-top: 44px;
         display: grid;
         grid-template-columns: 1fr;
-        gap: 10px;
+        gap: 14px;
+        transform: translateY(0);
       }
 
       .hero-stat {
         border-top: 1px solid #dbe3ef;
-        padding-top: 10px;
+        padding-top: 14px;
         padding-left: 0;
       }
 
       .hero-stat strong {
         display: block;
         font-family: var(--landing-font-hero);
-        font-size: 2.25rem;
-        line-height: 1;
+        font-size: 1rem;
+        line-height: 1.08;
+        letter-spacing: -0.01em;
         color: var(--navy);
       }
 
       .hero-stat span {
         display: block;
-        font-size: 14px;
-        color: #4b5563;
-        font-weight: 600;
+        margin-top: 6px;
+        font-size: 0.9rem;
+        line-height: 1.55;
+        color: #516173;
+        font-weight: 500;
+        max-width: 28ch;
       }
 
       .hero-visual img {
@@ -398,9 +417,11 @@ const landingStyles = String.raw`
       }
 
       .audience-copy h2 {
-        font-size: clamp(2rem, 5vw, 4rem);
-        line-height: 0.95;
+        font-size: clamp(1.92rem, 4.5vw, 3.65rem);
+        line-height: 1.02;
+        letter-spacing: -0.02em;
         color: var(--navy);
+        max-width: 13ch;
       }
 
       .audience-copy p {
@@ -484,325 +505,412 @@ const landingStyles = String.raw`
         font-size: 1.05rem;
       }
 
-      .clients-section {
-        background: var(--surface);
-      }
-
-      .clients-section .container {
-        max-width: 1060px;
-      }
-
-      .clients-head {
-        text-align: center;
-      }
-
-      .clients-kicker {
-        display: inline-block;
-        font-size: 12px;
-        letter-spacing: 2px;
-        text-transform: uppercase;
-        color: #5b6472;
-        font-weight: 800;
-      }
-
-      .clients-title {
-        margin-top: 10px;
-        font-size: clamp(2rem, 5.2vw, 4rem);
-        color: var(--text);
-        line-height: 0.96;
-      }
-
-      .clients-grid {
-        margin-top: 26px;
-        display: flex;
-        gap: 18px;
-        overflow-x: auto;
-        scrollbar-width: none;
-        scroll-behavior: smooth;
-        scroll-snap-type: none;
-        cursor: grab;
-        padding-bottom: 4px;
-      }
-
-      .clients-grid::-webkit-scrollbar {
-        display: none;
-      }
-
-      .clients-grid.is-dragging {
-        cursor: grabbing;
-        scroll-behavior: auto;
-      }
-
-      .client-card {
-        flex: 0 0 min(92vw, 760px);
-        background: #f1f4f7;
-        border: 1px solid #e3e9ef;
-        border-radius: 0;
-        padding: 24px;
-        user-select: none;
-        position: relative;
-      }
-
-      .client-card img {
-        pointer-events: none;
-        user-select: none;
-        -webkit-user-drag: none;
-      }
-
-      @media (hover: hover) and (pointer: fine) {
-        .client-card:hover {
-          cursor: grab;
-        }
-
-        .client-card:active {
-          cursor: grabbing;
-        }
-      }
-
-      .client-quote {
-        color: #0f7a83;
-        font-size: 2.8rem;
-        line-height: 1;
-        font-weight: 800;
-        margin-bottom: 8px;
-      }
-
-      .client-text {
-        color: var(--text);
-        font-size: 1.03rem;
-        line-height: 1.6;
-        max-width: 42ch;
-      }
-
-      .client-person {
-        margin-top: 18px;
-        display: flex;
+      .about-grid {
+        display: grid;
+        gap: 36px;
         align-items: center;
-        gap: 12px;
       }
 
-      .client-person img {
-        width: 56px;
-        height: 56px;
-        border-radius: 999px;
-        object-fit: cover;
-      }
-
-      .client-person strong {
-        display: block;
-        color: var(--text);
-        font-size: 1.05rem;
-      }
-
-      .client-person span {
-        display: block;
-        color: #7a8695;
-        font-size: 0.95rem;
-      }
-
-      .clients-dots {
-        margin-top: 18px;
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-      }
-
-      .clients-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 999px;
-        border: 1px solid #bec8d3;
-        background: transparent;
-      }
-
-      .clients-dot.active {
-        background: #0f7a83;
-        border-color: #0f7a83;
-      }
-
-      .clients-stats {
-        margin-top: 58px;
+      .about-copy {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 14px;
+        gap: 22px;
+        max-width: 720px;
       }
 
-      .clients-stat {
-        position: relative;
-        min-height: 132px;
-        display: grid;
-        place-items: center;
-        overflow: hidden;
+      .about-copy h2,
+      .trust-section h2,
+      .process-section h2,
+      .experience-section h2 {
+        font-size: clamp(2.2rem, 4vw, 3.45rem);
+        line-height: 1.02;
+        letter-spacing: -0.04em;
+        color: var(--navy);
       }
 
-      .clients-stat-number {
-        position: absolute;
-        top: 50%;
-        left: 0;
-        right: 0;
-        transform: translateY(-50%);
-        text-align: center;
-        font-size: clamp(4rem, 10vw, 8.5rem);
-        line-height: 1;
-        color: rgba(31, 41, 51, 0.07);
-        font-weight: 800;
-        letter-spacing: -2px;
+      .about-copy h2 {
+        max-width: 18ch;
       }
 
-      .clients-stat-label {
-        position: relative;
-        z-index: 1;
-        color: #2b3440;
-        font-size: 2rem;
-        font-family: var(--landing-font-hero);
-        font-weight: 700;
-      }
-
-      .card {
-        background: var(--surface);
-        border: 1px solid var(--border-soft);
-        border-radius: 18px;
-        padding: 18px;
-        box-shadow: 0 16px 34px rgba(15, 23, 42, 0.06);
-      }
-
-      .services-grid {
-        margin-top: 20px;
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 16px;
-        align-items: stretch;
-      }
-
-      [data-services-title] {
+      .about-copy p {
+        max-width: 58ch;
         margin: 0;
-        max-width: 32ch;
-        line-height: 1.06;
-        letter-spacing: -0.01em;
+        color: #334155;
+        font-size: 1.04rem;
+        line-height: 1.65;
       }
 
-      .section-subtitle {
-        margin: 12px 0 24px;
-        max-width: 62ch;
-        color: #59677a;
-        font-size: clamp(1rem, 1.4vw, 1.16rem);
-        line-height: 1.45;
-        font-weight: 500;
+      .about-points {
+        display: grid;
+        gap: 18px;
+        max-width: 56ch;
       }
 
-      .service-card {
+      .about-point {
         position: relative;
         display: grid;
-        grid-template-rows: minmax(280px, 1fr) auto;
-        min-height: 460px;
-        overflow: hidden;
-        border-radius: 28px;
-        padding: 0;
-        border: 1px solid rgba(12, 74, 110, 0.12);
-        background: #ffffff;
-        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+        gap: 6px;
+        padding-left: 22px;
       }
 
-      .service-card-media {
-        position: relative;
-        min-height: 320px;
-        overflow: hidden;
-      }
-
-      .service-card-media::after {
+      .about-point::before {
         content: "";
         position: absolute;
-        inset: 0;
-        background: linear-gradient(180deg, rgba(12, 24, 42, 0.02) 0%, rgba(12, 24, 42, 0.42) 100%);
+        left: 0;
+        top: 4px;
+        bottom: 4px;
+        width: 3px;
+        border-radius: 999px;
+        background: linear-gradient(180deg, var(--orange), var(--blue));
       }
 
-      .service-card-media img {
+      .about-point strong {
+        color: var(--navy);
+        font-size: 1.12rem;
+        letter-spacing: -0.02em;
+      }
+
+      .about-point span {
+        color: #516173;
+        line-height: 1.55;
+      }
+
+      .about-visual {
+        position: relative;
+        min-height: 620px;
+      }
+
+      .about-image {
+        position: absolute;
+        overflow: hidden;
+        border-radius: 30px;
+        box-shadow: 0 30px 70px rgba(15, 23, 42, 0.16);
+      }
+
+      .about-image img {
         display: block;
         width: 100%;
         height: 100%;
         object-fit: cover;
-        transition: transform 0.45s ease;
       }
 
-      .service-card:hover .service-card-media img {
-        transform: scale(1.04);
+      .about-image-primary {
+        top: 0;
+        right: 0;
+        width: min(100%, 520px);
+        height: 440px;
       }
 
-      .service-card-footer {
-        position: relative;
-        z-index: 2;
+      .about-image-secondary {
+        left: 0;
+        bottom: 0;
+        width: min(72%, 320px);
+        height: 220px;
+        border: 8px solid rgba(255, 255, 255, 0.96);
+      }
+
+      .about-badge {
+        position: absolute;
+        right: 18px;
+        bottom: 20px;
         display: grid;
-        gap: 10px;
-        padding: 20px 22px 22px;
-        background: linear-gradient(180deg, #0f243d 0%, #0c1c30 100%);
-      }
-
-      .service-card-footer h3 {
+        gap: 4px;
+        padding: 18px 20px;
+        border-radius: 24px;
+        background: linear-gradient(180deg, rgba(12, 74, 110, 0.96), rgba(16, 32, 51, 0.98));
         color: #f8fbff;
-        font-size: clamp(1.55rem, 2.25vw, 2rem);
-        line-height: 1.04;
-        min-height: 2.15em;
-        display: flex;
-        align-items: flex-start;
+        box-shadow: 0 22px 45px rgba(15, 23, 42, 0.22);
+        max-width: 220px;
       }
 
-      .service-card-label {
-        display: inline-flex;
+      .about-badge strong {
+        font-family: var(--landing-font-hero);
+        font-size: 2rem;
+        line-height: 0.95;
+        letter-spacing: -0.04em;
+      }
+
+      .about-badge span {
+        color: rgba(248, 251, 255, 0.82);
+        font-size: 0.92rem;
+        line-height: 1.4;
+      }
+
+      .trust-section {
+        background: linear-gradient(180deg, rgba(234, 242, 251, 0.42) 0%, rgba(248, 251, 255, 0.98) 100%);
+        overflow: hidden;
+      }
+
+      .trust-split {
+        display: grid;
         align-items: center;
-        width: fit-content;
-        padding: 7px 12px;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.14);
-        color: #d9e6f3;
-        font-size: 12px;
-        font-weight: 700;
-        letter-spacing: 0.7px;
-        text-transform: uppercase;
+        gap: 28px;
+        max-width: 1240px;
+        margin: 0 auto;
+        padding: 0 20px;
       }
 
-      .service-card-overlay {
+      .trust-media-bleed {
+        position: relative;
+        width: 100%;
+        max-width: 100%;
+        min-height: 500px;
+        aspect-ratio: 1.04 / 0.88;
+        margin: 0;
+        overflow: hidden;
+        border-radius: 34px;
+        box-shadow: 0 24px 48px rgba(15, 23, 42, 0.12);
+      }
+
+      .trust-media-bleed::after {
+        content: "";
         position: absolute;
         inset: 0;
-        z-index: 3;
+        background: linear-gradient(0deg, rgba(12, 74, 110, 0.16), rgba(12, 74, 110, 0.04));
+      }
+
+      .trust-media-bleed img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .trust-content-column {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 0;
+      }
+
+      .trust-content-inner {
+        width: 100%;
+        padding-top: clamp(32px, 5vw, 74px);
+        padding-bottom: clamp(32px, 5vw, 74px);
+        padding-left: clamp(6px, 1.6vw, 18px);
+        padding-right: clamp(6px, 1.6vw, 18px);
+      }
+
+      .trust-info {
         display: grid;
-        align-content: end;
-        gap: 12px;
-        padding: 22px;
-        background: linear-gradient(180deg, rgba(8, 24, 43, 0.18) 0%, rgba(8, 24, 43, 0.94) 100%);
-        opacity: 1;
-        transform: translateY(0);
-        pointer-events: auto;
-        transition: opacity 0.28s ease, transform 0.28s ease;
+        gap: 18px;
+        max-width: 560px;
       }
 
-      .service-card-overlay p {
-        color: rgba(241, 245, 249, 0.9);
-        line-height: 1.55;
-        margin: 0;
+      .trust-info .section-kicker {
+        text-transform: none;
+        letter-spacing: -0.01em;
       }
 
-      .checklist {
+      .trust-info h2 {
+        font-size: clamp(1.82rem, 2.75vw, 2.5rem);
+        line-height: 1.04;
+        letter-spacing: -0.02em;
+        color: var(--navy);
+        max-width: 18ch;
+      }
+
+      .trust-info .section-subtitle {
+        max-width: 54ch;
+      }
+
+      .trust-bullets {
         margin: 0;
         padding: 0;
         list-style: none;
         display: grid;
-        gap: 9px;
+        gap: 10px;
       }
 
-      .checklist li {
-        font-size: 14px;
+      .trust-bullets li {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        color: var(--text);
+        font-weight: 600;
+      }
+
+      .trust-bullets i {
+        color: var(--blue);
+      }
+
+      .trust-proof {
+        margin-top: 8px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        gap: 14px;
+      }
+
+      .trust-proof-logo {
+        display: block;
+        width: min(100%, 170px);
+        height: auto;
+        border-radius: 20px;
+        border: 1px solid rgba(12, 74, 110, 0.12);
+        background: rgba(255, 255, 255, 0.94);
+        box-shadow: 0 16px 34px rgba(15, 23, 42, 0.08);
+      }
+
+      .process-layout {
+        display: grid;
+        gap: 34px;
+        align-items: center;
+      }
+
+      .process-media {
+        margin: 0;
+        overflow: hidden;
+        border-radius: 34px;
+        width: 100%;
+        max-width: 100%;
+        min-height: 520px;
+        aspect-ratio: 1.02 / 1;
+        align-self: stretch;
+        box-shadow: 0 24px 48px rgba(15, 23, 42, 0.14);
+      }
+
+      .process-media img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+      }
+
+      .process-content {
+        display: grid;
+        min-width: 0;
+        gap: 34px;
+      }
+
+      .process-head {
+        max-width: 720px;
+        display: grid;
+        gap: 18px;
+      }
+
+      .process-timeline {
+        position: relative;
+        display: grid;
+        gap: 24px;
+      }
+
+      .process-timeline::before {
+        content: "";
+        position: absolute;
+        left: 24px;
+        top: 14px;
+        bottom: -10px;
+        width: 2px;
+        background: linear-gradient(180deg, rgba(43, 108, 176, 0.18), rgba(12, 74, 110, 0.42));
+      }
+
+      .process-step {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 18px;
+        align-items: start;
+      }
+
+      .process-step:last-child::after {
+        content: none;
+      }
+
+      .process-number {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 50px;
+        height: 50px;
+        border-radius: 999px;
+        background: linear-gradient(180deg, #2b6cb0 0%, #0c4a6e 100%);
         color: #f8fbff;
+        font-family: var(--landing-font-hero);
+        font-size: 1.25rem;
+        letter-spacing: -0.03em;
+        box-shadow: 0 14px 24px rgba(12, 74, 110, 0.18);
+        flex-shrink: 0;
       }
 
-      .checklist i {
-        color: #fbbf24;
-        margin-right: 8px;
+      .process-step-copy {
+        display: grid;
+        gap: 8px;
+        padding: 4px 0 0;
       }
 
+      .process-step h3 {
+        margin: 0;
+        color: var(--navy);
+        font-size: 1.32rem;
+        line-height: 1.08;
+      }
 
+      .process-step p {
+        margin: 0;
+        color: #516173;
+        line-height: 1.7;
+        max-width: 54ch;
+      }
 
-      .projects-section {
+      .trust-metrics-section {
+        padding-top: 26px;
+        padding-bottom: 34px;
+        background: linear-gradient(180deg, rgba(248, 251, 255, 0.98) 0%, rgba(244, 247, 251, 0.94) 100%);
+      }
+
+      .trust-metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0;
+        border-top: 1px solid rgba(148, 163, 184, 0.2);
+        border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+      }
+
+      .trust-metric {
+        position: relative;
+        min-height: 170px;
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+        text-align: center;
+        isolation: isolate;
+      }
+
+      .trust-metric::before {
+        content: attr(data-shadow);
+      }
+
+      .trust-metric + .trust-metric {
+        border-left: 1px solid rgba(148, 163, 184, 0.2);
+      }
+
+      .trust-metric-number {
+        position: absolute;
+        inset: 50% auto auto 50%;
+        transform: translate(-50%, -58%);
+        font-family: var(--landing-font-hero);
+        font-size: clamp(4.4rem, 12vw, 7.6rem);
+        line-height: 0.9;
+        letter-spacing: -0.06em;
+        color: rgba(15, 23, 42, 0.06);
+        z-index: 0;
+        user-select: none;
+        pointer-events: none;
+      }
+
+      .trust-metric-label {
+        position: relative;
+        z-index: 1;
+        color: var(--navy);
+        font-family: var(--landing-font-hero);
+        font-size: clamp(1.8rem, 3vw, 2.6rem);
+        line-height: 0.96;
+        letter-spacing: -0.03em;
+      }
+
+            .projects-section {
         background: var(--bg);
       }
 
@@ -812,81 +920,76 @@ const landingStyles = String.raw`
         align-items: center;
       }
 
+      .projects-head-centered {
+        justify-items: center;
+        text-align: center;
+        margin-inline: auto;
+        max-width: 920px;
+      }
+
       .projects-head h2 {
-        font-size: clamp(2.4rem, 6vw, 4.1rem);
+        font-size: clamp(2.65rem, 5.4vw, 4.6rem);
         color: var(--text);
-        line-height: 0.95;
-      }
-
-      .projects-desc {
-        color: var(--muted);
-        font-size: 1.05rem;
-        max-width: 60ch;
-      }
-
-      .projects-controls {
-        display: flex;
-        gap: 10px;
-      }
-
-      .projects-btn {
-        width: 54px;
-        height: 54px;
-        border-radius: 999px;
-        border: 1px solid #cfd8e8;
-        background: transparent;
-        color: #1f314f;
-        display: grid;
-        place-items: center;
-        font-size: 1.06rem;
-        cursor: pointer;
-      }
-
-      .projects-btn:hover {
-        background: #ffffff;
+        line-height: 0.98;
+        letter-spacing: -0.03em;
+        max-width: none;
+        white-space: nowrap;
       }
 
       .projects-wrap {
-        margin-top: 24px;
+        margin-top: 56px;
         width: 100%;
-        margin-left: 0;
         padding: 0 clamp(18px, 3.2vw, 48px);
         overflow: hidden;
       }
 
-      .projects-track {
+      .projects-double-marquee {
+        display: grid;
+        gap: 20px;
+      }
+
+      .projects-marquee-row {
+        overflow: hidden;
+      }
+
+      .projects-marquee {
+        display: flex;
+        width: max-content;
+        animation: projects-marquee 42s linear infinite;
+        will-change: transform;
+      }
+
+      .projects-marquee-group {
         display: flex;
         gap: 22px;
-        overflow-x: auto;
-        scrollbar-width: none;
-        scroll-behavior: smooth;
-        scroll-snap-type: none;
-        cursor: grab;
-        padding-bottom: 8px;
-        touch-action: pan-y;
-        -webkit-overflow-scrolling: touch;
+        flex-shrink: 0;
+        padding-right: 22px;
       }
 
-      .projects-track::-webkit-scrollbar {
-        display: none;
+      .projects-marquee-row.reverse .projects-marquee {
+        animation-direction: reverse;
       }
 
-      .projects-track.is-dragging {
-        cursor: grabbing;
-        scroll-behavior: auto;
+      .projects-marquee-row:hover .projects-marquee {
+        animation-play-state: paused;
+      }
+
+      @keyframes projects-marquee {
+        from { transform: translateX(0); }
+        to { transform: translateX(-50%); }
       }
 
       .project-card {
         position: relative;
-        flex: 0 0 clamp(290px, 27vw, 380px);
+        flex: 0 0 clamp(290px, 24vw, 360px);
         aspect-ratio: 1 / 1;
-        border-radius: 16px;
+        border-radius: 24px;
         overflow: hidden;
         user-select: none;
       }
 
       .project-card-wide {
-        flex-basis: clamp(430px, 40vw, 620px);
+        flex-basis: clamp(420px, 34vw, 560px);
         aspect-ratio: 16 / 10;
       }
 
@@ -903,23 +1006,23 @@ const landingStyles = String.raw`
       .project-overlay {
         position: absolute;
         inset: 0;
-        background: linear-gradient(180deg, rgba(6, 12, 24, 0.25), rgba(6, 12, 24, 0.62));
+        background: linear-gradient(180deg, rgba(6, 12, 24, 0.18), rgba(6, 12, 24, 0.7));
         display: flex;
         flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        padding: 18px;
+        align-items: flex-start;
+        justify-content: flex-end;
+        text-align: left;
+        padding: 22px;
         transition: opacity 0.22s ease, transform 0.22s ease;
       }
 
       .project-overlay strong {
         display: block;
         color: #ffffff;
-        font-size: clamp(1.35rem, 2.1vw, 2rem);
+        font-size: clamp(1.2rem, 1.8vw, 1.75rem);
         line-height: 1.02;
-        font-family: var(--landing-font-body);
-        font-weight: 800;
+        font-family: var(--landing-font-hero);
+        font-weight: 700;
         max-width: 16ch;
         text-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
       }
@@ -945,7 +1048,204 @@ const landingStyles = String.raw`
         }
       }
 
-      .payments {
+.clients-section {
+        background: linear-gradient(180deg, #f7fbff 0%, #ffffff 100%);
+      }
+
+      .clients-section .container {
+        max-width: 1180px;
+      }
+
+      .clients-head-centered {
+        text-align: center;
+      }
+
+      .clients-title {
+        font-size: clamp(2.35rem, 4.8vw, 4.1rem);
+        color: var(--text);
+        line-height: 1;
+        letter-spacing: -0.02em;
+        max-width: none;
+        margin-left: auto;
+        margin-right: auto;
+        white-space: nowrap;
+      }
+
+      .clients-carousel-shell {
+        margin-top: 44px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        align-items: center;
+        gap: 0;
+      }
+
+      .clients-viewport {
+        --clients-drag-offset: 0px;
+        --clients-side-offset: clamp(250px, 24vw, 330px);
+        position: relative;
+        overflow: hidden;
+        min-height: 520px;
+        cursor: grab;
+        touch-action: pan-y;
+      }
+
+      .clients-viewport.is-dragging {
+        cursor: grabbing;
+      }
+
+      .clients-stage {
+        position: relative;
+        height: 520px;
+      }
+
+      .client-slide {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: min(100%, 430px);
+        min-height: 390px;
+        padding: 34px 30px 30px;
+        border-radius: 30px;
+        background: rgba(255, 255, 255, 0.94);
+        border: 1px solid rgba(15, 35, 58, 0.08);
+        box-shadow: 0 18px 44px rgba(9, 22, 43, 0.08);
+        transition: transform 0.28s ease, opacity 0.28s ease, filter 0.28s ease, box-shadow 0.28s ease;
+        transform-origin: center;
+        user-select: none;
+        -webkit-user-select: none;
+        display: flex;
+        flex-direction: column;
+        cursor: pointer;
+      }
+
+      .client-slide::before {
+        content: "“";
+        position: absolute;
+        top: 22px;
+        left: 26px;
+        color: rgba(12, 74, 110, 0.18);
+        font-family: var(--landing-font-hero);
+        font-size: 4.2rem;
+        line-height: 1;
+      }
+
+      .client-slide-head {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-top: 74px;
+      }
+
+      .client-slide-head img {
+        width: 72px;
+        height: 72px;
+        border-radius: 999px;
+        object-fit: cover;
+        flex: 0 0 auto;
+        border: 3px solid rgba(43, 108, 176, 0.16);
+      }
+
+      .client-slide-head strong {
+        display: block;
+        color: var(--text);
+        font-size: 1.15rem;
+        line-height: 1.2;
+      }
+
+      .client-slide-head span {
+        display: block;
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 0.95rem;
+        line-height: 1.45;
+      }
+
+      .client-slide-rating {
+        margin-top: 24px;
+        display: inline-flex;
+        gap: 6px;
+        color: #d97706;
+        font-size: 0.98rem;
+      }
+
+      .client-slide-text {
+        margin: 18px 0 0;
+        color: var(--text);
+        font-size: 1.12rem;
+        line-height: 1.78;
+        max-width: 29ch;
+      }
+
+      .client-slide.is-active {
+        transform: translate(calc(-50% + var(--clients-drag-offset)), -50%) scale(1);
+        opacity: 1;
+        filter: none;
+        z-index: 3;
+        box-shadow: 0 24px 56px rgba(9, 22, 43, 0.12);
+        cursor: default;
+      }
+
+      .client-slide.is-prev {
+        transform: translate(calc(-50% - var(--clients-side-offset) + var(--clients-drag-offset)), -50%) scale(0.88);
+        opacity: 0.68;
+        filter: blur(0.2px);
+        z-index: 2;
+      }
+
+      .client-slide.is-next {
+        transform: translate(calc(-50% + var(--clients-side-offset) + var(--clients-drag-offset)), -50%) scale(0.88);
+        opacity: 0.68;
+        filter: blur(0.2px);
+        z-index: 2;
+      }
+
+      .client-slide.is-hidden-left {
+        transform: translate(calc(-50% - calc(var(--clients-side-offset) * 1.85) + var(--clients-drag-offset)), -50%) scale(0.72);
+        opacity: 0;
+        z-index: 1;
+        pointer-events: none;
+      }
+
+      .client-slide.is-hidden-right {
+        transform: translate(calc(-50% + calc(var(--clients-side-offset) * 1.85) + var(--clients-drag-offset)), -50%) scale(0.72);
+        opacity: 0;
+        z-index: 1;
+        pointer-events: none;
+      }
+
+      .clients-controls {
+        margin-top: 28px;
+        display: flex;
+        justify-content: center;
+        gap: 14px;
+      }
+
+      .clients-control {
+        width: 52px;
+        height: 52px;
+        padding: 0;
+        border: 0;
+        border-radius: 999px;
+        background: linear-gradient(180deg, #1d5f92 0%, #0c4a6e 100%);
+        color: #f8fbff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 14px 30px rgba(12, 74, 110, 0.2);
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+      }
+
+      .clients-control:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 18px 34px rgba(12, 74, 110, 0.24);
+      }
+
+      .clients-control i {
+        font-size: 0.95rem;
+      }
+
+.payments {
         margin-top: 20px;
         display: flex;
         flex-wrap: wrap;
@@ -972,14 +1272,97 @@ const landingStyles = String.raw`
         color: #e2e8f0;
       }
 
-      .cta-dark {
-        background: linear-gradient(135deg, #081221, #13345b);
+      .trust-band {
+        background:
+          radial-gradient(circle at top left, rgba(43, 108, 176, 0.22), transparent 36%),
+          linear-gradient(135deg, #081221 0%, #12345a 100%);
         color: #e9f1ff;
-        text-align: center;
       }
 
-      .cta-dark h2 {
-        font-size: clamp(2rem, 5vw, 3.6rem);
+      .trust-band-inner {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 28px;
+        align-items: center;
+      }
+
+      .trust-band-copy {
+        max-width: 760px;
+      }
+
+      .trust-band-kicker {
+        display: inline-flex;
+        margin-bottom: 12px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(148, 163, 184, 0.26);
+        background: rgba(255, 255, 255, 0.06);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+        color: #bfd7f2;
+      }
+
+      .trust-band h2 {
+        font-size: clamp(1.95rem, 4.2vw, 3rem);
+        line-height: 1.04;
+        letter-spacing: -0.02em;
+        color: #f8fbff;
+        max-width: 13ch;
+      }
+
+      .trust-band p {
+        margin-top: 12px;
+        max-width: 58ch;
+        color: rgba(232, 240, 251, 0.84);
+        font-size: 1.04rem;
+        line-height: 1.75;
+      }
+
+      .trust-band-areas {
+        margin-top: 18px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .trust-band-area {
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(191, 215, 242, 0.14);
+        color: #eef5ff;
+        font-size: 0.94rem;
+        font-weight: 700;
+      }
+
+      .trust-band-points {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .trust-point {
+        padding: 18px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(191, 215, 242, 0.14);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      }
+
+      .trust-point strong {
+        display: block;
+        font-size: 1rem;
+        color: #f8fbff;
+      }
+
+      .trust-point span {
+        display: block;
+        margin-top: 8px;
+        color: rgba(232, 240, 251, 0.78);
+        font-size: 0.95rem;
+        line-height: 1.6;
       }
 
       .form-grid {
@@ -991,7 +1374,12 @@ const landingStyles = String.raw`
 
       .contact-section {
         position: relative;
-        background: linear-gradient(135deg, rgba(12, 74, 110, 0.96) 0%, rgba(18, 54, 90, 0.96) 100%), url("/images/contact.jpg") center/cover no-repeat;
+        background-image:
+          linear-gradient(135deg, rgba(12, 74, 110, 0.96) 0%, rgba(18, 54, 90, 0.96) 100%),
+          url("/images/contact.jpg");
+        background-position: center, center;
+        background-size: cover, cover;
+        background-repeat: no-repeat, no-repeat;
         margin-top: clamp(56px, 7vw, 90px);
       }
 
@@ -1029,9 +1417,12 @@ const landingStyles = String.raw`
 
       .contact-title {
         margin-top: 10px;
-        font-size: clamp(2rem, 4.5vw, 4rem);
-        line-height: 0.95;
+        font-size: clamp(1.95rem, 4vw, 3.45rem);
+        line-height: 1;
+        letter-spacing: -0.02em;
         color: var(--text);
+        max-width: none;
+        white-space: nowrap;
       }
 
       .contact-form {
@@ -1156,7 +1547,7 @@ const landingStyles = String.raw`
         max-height: 0;
         overflow: hidden;
         transition: max-height 0.32s ease;
-        padding: 0 16px;
+        padding: 0 14px;
         color: #4b5563;
       }
 
@@ -1168,6 +1559,13 @@ const landingStyles = String.raw`
       .footer {
         background: var(--navy);
         color: #d6e2f5;
+      }
+
+      .footer-top {
+        display: grid;
+        gap: 28px;
+        padding-bottom: 28px;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.18);
       }
 
       .work-strip {
@@ -1198,12 +1596,13 @@ const landingStyles = String.raw`
       .footer-grid {
         display: grid;
         grid-template-columns: 1fr;
-        gap: 20px;
+        gap: 22px;
       }
 
       .footer h3 {
         color: #fff;
-        font-size: 1.5rem;
+        font-size: 1.28rem;
+        margin-bottom: 10px;
       }
 
       .phone-big {
@@ -1213,11 +1612,133 @@ const landingStyles = String.raw`
         font-size: 2rem;
       }
 
-      .comunas {
+      .footer-brand-mark {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 44px;
+        height: 44px;
+        padding: 0 14px;
+        border-radius: 999px;
+        border: 1px solid rgba(148, 163, 184, 0.26);
+        background: rgba(255, 255, 255, 0.06);
+        color: #f8fbff;
+        font-family: var(--landing-font-hero);
+        font-size: 0.95rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .footer-kicker {
+        display: inline-block;
+        margin-top: 12px;
+        color: #9cc5eb;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+      }
+
+      .footer-copy {
+        max-width: 34ch;
+        color: #c5d5ea;
+        line-height: 1.65;
+      }
+
+      .footer-list {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px;
-        font-size: 14px;
+        gap: 10px;
+        color: #c5d5ea;
+        font-size: 0.98rem;
+        line-height: 1.6;
+      }
+
+      .footer-list a {
+        color: #e8f1ff;
+      }
+
+      .footer-map-link {
+        display: inline-flex;
+        margin-top: 12px;
+        font-weight: 700;
+        color: #f8fbff;
+      }
+
+      .map-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 1200;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(7, 15, 27, 0.62);
+        backdrop-filter: blur(8px);
+      }
+
+      .map-modal.is-open {
+        display: flex;
+      }
+
+      .map-modal-card {
+        position: relative;
+        width: min(100%, 920px);
+        border-radius: 28px;
+        overflow: hidden;
+        background: #f8fbff;
+        border: 1px solid rgba(203, 213, 225, 0.7);
+        box-shadow: 0 32px 80px rgba(2, 12, 27, 0.34);
+      }
+
+      .map-modal-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        padding: 18px 20px;
+        background: #ffffff;
+        border-bottom: 1px solid rgba(203, 213, 225, 0.65);
+      }
+
+      .map-modal-head strong {
+        color: var(--navy);
+        font-size: 1.05rem;
+      }
+
+      .map-modal-head span {
+        display: block;
+        margin-top: 4px;
+        color: #64748b;
+        font-size: 0.92rem;
+      }
+
+      .map-modal-close {
+        width: 42px;
+        height: 42px;
+        border: 0;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.08);
+        color: var(--navy);
+        font-size: 1.2rem;
+        cursor: pointer;
+      }
+
+      .map-modal-frame {
+        width: 100%;
+        height: min(70vh, 560px);
+        border: 0;
+        display: block;
+      }
+
+      .footer-meta {
+        display: grid;
+        gap: 18px;
+        padding-top: 20px;
+      }
+
+      .footer-legal {
+        font-size: 12px;
+        color: #94a3b8;
       }
 
       .mobile-sticky {
@@ -1262,6 +1783,111 @@ const landingStyles = String.raw`
         opacity: 1;
         transform: none;
       }
+
+      .services-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
+        margin-top: 28px;
+      }
+
+      .service-card {
+        position: relative;
+        overflow: hidden;
+        border-radius: 24px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        box-shadow: 0 18px 50px rgba(9, 22, 43, 0.08);
+      }
+
+      .service-card-media {
+        position: relative;
+        aspect-ratio: 5 / 6;
+        overflow: hidden;
+        background: #dfe7f1;
+      }
+
+      .service-card-media img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .service-card-overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        gap: 16px;
+        padding: 20px;
+        background: linear-gradient(180deg, rgba(7, 17, 33, 0.10) 8%, rgba(7, 17, 33, 0.82) 100%);
+        transition: opacity 0.25s ease, transform 0.25s ease;
+      }
+
+      .service-card-overlay p {
+        margin: 0;
+        color: rgba(247, 250, 255, 0.96);
+        font-size: 1rem;
+        line-height: 1.55;
+        max-width: 28ch;
+      }
+
+      .checklist {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        display: grid;
+        gap: 10px;
+      }
+
+      .checklist li {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        color: #ffffff;
+        font-size: 0.98rem;
+        line-height: 1.45;
+      }
+
+      .checklist li i {
+        margin-top: 4px;
+        color: var(--accent);
+        font-size: 0.86rem;
+        flex: 0 0 auto;
+      }
+
+      .service-card-footer {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-end;
+        gap: 8px;
+        padding: 18px 22px 20px;
+        background: linear-gradient(180deg, #132c47 0%, #0c2339 100%);
+      }
+
+      .service-card-footer h3 {
+        margin: 0;
+        color: #ffffff;
+        font-size: clamp(1.12rem, 1.45vw, 1.56rem);
+        line-height: 1;
+        letter-spacing: -0.01em;
+        font-family: var(--landing-font-hero);
+        font-weight: 700;
+        min-height: 2.72em;
+        max-width: 12ch;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        align-items: flex-start;
+      }
+
+      .service-title-line {
+        display: block;
+      }
+
 
       @media (min-width: 768px) {
         .section {
@@ -1321,6 +1947,47 @@ const landingStyles = String.raw`
         .services-grid {
           grid-template-columns: repeat(3, 1fr);
         }
+        .trust-metrics-grid {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        .trust-split-left {
+          grid-template-columns: minmax(0, 1.08fr) minmax(340px, 0.92fr);
+          gap: 54px;
+        }
+
+        .process-layout {
+          grid-template-columns: minmax(0, 0.94fr) minmax(380px, 1.06fr);
+          gap: 60px;
+        }
+
+        .about-grid {
+          grid-template-columns: 1.02fr 0.98fr;
+        }
+
+        .clients-carousel-shell {
+          grid-template-columns: minmax(0, 1fr);
+        }
+
+        .trust-band-inner {
+          grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
+          gap: 40px;
+        }
+
+        .clients-viewport {
+          --clients-side-offset: clamp(290px, 22vw, 370px);
+          min-height: 560px;
+        }
+
+        .clients-stage {
+          height: 560px;
+        }
+
+        .client-slide {
+          width: min(100%, 460px);
+          min-height: 410px;
+        }
+
 
         @media (hover: hover) and (pointer: fine) {
           .service-card-overlay {
@@ -1374,17 +2041,128 @@ const landingStyles = String.raw`
         }
 
         .footer-grid {
-          grid-template-columns: 1.4fr 1fr 1fr;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .footer-top {
+          grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
+          gap: 42px;
         }
       }
 
       @media (max-width: 767px) {
+        .clients-title {
+          font-size: clamp(1.95rem, 9vw, 2.75rem);
+          white-space: normal;
+          line-height: 0.98;
+          max-width: 12ch;
+        }
+
+        .clients-viewport {
+          min-height: 500px;
+        }
+
+        .clients-stage {
+          height: 500px;
+        }
+
+        .client-slide {
+          box-shadow: 0 14px 28px rgba(9, 22, 43, 0.06);
+        }
+
+        .client-slide.is-active {
+          box-shadow: 0 18px 34px rgba(9, 22, 43, 0.08);
+        }
+
+        .trust-band-areas {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 10px;
+        }
+
+        .trust-band-area {
+          width: 100%;
+          text-align: center;
+        }
+
+        .trust-proof {
+          flex-wrap: nowrap;
+          justify-content: flex-start;
+          align-items: flex-start;
+          gap: 10px;
+        }
+
+        .trust-proof-logo {
+          width: calc(50% - 5px);
+          max-width: 140px;
+          border-radius: 16px;
+        }
+
         .work-strip {
           grid-template-columns: repeat(3, minmax(0, 1fr));
         }
 
         .work-strip img {
           height: 180px;
+        }
+
+        .footer-payments {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+          justify-content: flex-start;
+        }
+
+        .footer-payments .pay-badge {
+          width: auto;
+        }
+      }
+
+      @media (min-width: 768px) and (max-width: 991px) {
+        .top-nav {
+          background: rgba(255, 255, 255, 0.96);
+          backdrop-filter: blur(8px);
+          border-bottom: 1px solid #e2e8f0;
+          box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+        }
+
+        .top-nav-inner {
+          padding: 12px 18px;
+        }
+
+        .hero {
+          padding-top: 72px;
+        }
+
+        .hero-grid {
+          min-height: calc(100vh - 72px);
+        }
+
+        .hero-media img {
+          height: 48vh;
+          object-position: center 30%;
+        }
+
+        .footer-top {
+          gap: 34px;
+        }
+
+        .footer-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 28px 42px;
+        }
+
+        .footer h3 {
+          margin-bottom: 16px;
+        }
+
+        .footer-meta {
+          gap: 20px;
+          padding-top: 24px;
+        }
+
+        .footer-payments {
+          margin-top: 0;
         }
       }
 
@@ -1491,14 +2269,30 @@ const landingStyles = String.raw`
         .hero-content-inner {
           width: 100%;
           max-width: 900px;
+          position: relative;
+          padding-bottom: clamp(220px, 24vh, 280px);
         }
 
         .hero h1 {
-          font-size: clamp(3rem, 4.3vw, 4.85rem);
+          font-size: clamp(2.85rem, 4vw, 4.35rem);
         }
 
         .hero-line {
-          white-space: normal;
+          white-space: nowrap;
+        }
+
+        .hero-stats {
+          margin-top: 0;
+          padding-top: 0;
+          position: absolute;
+          left: 0;
+          right: 0;
+          bottom: -18px;
+          transform: none;
+        }
+
+        .about-visual {
+          min-height: 620px;
         }
 
         .audience-visual {
@@ -1542,6 +2336,125 @@ const landingStyles = String.raw`
           font-size: 15px;
         }
 
+        @media (max-width: 1180px) {
+          .footer {
+            padding-top: 64px;
+            padding-bottom: 44px;
+          }
+
+          .top-nav {
+            width: 59vw;
+          }
+
+          .top-nav.nav--desktop-integrated {
+            width: 59vw;
+          }
+
+          .top-nav-inner {
+            padding: 18px 24px;
+          }
+
+          .top-nav.nav--desktop-integrated .top-nav-inner {
+            padding: 18px 24px;
+          }
+
+          .nav-links {
+            gap: 14px;
+            font-size: 13px;
+          }
+
+          .hero-grid {
+            grid-template-columns: 38% 62%;
+          }
+
+          .hero-content {
+            padding: 94px 46px 40px;
+          }
+
+          .hero-content-inner {
+            max-width: 100%;
+            padding-bottom: 236px;
+          }
+
+          .hero h1 {
+            font-size: clamp(1.72rem, 2.35vw, 2.2rem);
+            max-width: none;
+            line-height: 0.96;
+          }
+
+          .hero-line {
+            white-space: nowrap;
+          }
+
+          .hero-lead {
+            max-width: 33ch;
+          }
+
+          .badge {
+            font-size: 12px;
+            padding: 8px 11px;
+          }
+
+          .hero-stats {
+            bottom: -4px;
+            gap: 0;
+          }
+
+          .hero-stat {
+            padding-left: 12px;
+          }
+
+          .hero-stat strong {
+            font-size: 0.9rem;
+            line-height: 1.05;
+          }
+
+          .hero-stat span {
+            font-size: 0.82rem;
+            line-height: 1.45;
+            max-width: 16ch;
+          }
+
+          .footer-top {
+            grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+            gap: 32px 48px;
+          }
+
+          .footer-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 24px 56px;
+          }
+
+          .footer h3 {
+            margin-bottom: 18px;
+          }
+
+          .footer-copy {
+            max-width: 28ch;
+          }
+
+          .footer-meta {
+            gap: 14px;
+            padding-top: 18px;
+          }
+
+          .footer-list {
+            gap: 12px;
+            font-size: 0.94rem;
+            line-height: 1.7;
+          }
+
+          .footer-payments {
+            margin-top: 0;
+            gap: 8px;
+          }
+
+          .pay-badge {
+            padding: 9px 12px;
+            font-size: 12px;
+          }
+        }
+
         .mobile-sticky {
           display: none;
         }
@@ -1551,7 +2464,7 @@ const landingStyles = String.raw`
 const landingMarkup = String.raw`
     <nav class="top-nav">
       <div class="top-nav-inner">
-        <a class="brand" href="#inicio" data-default-brand="Gasfiter 24/7" data-logo-height="42">Gasfiter 24/7</a>
+        <a class="brand" href="#inicio" data-default-brand="" data-logo-height="42" aria-label="Inicio"></a>
         <div class="nav-links">
           <a href="#servicios">Servicios</a>
           <a href="#trabajos">Proyectos</a>
@@ -1576,13 +2489,12 @@ const landingMarkup = String.raw`
 
         <div class="hero-content">
           <div class="hero-content-inner">
-            <span class="eyebrow" data-hero-eyebrow>SERVICIO 24/7 · SANTIAGO</span>
+            <span class="eyebrow" data-hero-eyebrow>SERVICIOS 24/7</span>
             <h1 data-hero-title>
-              <span class="hero-line">Gasfiter urgente en Santiago</span>
-              <span class="hero-line">Llegamos en menos de 40 minutos</span>
+              <span class="hero-line">Servicios de gasfitería profesional</span>
             </h1>
             <p class="hero-lead" data-hero-subtitle>
-              Fugas, destapes, calefont e instalaciones. Respuesta inmediata, diagnóstico claro y solución en terreno.
+              Atención técnica para fugas, destapes, calefont e instalaciones con respuesta rápida y diagnóstico claro en terreno.
             </p>
             <div class="badges">
               <span class="badge"><i class="fa-solid fa-bolt" aria-hidden="true"></i>Disponible ahora</span>
@@ -1591,7 +2503,7 @@ const landingMarkup = String.raw`
             </div>
             <div class="hero-cta">
               <a class="btn btn-primary" href="tel:+569XXXXXXX" data-hero-cta-primary>
-                <i class="fa-solid fa-phone-volume" aria-hidden="true"></i> LLAMAR AHORA +56 9 XXXX XXXX
+                <i class="fa-solid fa-phone-volume" aria-hidden="true"></i> Llamar ahora
               </a>
               <a class="btn btn-ghost" href="https://wa.me/569XXXXXXX" target="_blank" rel="noopener noreferrer" data-hero-cta-secondary>
                 <i class="fa-brands fa-whatsapp" aria-hidden="true"></i> WhatsApp
@@ -1599,16 +2511,16 @@ const landingMarkup = String.raw`
             </div>
             <div class="hero-stats">
               <div class="hero-stat">
-                <strong>20+</strong>
-                <span>Urgencias por día</span>
+                <strong>Atención 24/7</strong>
+                <span>Urgencias y visitas coordinadas según comuna y disponibilidad.</span>
               </div>
               <div class="hero-stat">
-                <strong>100+</strong>
-                <span>Clientes semanales</span>
+                <strong>Cobertura local</strong>
+                <span>Hogares, oficinas y locales según comuna y disponibilidad.</span>
               </div>
               <div class="hero-stat">
-                <strong>10+</strong>
-                <span>Nuevos casos diarios</span>
+                <strong>Pago y respaldo</strong>
+                <span>Transferencia, Webpay y trabajo explicado antes de ejecutar.</span>
               </div>
             </div>
           </div>
@@ -1620,7 +2532,7 @@ const landingMarkup = String.raw`
       <div class="container about-grid">
         <div class="about-copy">
           <span class="section-kicker" data-about-kicker>QUIÉNES SOMOS</span>
-          <h2 data-about-title>Respuesta técnica con criterio, orden y ejecución limpia</h2>
+          <h2 data-about-title>Un equipo profesional que responde con soluciones claras</h2>
           <p data-about-description>
             Operamos como un servicio técnico en terreno, no como una visita improvisada. Priorizamos diagnóstico claro,
             comunicación directa y cierre correcto para que el cliente entienda qué se hizo y qué queda resuelto.
@@ -1656,32 +2568,54 @@ const landingMarkup = String.raw`
     </section>
 
     <section class="section trust-section reveal" id="certificacion">
-      <div class="container">
-        <div class="section-head section-head-centered">
-          <span class="section-kicker" data-trust-kicker>CERTIFICACIÓN Y SEGURIDAD</span>
-          <h2 data-trust-title>Respaldo técnico para trabajos que no admiten improvisación</h2>
-          <p class="section-subtitle" data-trust-subtitle>
-            La confianza no se comunica con promesas. Se comunica con procesos claros, seguridad operativa y ejecución
-            consistente en terreno.
-          </p>
+      <div class="trust-split trust-split-left">
+        <figure class="trust-media-bleed">
+          <img src="/images/gasfiter-calefont.webp" alt="Técnico trabajando en instalación de gas y calefont" loading="lazy" />
+        </figure>
+
+        <div class="trust-content-column">
+          <div class="container trust-content-inner">
+            <div class="trust-info">
+              <span class="section-kicker" data-trust-kicker>Certificación y seguridad</span>
+              <h2 data-trust-title>Respaldo técnico para trabajos donde no se puede improvisar</h2>
+              <p class="section-subtitle" data-trust-subtitle>
+                La licencia SEC acredita intervención autorizada en instalaciones de gas, calefont y trabajos críticos donde la seguridad importa.
+              </p>
+
+              <ul class="trust-bullets">
+                <li><i class="fa-solid fa-check" aria-hidden="true"></i>Garantía destacada</li>
+                <li><i class="fa-solid fa-check" aria-hidden="true"></i>Norma de seguridad</li>
+                <li><i class="fa-solid fa-check" aria-hidden="true"></i>Certificación profesional</li>
+              </ul>
+
+              <div class="trust-proof" aria-label="Certificaciones y respaldos">
+                <img class="trust-proof-logo" src="/images/sec.webp" alt="Licencia SEC" loading="lazy" />
+                <img class="trust-proof-logo" src="/images/sello_verde.webp" alt="Sello verde" loading="lazy" />
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="trust-grid">
-          <article class="card trust-card" data-trust-item>
-            <div class="trust-icon"><i class="fa-solid fa-shield-halved"></i></div>
-            <h3>Protocolos de seguridad</h3>
-            <p>Intervención ordenada, revisión de riesgos y pruebas de funcionamiento antes del cierre.</p>
-          </article>
-          <article class="card trust-card" data-trust-item>
-            <div class="trust-icon"><i class="fa-solid fa-file-shield"></i></div>
-            <h3>Respaldo y garantía</h3>
-            <p>Cada trabajo queda con trazabilidad básica, recomendaciones y garantía sobre la intervención.</p>
-          </article>
-          <article class="card trust-card" data-trust-item>
-            <div class="trust-icon"><i class="fa-solid fa-user-check"></i></div>
-            <h3>Técnicos preparados</h3>
-            <p>Equipo orientado a diagnóstico, urgencias y solución efectiva en domicilio o comercio.</p>
-          </article>
-        </div>
+      </div>
+    </section>
+
+    <section class="section trust-metrics-section reveal" id="experiencia" aria-label="Experiencia y cobertura">
+      <div class="container trust-metrics-grid">
+        <article class="trust-metric">
+          <span class="trust-metric-number" data-count-target="98" data-count-suffix="+">98+</span>
+          <span class="trust-metric-label">Proyectos</span>
+        </article>
+        <article class="trust-metric">
+          <span class="trust-metric-number" data-count-target="65" data-count-suffix="+">65+</span>
+          <span class="trust-metric-label">Clientes</span>
+        </article>
+        <article class="trust-metric">
+          <span class="trust-metric-number" data-count-target="10" data-count-suffix="+">10+</span>
+          <span class="trust-metric-label">Años</span>
+        </article>
+        <article class="trust-metric">
+          <span class="trust-metric-number" data-count-target="15" data-count-suffix="+">15+</span>
+          <span class="trust-metric-label">Comunas</span>
+        </article>
       </div>
     </section>
 
@@ -1703,8 +2637,7 @@ const landingMarkup = String.raw`
               </div>
             </div>
             <div class="service-card-footer">
-              <h3 data-service-title>Filtraciones y fugas</h3>
-              <span class="service-card-label">Atención en terreno</span>
+              <h3 data-service-title><span class="service-title-line">Fugas de agua y</span><span class="service-title-line">gas servicio</span></h3>
             </div>
           </article>
 
@@ -1721,8 +2654,7 @@ const landingMarkup = String.raw`
               </div>
             </div>
             <div class="service-card-footer">
-              <h3 data-service-title>Destapes urgentes</h3>
-              <span class="service-card-label">Respuesta rápida</span>
+              <h3 data-service-title><span class="service-title-line">Destapes y</span><span class="service-title-line">mantención</span></h3>
             </div>
           </article>
 
@@ -1739,8 +2671,7 @@ const landingMarkup = String.raw`
               </div>
             </div>
             <div class="service-card-footer">
-              <h3 data-service-title>Instalaciones y reparaciones</h3>
-              <span class="service-card-label">Solución técnica</span>
+              <h3 data-service-title><span class="service-title-line">Instalacion y</span><span class="service-title-line">reparacion gas</span></h3>
             </div>
           </article>
         </div>
@@ -1748,116 +2679,212 @@ const landingMarkup = String.raw`
     </section>
 
     <section class="section process-section reveal" id="proceso">
-      <div class="container">
-        <div class="section-head">
-          <span class="section-kicker" data-process-kicker>PROCESO DE TRABAJO</span>
-          <h2 data-process-title>Un flujo simple para resolver rápido y bien</h2>
-          <p class="section-subtitle" data-process-subtitle>
-            La urgencia no justifica el desorden. El proceso está pensado para dar velocidad sin perder control técnico.
-          </p>
-        </div>
-        <div class="process-grid">
-          <article class="process-step" data-process-step>
-            <span class="process-number">01</span>
-            <h3>Recepción y priorización</h3>
-            <p>Tomamos el caso, definimos el tipo de urgencia y coordinamos disponibilidad por comuna.</p>
-          </article>
-          <article class="process-step" data-process-step>
-            <span class="process-number">02</span>
-            <h3>Diagnóstico en terreno</h3>
-            <p>Identificamos el origen del problema y explicamos la intervención antes de avanzar.</p>
-          </article>
-          <article class="process-step" data-process-step>
-            <span class="process-number">03</span>
-            <h3>Ejecución y prueba</h3>
-            <p>Realizamos la reparación o instalación y validamos funcionamiento real antes del cierre.</p>
-          </article>
-          <article class="process-step" data-process-step>
-            <span class="process-number">04</span>
-            <h3>Cierre y recomendaciones</h3>
-            <p>Entregamos respaldo, garantía y recomendaciones para evitar reincidencias futuras.</p>
-          </article>
+      <div class="container process-layout">
+        <figure class="process-media">
+          <img src="/images/gasfiter-emergencias.webp" alt="Técnico preparando una intervención en terreno" loading="lazy" />
+        </figure>
+
+        <div class="process-content">
+          <div class="section-head process-head">
+            <span class="section-kicker" data-process-kicker>PROCESO DE TRABAJO</span>
+            <h2 data-process-title>Un proceso claro para responder rápido sin perder control técnico</h2>
+            <p class="section-subtitle" data-process-subtitle>
+              Cada paso está pensado para dar visibilidad, orden y cierre correcto desde el primer contacto hasta la validación final.
+            </p>
+          </div>
+
+          <div class="process-timeline">
+            <article class="process-step" data-process-step>
+              <span class="process-number">01</span>
+              <div class="process-step-copy">
+                <h3>Recepción y priorización</h3>
+                <p>Tomamos el caso, entendemos la urgencia y definimos la atención según comuna y tipo de problema.</p>
+              </div>
+            </article>
+            <article class="process-step" data-process-step>
+              <span class="process-number">02</span>
+              <div class="process-step-copy">
+                <h3>Diagnóstico en terreno</h3>
+                <p>Revisamos el origen del problema y explicamos la intervención antes de ejecutar cualquier trabajo.</p>
+              </div>
+            </article>
+            <article class="process-step" data-process-step>
+              <span class="process-number">03</span>
+              <div class="process-step-copy">
+                <h3>Ejecución y prueba</h3>
+                <p>Realizamos la reparación o instalación y validamos funcionamiento real antes del cierre.</p>
+              </div>
+            </article>
+            <article class="process-step" data-process-step>
+              <span class="process-number">04</span>
+              <div class="process-step-copy">
+                <h3>Cierre y respaldo</h3>
+                <p>Entregamos recomendaciones, garantía y una salida técnica clara para evitar reincidencias.</p>
+              </div>
+            </article>
+          </div>
         </div>
       </div>
     </section>
 
     <section class="section projects-section reveal" id="trabajos">
       <div class="container">
-        <div class="projects-head">
-          <h2>Trabajos realizados en Santiago</h2>
-          <p class="projects-desc">
-            Casos reales de instalación, reparación y mantención. Haz click y arrastra para deslizar las imágenes hacia
-            la izquierda o derecha.
-          </p>
-          <div class="projects-controls" aria-label="Controles carrusel proyectos">
-            <button class="projects-btn" type="button" data-projects-prev aria-label="Anterior">
-              <i class="fa-solid fa-arrow-left"></i>
-            </button>
-            <button class="projects-btn" type="button" data-projects-next aria-label="Siguiente">
-              <i class="fa-solid fa-arrow-right"></i>
-            </button>
+        <div class="projects-head projects-head-centered">
+          <h2>Proyectos</h2>
+        </div>
+      </div>
+      <div class="projects-wrap projects-double-marquee">
+        <div class="projects-marquee-row">
+          <div class="projects-marquee" data-projects-track-top>
+            <div class="projects-marquee-group">
+              <figure class="project-card">
+                <img src="/images/square1.webp" alt="Proyecto de gasfitería en baño" loading="lazy" />
+                <figcaption class="project-overlay"><strong>Proyecto en baño</strong><span>Providencia</span></figcaption>
+              </figure>
+              <figure class="project-card project-card-wide">
+                <img src="/images/landscape1.webp" alt="Proyecto de gasfitería en cocina" loading="lazy" />
+                <figcaption class="project-overlay"><strong>Proyecto en cocina</strong><span>Las Condes</span></figcaption>
+              </figure>
+              <figure class="project-card">
+                <img src="/images/square2.webp" alt="Proyecto de mantención preventiva" loading="lazy" />
+                <figcaption class="project-overlay"><strong>Mantención preventiva</strong><span>Santiago Centro</span></figcaption>
+              </figure>
+              <figure class="project-card">
+                <img src="/images/square3.webp" alt="Proyecto de grifería en cocina" loading="lazy" />
+                <figcaption class="project-overlay"><strong>Proyecto de grifería</strong><span>La Florida</span></figcaption>
+              </figure>
+              <figure class="project-card">
+                <img src="/images/square4.webp" alt="Proyecto de reparación de fugas" loading="lazy" />
+                <figcaption class="project-overlay"><strong>Reparación de fugas</strong><span>Ñuñoa</span></figcaption>
+              </figure>
+              <figure class="project-card">
+                <img src="/images/square1.webp" alt="Proyecto de destape en departamento" loading="lazy" />
+                <figcaption class="project-overlay"><strong>Destape de desagüe</strong><span>San Miguel</span></figcaption>
+              </figure>
+            </div>
+            <div class="projects-marquee-group" aria-hidden="true">
+              <figure class="project-card">
+                <img src="/images/square2.webp" alt="Proyecto de gasfitería en baño" loading="lazy" />
+                <figcaption class="project-overlay"><strong>Proyecto en baño</strong><span>Providencia</span></figcaption>
+              </figure>
+              <figure class="project-card project-card-wide">
+                <img src="/images/landscape2.webp" alt="Proyecto de gasfitería en cocina" loading="lazy" />
+                <figcaption class="project-overlay"><strong>Proyecto en cocina</strong><span>Las Condes</span></figcaption>
+              </figure>
+              <figure class="project-card">
+                <img src="/images/square3.webp" alt="Proyecto de mantención preventiva" loading="lazy" />
+                <figcaption class="project-overlay"><strong>Mantención preventiva</strong><span>Santiago Centro</span></figcaption>
+              </figure>
+              <figure class="project-card">
+                <img src="/images/square4.webp" alt="Proyecto de grifería en cocina" loading="lazy" />
+                <figcaption class="project-overlay"><strong>Proyecto de grifería</strong><span>La Florida</span></figcaption>
+              </figure>
+              <figure class="project-card">
+                <img src="/images/square1.webp" alt="Proyecto de reparación de fugas" loading="lazy" />
+                <figcaption class="project-overlay"><strong>Reparación de fugas</strong><span>Ñuñoa</span></figcaption>
+              </figure>
+              <figure class="project-card">
+                <img src="/images/square2.webp" alt="Proyecto de destape en departamento" loading="lazy" />
+                <figcaption class="project-overlay"><strong>Destape de desagüe</strong><span>San Miguel</span></figcaption>
+              </figure>
+            </div>
           </div>
         </div>
-        <div class="projects-wrap">
-          <div class="projects-track" data-projects-track>
-            <figure class="project-card">
-              <img
-                src="/images/gasfiter-destape.webp"
-                alt="Destape urgente en baño"
-                loading="lazy"
-              />
-              <figcaption class="project-overlay"><strong>Destape urgente</strong><span>Providencia</span></figcaption>
-            </figure>
-            <figure class="project-card project-card-wide">
-              <img
-                src="/images/gasfiter-calefont.webp"
-                alt="Instalación calefont en hogar"
-                loading="lazy"
-              />
-              <figcaption class="project-overlay"><strong>Instalación calefont</strong><span>Las Condes</span></figcaption>
-            </figure>
-            <figure class="project-card">
-              <img
-                src="/images/gasfiter-mantencion.webp"
-                alt="Mantención preventiva en taller"
-                loading="lazy"
-              />
-              <figcaption class="project-overlay"><strong>Mantención preventiva</strong><span>Santiago Centro</span></figcaption>
-            </figure>
-            <figure class="project-card">
-              <img
-                src="/images/gasfiter-griferia.webp"
-                alt="Cambio de grifería en cocina"
-                loading="lazy"
-              />
-              <figcaption class="project-overlay"><strong>Cambio de grifería</strong><span>La Florida</span></figcaption>
-            </figure>
-            <figure class="project-card">
-              <img
-                src="/images/gasfiter-fugas.webp"
-                alt="Reparación de cañería en muro"
-                loading="lazy"
-              />
-              <figcaption class="project-overlay"><strong>Reparación de fugas</strong><span>Ñuñoa</span></figcaption>
-            </figure>
-            <figure class="project-card">
-              <img
-                src="/images/gasfiter-emergencias.webp"
-                alt="Destape de desagüe en departamento"
-                loading="lazy"
-              />
-              <figcaption class="project-overlay"><strong>Destape de desagüe</strong><span>San Miguel</span></figcaption>
-            </figure>
+        <div class="projects-marquee-row reverse">
+          <div class="projects-marquee" data-projects-track-bottom>
+            <div class="projects-marquee-group">
+              <figure class="project-card">
+                <img src="/images/square3.webp" alt="Proyecto de destape en departamento" loading="lazy" />
+                <figcaption class="project-overlay"><strong>Destape de desagüe</strong><span>San Miguel</span></figcaption>
+              </figure>
+              <figure class="project-card">
+                <img src="/images/square4.webp" alt="Proyecto de reparación de fugas" loading="lazy" />
+                <figcaption class="project-overlay"><strong>Reparación de fugas</strong><span>Ñuñoa</span></figcaption>
+              </figure>
+              <figure class="project-card">
+                <img src="/images/square1.webp" alt="Proyecto de grifería en cocina" loading="lazy" />
+                <figcaption class="project-overlay"><strong>Proyecto de grifería</strong><span>La Florida</span></figcaption>
+              </figure>
+              <figure class="project-card">
+                <img src="/images/square2.webp" alt="Proyecto de mantención preventiva" loading="lazy" />
+                <figcaption class="project-overlay"><strong>Mantención preventiva</strong><span>Santiago Centro</span></figcaption>
+              </figure>
+              <figure class="project-card project-card-wide">
+                <img src="/images/landscape3.webp" alt="Proyecto de gasfitería en cocina" loading="lazy" />
+                <figcaption class="project-overlay"><strong>Proyecto en cocina</strong><span>Las Condes</span></figcaption>
+              </figure>
+              <figure class="project-card">
+                <img src="/images/square3.webp" alt="Proyecto de gasfitería en baño" loading="lazy" />
+                <figcaption class="project-overlay"><strong>Proyecto en baño</strong><span>Providencia</span></figcaption>
+              </figure>
+            </div>
+            <div class="projects-marquee-group" aria-hidden="true">
+              <figure class="project-card">
+                <img src="/images/square4.webp" alt="Proyecto de destape en departamento" loading="lazy" />
+                <figcaption class="project-overlay"><strong>Destape de desagüe</strong><span>San Miguel</span></figcaption>
+              </figure>
+              <figure class="project-card">
+                <img src="/images/square1.webp" alt="Proyecto de reparación de fugas" loading="lazy" />
+                <figcaption class="project-overlay"><strong>Reparación de fugas</strong><span>Ñuñoa</span></figcaption>
+              </figure>
+              <figure class="project-card">
+                <img src="/images/square2.webp" alt="Proyecto de grifería en cocina" loading="lazy" />
+                <figcaption class="project-overlay"><strong>Proyecto de grifería</strong><span>La Florida</span></figcaption>
+              </figure>
+              <figure class="project-card">
+                <img src="/images/square3.webp" alt="Proyecto de mantención preventiva" loading="lazy" />
+                <figcaption class="project-overlay"><strong>Mantención preventiva</strong><span>Santiago Centro</span></figcaption>
+              </figure>
+              <figure class="project-card project-card-wide">
+                <img src="/images/landscape4.webp" alt="Proyecto de gasfitería en cocina" loading="lazy" />
+                <figcaption class="project-overlay"><strong>Proyecto en cocina</strong><span>Las Condes</span></figcaption>
+              </figure>
+              <figure class="project-card">
+                <img src="/images/square4.webp" alt="Proyecto de gasfitería en baño" loading="lazy" />
+                <figcaption class="project-overlay"><strong>Proyecto en baño</strong><span>Providencia</span></figcaption>
+              </figure>
+            </div>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="section cta-dark reveal">
-      <div class="container">
-        <h2>¿Tienes una urgencia ahora?</h2>
-        <p style="margin: 10px auto 18px; max-width: 56ch">Te atendemos hoy, en tu comuna, con respuesta rápida y técnica.</p>
-        <a class="btn btn-primary" href="tel:+569XXXXXXX" style="font-size: 1rem; padding: 16px 26px">Llamar ahora</a>
+    <section class="section trust-band reveal">
+      <div class="container trust-band-inner">
+        <div class="trust-band-copy">
+          <span class="trust-band-kicker">Cobertura y confianza</span>
+          <h2>Atención técnica en Santiago, con respuesta clara y cobertura real</h2>
+          <p>
+            Atendemos hogares, departamentos, oficinas y locales comerciales con servicio rápido según comuna,
+            diagnóstico transparente y respaldo en cada visita.
+          </p>
+          <div class="trust-band-areas">
+            <span class="trust-band-area">Providencia</span>
+            <span class="trust-band-area">Ñuñoa</span>
+            <span class="trust-band-area">Las Condes</span>
+            <span class="trust-band-area">Santiago Centro</span>
+            <span class="trust-band-area">La Florida</span>
+            <span class="trust-band-area">Maipú</span>
+          </div>
+        </div>
+        <div class="trust-band-points">
+          <article class="trust-point">
+            <strong>Atención 24/7</strong>
+            <span>Disponibilidad para urgencias reales y visitas programadas según comuna.</span>
+          </article>
+          <article class="trust-point">
+            <strong>Técnicos verificados</strong>
+            <span>Servicio profesional, ordenado y enfocado en soluciones duraderas.</span>
+          </article>
+          <article class="trust-point">
+            <strong>Presupuesto claro</strong>
+            <span>Se informa el trabajo y el costo antes de comenzar la intervención.</span>
+          </article>
+          <article class="trust-point">
+            <strong>Medios de pago</strong>
+            <span>Transferencia, Webpay, débito, crédito y comprobante cuando corresponde.</span>
+          </article>
+        </div>
       </div>
     </section>
 
@@ -1887,81 +2914,59 @@ const landingMarkup = String.raw`
 
     <section class="section clients-section reveal" id="testimonios">
       <div class="container">
-        <div class="clients-head">
-          <span class="clients-kicker">Testimonios</span>
-          <h2 class="clients-title">Comentarios de nuestros clientes</h2>
+        <div class="clients-head clients-head-centered">
+          <h2 class="clients-title">Lo que dicen nuestros clientes</h2>
         </div>
 
-        <div class="clients-grid" data-clients-track>
-          <article class="client-card">
-            <div class="client-quote">”</div>
-            <p class="client-text">
-              Llegaron rápido, explicaron todo con claridad y dejaron el trabajo impecable. Recomendados para
-              urgencias y reparaciones en casa.
-            </p>
-            <div class="client-person">
-              <img src="/images/gasfiter-testimonial.webp" alt="Roland Berry" loading="lazy" />
-              <div>
-                <strong>Roland Berry</strong>
-                <span>Providencia, RM</span>
-              </div>
-            </div>
-          </article>
+        <div class="clients-carousel-shell">
+          <div class="clients-viewport" data-clients-viewport>
+            <div class="clients-stage" data-clients-stage>
+              <article class="client-slide is-prev">
+                <div class="client-slide-head">
+                  <img src="/images/gasfiter-testimonial-2.webp" alt="George Caldwell" loading="lazy" />
+                  <div>
+                    <strong>George Caldwell</strong>
+                    <span>Las Condes, RM · Reparación de fugas</span>
+                  </div>
+                </div>
+                <div class="client-slide-rating" aria-hidden="true">★★★★★</div>
+                <p class="client-slide-text">Excelente atención, muy puntuales y transparentes con los costos. Solucionaron la fuga el mismo día y todo quedó funcionando perfecto.</p>
+              </article>
 
-          <article class="client-card">
-            <div class="client-quote">”</div>
-            <p class="client-text">
-              Excelente atención, muy puntuales y transparentes con los costos. Solucionaron la fuga en el mismo día y
-              todo quedó funcionando perfecto.
-            </p>
-            <div class="client-person">
-              <img src="/images/gasfiter-testimonial-2.webp" alt="George Caldwell" loading="lazy" />
-              <div>
-                <strong>George Caldwell</strong>
-                <span>Las Condes, RM</span>
-              </div>
-            </div>
-          </article>
+              <article class="client-slide is-active">
+                <div class="client-slide-head">
+                  <img src="/images/gasfiter-testimonial.webp" alt="Roland Berry" loading="lazy" />
+                  <div>
+                    <strong>Roland Berry</strong>
+                    <span>Providencia, RM · Destape urgente</span>
+                  </div>
+                </div>
+                <div class="client-slide-rating" aria-hidden="true">★★★★★</div>
+                <p class="client-slide-text">Llegaron rápido, explicaron todo con claridad y dejaron el trabajo impecable. Recomendados para urgencias y reparaciones en casa.</p>
+              </article>
 
-          <article class="client-card">
-            <div class="client-quote">”</div>
-            <p class="client-text">
-              Muy profesionales y ordenados. Nos ayudaron con una emergencia en el baño y dejaron todo limpio. Excelente
-              servicio y respuesta rápida.
-            </p>
-            <div class="client-person">
-              <img src="/images/gasfiter-testimonial-3.webp" alt="Camila Rojas" loading="lazy" />
-              <div>
-                <strong>Camila Rojas</strong>
-                <span>Ñuñoa, RM</span>
-              </div>
+              <article class="client-slide is-next">
+                <div class="client-slide-head">
+                  <img src="/images/gasfiter-testimonial-3.webp" alt="Camila Rojas" loading="lazy" />
+                  <div>
+                    <strong>Camila Rojas</strong>
+                    <span>Ñuñoa, RM · Mantención preventiva</span>
+                  </div>
+                </div>
+                <div class="client-slide-rating" aria-hidden="true">★★★★★</div>
+                <p class="client-slide-text">Muy profesionales y ordenados. Nos ayudaron con una emergencia en el baño y dejaron todo limpio. Excelente servicio y respuesta rápida.</p>
+              </article>
             </div>
-          </article>
+          </div>
         </div>
 
-        <div class="clients-dots" data-clients-dots aria-hidden="true">
-          <span class="clients-dot active"></span>
-          <span class="clients-dot"></span>
-          <span class="clients-dot"></span>
-        </div>
-
-        <div class="clients-stats">
-          <div class="clients-stat">
-            <span class="clients-stat-number">98</span>
-            <span class="clients-stat-label">Proyectos</span>
-          </div>
-          <div class="clients-stat">
-            <span class="clients-stat-number">65</span>
-            <span class="clients-stat-label">Personas</span>
-          </div>
-          <div class="clients-stat">
-            <span class="clients-stat-number">10</span>
-            <span class="clients-stat-label">Años</span>
-          </div>
-          <div class="clients-stat">
-            <span class="clients-stat-number">15</span>
-            <span class="clients-stat-label">Comunas</span>
-          </div>
+        <div class="clients-controls">
+          <button class="clients-control" type="button" aria-label="Testimonio anterior" data-clients-prev>
+            <i class="fa-solid fa-arrow-left"></i>
+          </button>
+          <button class="clients-control" type="button" aria-label="Siguiente testimonio" data-clients-next>
+            <i class="fa-solid fa-arrow-right"></i>
+          </button>
         </div>
       </div>
     </section>
@@ -2006,47 +3011,76 @@ const landingMarkup = String.raw`
     </section>
 
     <footer class="section footer">
-      <div class="container footer-grid">
+      <div class="container footer-top">
         <div>
-          <a class="brand footer-brand" href="#inicio" data-default-brand="Gasfiter 24/7" data-logo-height="34">
-            Gasfiter 24/7
-          </a>
-          <h3>Gasfiter Urgencias Santiago</h3>
-          <p style="margin-top: 8px">Respuesta técnica 24/7 para fugas, destapes e instalaciones.</p>
-          <p style="margin-top: 14px"><a class="phone-big" href="tel:+569XXXXXXX">+56 9 XXXX XXXX</a></p>
+          <span class="footer-brand-mark">Logo</span>
+          <span class="footer-kicker">Placeholder de marca</span>
+          <h3 style="margin-top: 14px">Gasfiter Urgencias Santiago</h3>
+          <p class="footer-copy">Respuesta técnica 24/7 para fugas, destapes, calefont e instalaciones con atención en terreno.</p>
+          <p style="margin-top: 16px"><a class="phone-big" href="tel:+569XXXXXXX">+56 9 XXXX XXXX</a></p>
           <p style="margin-top: 10px">
             <a href="https://wa.me/569XXXXXXX" target="_blank" rel="noopener noreferrer">
               <i class="fa-brands fa-whatsapp"></i> WhatsApp directo
             </a>
           </p>
         </div>
-        <div>
-          <h3>Cobertura</h3>
-          <div class="comunas" style="margin-top: 10px">
-            <span>Las Condes</span><span>Providencia</span><span>Ñuñoa</span><span>Santiago Centro</span
-            ><span>La Florida</span><span>Maipú</span><span>San Miguel</span><span>Estación Central</span>
+
+        <div class="footer-grid">
+          <div>
+            <h3>Contacto</h3>
+            <div class="footer-list">
+              <span>Dirección placeholder 123</span>
+              <span>Santiago, Región Metropolitana</span>
+              <a href="mailto:contacto@gasfiter.cl">contacto@gasfiter.cl</a>
+            </div>
+            <a class="footer-map-link" href="#mapa" data-open-map-modal>Ver mapa / ubicación</a>
+          </div>
+
+          <div>
+            <h3>Cobertura</h3>
+            <div class="footer-list">
+              <span>Providencia, Ñuñoa, Las Condes, Santiago Centro, La Florida y más.</span>
+            </div>
+          </div>
+
+          <div>
+            <h3>Horario y pagos</h3>
+            <div class="footer-list">
+              <span>Atención 24/7</span>
+              <span>Servicio sujeto a disponibilidad por comuna y emergencia.</span>
+            </div>
           </div>
         </div>
-        <div>
-          <h3>Horario</h3>
-          <p style="margin-top: 10px">Atención 24/7</p>
-          <p style="margin-top: 8px; font-size: 14px; color: #a9bbd8">
-            Servicio sujeto a disponibilidad por comuna y emergencia.
-          </p>
-        </div>
       </div>
-      <div class="container" style="margin-top: 18px; font-size: 12px; color: #94a3b8">
-        © 2026 Gasfiter Urgencias Santiago. Todos los derechos reservados.
-      </div>
-      <div class="container">
+      <div class="container footer-meta">
         <div class="payments footer-payments" aria-label="Métodos de pago">
           <span class="pay-badge">Webpay</span>
           <span class="pay-badge">Transferencia</span>
           <span class="pay-badge">Débito / Crédito</span>
           <span class="pay-badge">Efectivo</span>
         </div>
+        <div class="footer-legal">Desarrollado por FOCUSWEB CHILE</div>
       </div>
     </footer>
+
+    <div class="map-modal" data-map-modal aria-hidden="true">
+      <div class="map-modal-card" role="dialog" aria-modal="true" aria-labelledby="map-modal-title">
+        <div class="map-modal-head">
+          <div>
+            <strong id="map-modal-title">Ubicación referencial</strong>
+            <span>Santiago, Región Metropolitana · Placeholder editable desde contenido final</span>
+          </div>
+          <button class="map-modal-close" type="button" aria-label="Cerrar mapa" data-close-map-modal>×</button>
+        </div>
+        <iframe
+          class="map-modal-frame"
+          src="https://www.google.com/maps?q=Santiago%20Chile&z=12&output=embed"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          title="Mapa de ubicación"
+        ></iframe>
+      </div>
+    </div>
 
     <div class="mobile-sticky" aria-label="acciones rápidas móviles">
       <a class="mobile-call" href="tel:+569XXXXXXX" data-quick-call>Llamar</a>
@@ -2057,7 +3091,10 @@ const landingMarkup = String.raw`
 
 const DEFAULT_LANDING_VALUES = {
   hero: {
-    eyebrow: "SERVICIO 24/7 · SANTIAGO",
+    title: "Servicios de gasfitería profesional",
+    subtitle:
+      "Atención técnica para fugas, destapes, calefont e instalaciones con respuesta rápida y diagnóstico claro en terreno.",
+    eyebrow: "SERVICIOS 24/7",
     image: "/images/heroseccion.webp",
     primaryUrl: "tel:+569XXXXXXX",
     primaryText: "LLAMAR AHORA +56 9 XXXX XXXX",
@@ -2109,6 +3146,18 @@ const DEFAULT_LANDING_VALUES = {
 export default function DynamicLanding() {
   useEffect(() => {
     const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+    const normalizeServiceTitle = (title: string, index: number) => {
+      const compact = title.replace(/\s+/g, " ").trim();
+      if (index === 0) return ["Instalacion y", "reparacion gas"];
+      if (index === 1) return ["Destapes y", "mantención"];
+      if (index === 2) return ["Fugas de agua y", "gas servicio"];
+
+      const words = compact.split(" ");
+      if (words.length <= 2) return [compact, ""];
+      const splitIndex = Math.ceil(words.length / 2);
+      return [words.slice(0, splitIndex).join(" "), words.slice(splitIndex).join(" ")];
+    };
 
     const getFallbackIcon = (classList: DOMTokenList) => {
       if (classList.contains("fa-arrow-left")) return "←";
@@ -2196,12 +3245,6 @@ export default function DynamicLanding() {
       }
     };
 
-    const shellEl = document.querySelector<HTMLElement>("[data-landing-shell]");
-    const heroTitleEl = document.querySelector<HTMLElement>("[data-hero-title]");
-    if (heroTitleEl) {
-      heroTitleEl.style.visibility = "hidden";
-    }
-
     const waitForFonts = async () => {
       const fontApi = (document as Document & { fonts?: FontFaceSet }).fonts;
       if (!fontApi) return;
@@ -2242,6 +3285,11 @@ export default function DynamicLanding() {
         }
         return;
       }
+      if (window.innerWidth >= 768) {
+        nav.classList.remove("nav--desktop-bar", "nav--desktop-hidden", "nav--desktop-integrated");
+        nav.classList.add("nav--visible");
+        return;
+      }
       nav.classList.remove("nav--desktop-bar", "nav--desktop-hidden", "nav--desktop-integrated");
       if (window.scrollY > 40) nav.classList.add("nav--visible");
       else nav.classList.remove("nav--visible");
@@ -2263,6 +3311,88 @@ export default function DynamicLanding() {
       { threshold: 0.14 },
     );
     reveals.forEach((item) => io.observe(item));
+
+    const metricNumbers = document.querySelectorAll<HTMLElement>("[data-count-target]");
+    const animateMetric = (el: HTMLElement) => {
+      if (el.dataset.countAnimated === "true") return;
+      const target = Number(el.dataset.countTarget || "0");
+      const suffix = el.dataset.countSuffix || "";
+      if (!Number.isFinite(target) || target <= 0) {
+        el.textContent = `${target}${suffix}`;
+        el.dataset.countAnimated = "true";
+        return;
+      }
+
+      const duration = 1100;
+      const start = performance.now();
+      const step = (now: number) => {
+        const progress = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const value = Math.round(target * eased);
+        el.textContent = `${value}${suffix}`;
+        if (progress < 1) {
+          window.requestAnimationFrame(step);
+          return;
+        }
+        el.textContent = `${target}${suffix}`;
+        el.dataset.countAnimated = "true";
+      };
+
+      el.textContent = `0${suffix}`;
+      window.requestAnimationFrame(step);
+    };
+
+    const metricsIo = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          animateMetric(entry.target as HTMLElement);
+          metricsIo.unobserve(entry.target);
+        });
+      },
+      { threshold: 0.45 },
+    );
+    metricNumbers.forEach((item) => metricsIo.observe(item));
+
+    const mapModal = document.querySelector<HTMLElement>("[data-map-modal]");
+    const openMapTriggers = document.querySelectorAll<HTMLElement>("[data-open-map-modal]");
+    const closeMapTriggers = document.querySelectorAll<HTMLElement>("[data-close-map-modal]");
+
+    const closeMapModal = () => {
+      if (!mapModal) return;
+      mapModal.classList.remove("is-open");
+      mapModal.setAttribute("aria-hidden", "true");
+      document.body.style.overflow = "";
+    };
+
+    const openMapModal = () => {
+      if (!mapModal) return;
+      mapModal.classList.add("is-open");
+      mapModal.setAttribute("aria-hidden", "false");
+      document.body.style.overflow = "hidden";
+    };
+
+    openMapTriggers.forEach((trigger) => {
+      trigger.addEventListener("click", (event) => {
+        event.preventDefault();
+        openMapModal();
+      });
+    });
+
+    closeMapTriggers.forEach((trigger) => {
+      trigger.addEventListener("click", () => {
+        closeMapModal();
+      });
+    });
+
+    mapModal?.addEventListener("click", (event) => {
+      if (event.target === mapModal) closeMapModal();
+    });
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") closeMapModal();
+    };
+    window.addEventListener("keydown", onKeyDown);
 
     const bindFaqButtons = () => {
       const faqBtns = document.querySelectorAll(".faq-btn");
@@ -2356,7 +3486,7 @@ export default function DynamicLanding() {
       setVisible(".band-dark", !isExplicitlyDisabled("audience"));
       setVisible("#servicios", !isExplicitlyDisabled("services"));
       setVisible("#trabajos", !isExplicitlyDisabled("projects"));
-      setVisible(".cta-dark", !isExplicitlyDisabled("urgency_banner"));
+      setVisible(".trust-band", !isExplicitlyDisabled("urgency_banner"));
       setVisible("#contacto", !isExplicitlyDisabled("contact_banner"));
       setVisible("#testimonios", !isExplicitlyDisabled("testimonials"));
       setVisible("#faq", !isExplicitlyDisabled("faq"));
@@ -2381,8 +3511,7 @@ export default function DynamicLanding() {
             logoHeight
           )}px; width:auto; object-fit:contain;" />`;
         } else {
-          const fallbackText = navBrandLink.getAttribute("data-default-brand") || "Gasfiter 24/7";
-          navBrandLink.textContent = fallbackText;
+          navBrandLink.textContent = "";
         }
       }
 
@@ -2479,25 +3608,9 @@ export default function DynamicLanding() {
       if (primaryBtn && heroPrimaryUrl) {
         primaryBtn.setAttribute("href", heroPrimaryUrl);
       }
-      if (primaryBtn && heroPrimaryText) {
-        const icon = primaryBtn.querySelector("i");
-        primaryBtn.textContent = " " + heroPrimaryText;
-        if (icon) {
-          primaryBtn.prepend(icon);
-          primaryBtn.insertBefore(document.createTextNode(" "), icon.nextSibling);
-        }
-      }
       const secondaryBtn = document.querySelector("[data-hero-cta-secondary]");
       if (secondaryBtn && heroSecondaryUrl) {
         secondaryBtn.setAttribute("href", heroSecondaryUrl);
-      }
-      if (secondaryBtn && heroSecondaryText) {
-        const icon = secondaryBtn.querySelector("i");
-        secondaryBtn.textContent = heroSecondaryText;
-        if (icon) {
-          secondaryBtn.prepend(icon);
-          secondaryBtn.insertBefore(document.createTextNode(" "), icon.nextSibling);
-        }
       }
 
       const quickCallLinks = document.querySelectorAll<HTMLAnchorElement>("[data-quick-call]");
@@ -2538,7 +3651,8 @@ export default function DynamicLanding() {
           const featuresEl = card.querySelector("[data-service-features]");
 
           if (titleEl && item.title) {
-            titleEl.textContent = item.title;
+            const [lineOne, lineTwo] = normalizeServiceTitle(item.title, idx);
+            titleEl.innerHTML = `<span class="service-title-line">${escapeHtml(lineOne)}</span>${lineTwo ? `<span class="service-title-line">${escapeHtml(lineTwo)}</span>` : ""}`;
           }
           if (descEl && item.description) {
             descEl.textContent = item.description;
@@ -2606,32 +3720,38 @@ export default function DynamicLanding() {
       if (sectionProjects?.data) {
         const projectsRoot = document.getElementById("trabajos");
         const projectsTitle = projectsRoot?.querySelector(".projects-head h2");
-        const projectsDescription = projectsRoot?.querySelector(".projects-desc");
-        const projectsTrack = projectsRoot?.querySelector("[data-projects-track]");
-        const projectsControls = projectsRoot?.querySelector(".projects-controls");
+        const projectsTrackTop = projectsRoot?.querySelector("[data-projects-track-top]");
+        const projectsTrackBottom = projectsRoot?.querySelector("[data-projects-track-bottom]");
         const projects = resolveProjectsFromSettings({
           settings,
           defaults: DEFAULT_LANDING_VALUES.projects,
         });
-        if (projectsTitle) projectsTitle.textContent = projects.title;
-        if (projectsDescription) projectsDescription.textContent = projects.description;
-        if (projectsControls) {
-          projectsControls.setAttribute("style", projects.controlsEnabled ? "" : "display:none");
-        }
-        if (projectsTrack && projects.items.length) {
-          projectsTrack.innerHTML = projects.items
+        if (projectsTitle) projectsTitle.textContent = "Proyectos";
+        const renderProjectsGroup = (items: typeof projects.items) => {
+          const source = items.length ? items : projects.items;
+          return source
             .map((item) => {
               const wideClass = item.size === "wide" ? " project-card-wide" : "";
               return `
                 <figure class="project-card${wideClass}">
                   <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.alt || item.title)}" loading="lazy" />
-                  <figcaption class="project-overlay"><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(
-                    item.location,
-                  )}</span></figcaption>
+                  <figcaption class="project-overlay"><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.location)}</span></figcaption>
                 </figure>
               `;
             })
             .join("");
+        };
+        if (projects.items.length) {
+          const topItems = projects.items;
+          const bottomItems = [...projects.items].reverse();
+          const topMarkup = renderProjectsGroup(topItems);
+          const bottomMarkup = renderProjectsGroup(bottomItems);
+          if (projectsTrackTop) {
+            projectsTrackTop.innerHTML = `<div class="projects-marquee-group">${topMarkup}</div><div class="projects-marquee-group" aria-hidden="true">${topMarkup}</div>`;
+          }
+          if (projectsTrackBottom) {
+            projectsTrackBottom.innerHTML = `<div class="projects-marquee-group">${bottomMarkup}</div><div class="projects-marquee-group" aria-hidden="true">${bottomMarkup}</div>`;
+          }
         }
       }
 
@@ -2659,24 +3779,6 @@ export default function DynamicLanding() {
         }
       } else if (faqSectionEl && faq.hasDynamicSource) {
         faqSectionEl.style.display = "none";
-      }
-
-      if (sectionUrgency?.data) {
-        const urgencyRoot = document.querySelector(".cta-dark");
-        const urgencyTitle = urgencyRoot?.querySelector("h2");
-        const urgencyDesc = urgencyRoot?.querySelector("p");
-        const urgencyCta = urgencyRoot?.querySelector("a");
-        const urgency = resolveUrgencyFromSettings({
-          settings,
-          defaults: DEFAULT_LANDING_VALUES.urgency,
-          heroPrimaryUrl,
-        });
-        if (urgencyTitle) urgencyTitle.textContent = urgency.title;
-        if (urgencyDesc) urgencyDesc.textContent = urgency.description;
-        if (urgencyCta) {
-          urgencyCta.textContent = urgency.ctaPrimary.text;
-          urgencyCta.setAttribute("href", urgency.ctaPrimary.url);
-        }
       }
 
       if (sectionContact?.data) {
@@ -2707,37 +3809,30 @@ export default function DynamicLanding() {
       const testimonialsSectionEl = document.getElementById("testimonios");
       if (testimonials.items.length) {
         const testimonialsTitle = document.querySelector(".clients-title");
-        const testimonialsKicker = document.querySelector(".clients-kicker");
         if (testimonialsTitle) testimonialsTitle.textContent = testimonials.title;
-        if (testimonialsKicker) testimonialsKicker.textContent = testimonials.kicker;
 
-        const clientsTrack = document.querySelector("[data-clients-track]");
-        if (clientsTrack) {
-          clientsTrack.innerHTML = testimonials.items
+        const clientsStage = document.querySelector("[data-clients-stage]");
+        if (clientsStage) {
+          clientsStage.innerHTML = testimonials.items
             .map((item) => {
               return `
-                <article class="client-card">
-                  <div class="client-quote">”</div>
-                  <p class="client-text">${escapeHtml(item.quote)}</p>
-                  <div class="client-person">
+                <article class="client-slide">
+                  <div class="client-slide-head">
                     <img src="${escapeHtml(item.avatar)}" alt="${escapeHtml(item.name)}" loading="lazy" />
                     <div>
                       <strong>${escapeHtml(item.name)}</strong>
                       <span>${escapeHtml(item.location)}</span>
                     </div>
                   </div>
+                  <div class="client-slide-rating" aria-hidden="true">★★★★★</div>
+                  <p class="client-slide-text">${escapeHtml(item.quote)}</p>
                 </article>
               `;
             })
             .join("");
         }
 
-        const dots = document.querySelector("[data-clients-dots]");
-        if (dots) {
-          dots.innerHTML = testimonials.items
-            .map((_, idx) => `<span class="clients-dot${idx === 0 ? " active" : ""}"></span>`)
-            .join("");
-        }
+        window.requestAnimationFrame(setupClientsCarousel);
       } else if (testimonialsSectionEl && testimonials.hasSectionSource) {
         testimonialsSectionEl.style.display = "none";
       }
@@ -2773,11 +3868,9 @@ export default function DynamicLanding() {
             const parsedFamily = parseGoogleFamilyFromUrl(value);
             if (parsedFamily) {
               root.style.setProperty("--font-body", `"${parsedFamily}", Inter, sans-serif`);
-              root.style.setProperty("--font-hero", `"${parsedFamily}", var(--font-display), sans-serif`);
             }
           } else {
             root.style.setProperty("--font-body", `${value}, Inter, sans-serif`);
-            root.style.setProperty("--font-hero", `${value}, var(--font-display), sans-serif`);
           }
         }
       }
@@ -2795,185 +3888,179 @@ export default function DynamicLanding() {
     };
 
     const initDynamicContent = async () => {
-      try {
-        await ensureIconsReady();
-        await hydrateFromBackend();
-        await waitForFonts();
-      } finally {
-        if (shellEl) {
-          shellEl.classList.add("is-ready");
-        }
-        if (heroTitleEl) {
-          heroTitleEl.style.visibility = "visible";
-        }
-      }
+      void ensureIconsReady();
+      void waitForFonts();
+      await hydrateFromBackend();
     };
     void initDynamicContent();
 
-    const projectsTrack = document.querySelector<HTMLElement>("[data-projects-track]");
-    const prevBtn = document.querySelector<HTMLElement>("[data-projects-prev]");
-    const nextBtn = document.querySelector<HTMLElement>("[data-projects-next]");
+    const clientsState = {
+      active: 1,
+      pointerId: null as number | null,
+      startX: 0,
+      startY: 0,
+      deltaX: 0,
+      deltaY: 0,
+      pressed: false,
+      dragging: false,
+      dragActivated: false,
+      moved: false,
+      bound: false,
+    };
 
-    if (projectsTrack) {
-      const cards = Array.from(projectsTrack.querySelectorAll(".project-card"));
-      const getStep = () => {
-        const firstCard = cards[0] as HTMLElement | undefined;
-        if (!firstCard) return Math.max(280, Math.round(projectsTrack.clientWidth * 0.35));
-        const gap = 24;
-        return firstCard.getBoundingClientRect().width + gap;
-      };
+    const updateClientsCarousel = () => {
+      const stage = document.querySelector<HTMLElement>("[data-clients-stage]");
+      const viewport = document.querySelector<HTMLElement>("[data-clients-viewport]");
+      if (!stage || !viewport) return;
+      const slides = Array.from(stage.querySelectorAll<HTMLElement>(".client-slide"));
+      if (!slides.length) return;
+      const total = slides.length;
+      clientsState.active = ((clientsState.active % total) + total) % total;
+      slides.forEach((slide, index) => {
+        slide.dataset.clientIndex = String(index);
+        let offset = index - clientsState.active;
+        if (offset > total / 2) offset -= total;
+        if (offset < -total / 2) offset += total;
+        slide.classList.remove("is-active", "is-prev", "is-next", "is-hidden-left", "is-hidden-right");
+        if (offset === 0) slide.classList.add("is-active");
+        else if (offset === -1) slide.classList.add("is-prev");
+        else if (offset === 1) slide.classList.add("is-next");
+        else if (offset < 0) slide.classList.add("is-hidden-left");
+        else slide.classList.add("is-hidden-right");
+      });
+      viewport.style.setProperty("--clients-drag-offset", "0px");
+    };
 
-      prevBtn?.addEventListener("click", () => {
-        projectsTrack.scrollBy({ left: -getStep(), behavior: "smooth" });
+    const shiftClientsCarousel = (delta: number) => {
+      const stage = document.querySelector<HTMLElement>("[data-clients-stage]");
+      if (!stage) return;
+      const slides = stage.querySelectorAll(".client-slide");
+      if (!slides.length) return;
+      clientsState.active += delta;
+      updateClientsCarousel();
+    };
+
+    const setupClientsCarousel = () => {
+      const viewport = document.querySelector<HTMLElement>("[data-clients-viewport]");
+      const stage = document.querySelector<HTMLElement>("[data-clients-stage]");
+      const prev = document.querySelector<HTMLButtonElement>("[data-clients-prev]");
+      const next = document.querySelector<HTMLButtonElement>("[data-clients-next]");
+      if (!viewport || !stage) return;
+      const slides = stage.querySelectorAll(".client-slide");
+      if (!slides.length) return;
+      if (clientsState.active >= slides.length) {
+        clientsState.active = Math.max(0, Math.min(1, slides.length - 1));
+      }
+      updateClientsCarousel();
+      if (clientsState.bound) return;
+      clientsState.bound = true;
+
+      prev?.addEventListener("click", () => shiftClientsCarousel(-1));
+      next?.addEventListener("click", () => shiftClientsCarousel(1));
+
+      stage.addEventListener("click", (event) => {
+        if (clientsState.moved) return;
+        const target = event.target as HTMLElement | null;
+        const slide = target?.closest<HTMLElement>(".client-slide");
+        if (!slide) return;
+        const nextIndex = Number(slide.dataset.clientIndex);
+        if (Number.isNaN(nextIndex) || nextIndex === clientsState.active) return;
+        clientsState.active = nextIndex;
+        updateClientsCarousel();
       });
 
-      nextBtn?.addEventListener("click", () => {
-        projectsTrack.scrollBy({ left: getStep(), behavior: "smooth" });
-      });
-
-      let isDown = false;
-      let startX = 0;
-      let startScrollLeft = 0;
-      let hasMoved = false;
-
-      const onPointerDown = (event: PointerEvent) => {
-        if (event.pointerType !== "mouse") return;
+      viewport.addEventListener("pointerdown", (event) => {
         if (event.button !== 0) return;
-        isDown = true;
-        hasMoved = false;
-        startX = event.clientX;
-        startScrollLeft = projectsTrack.scrollLeft;
-        projectsTrack.classList.add("is-dragging");
-      };
+        clientsState.pointerId = event.pointerId;
+        clientsState.startX = event.clientX;
+        clientsState.startY = event.clientY;
+        clientsState.deltaX = 0;
+        clientsState.deltaY = 0;
+        clientsState.pressed = true;
+        clientsState.dragging = false;
+        clientsState.dragActivated = false;
+        clientsState.moved = false;
+      });
 
-      const onPointerMove = (event: PointerEvent) => {
-        if (!isDown) return;
-        const deltaX = event.clientX - startX;
-        if (Math.abs(deltaX) > 3) {
-          hasMoved = true;
+      viewport.addEventListener("pointermove", (event) => {
+        if (!clientsState.pressed) return;
+        clientsState.deltaX = event.clientX - clientsState.startX;
+        clientsState.deltaY = event.clientY - clientsState.startY;
+
+        if (!clientsState.dragActivated) {
+          const absX = Math.abs(clientsState.deltaX);
+          const absY = Math.abs(clientsState.deltaY);
+          if (absX < 18) return;
+          if (absY > absX * 0.75) {
+            clientsState.pressed = false;
+            clientsState.deltaX = 0;
+            clientsState.deltaY = 0;
+            return;
+          }
+          clientsState.dragging = true;
+          clientsState.dragActivated = true;
+          viewport.classList.add("is-dragging");
+          viewport.setPointerCapture(event.pointerId);
+        }
+
+        if (!clientsState.dragging) return;
+        if (Math.abs(clientsState.deltaX) > 12) {
+          clientsState.moved = true;
           event.preventDefault();
         }
-        projectsTrack.scrollLeft = startScrollLeft - deltaX;
-      };
-
-      const stopDragging = () => {
-        isDown = false;
-        projectsTrack.classList.remove("is-dragging");
-      };
-
-      projectsTrack.addEventListener("pointerdown", onPointerDown);
-      projectsTrack.addEventListener("pointermove", onPointerMove);
-      projectsTrack.addEventListener("pointerup", stopDragging);
-      projectsTrack.addEventListener("pointercancel", stopDragging);
-      projectsTrack.addEventListener("mouseleave", stopDragging);
-      projectsTrack.addEventListener("dragstart", (event) => event.preventDefault());
-      projectsTrack.addEventListener("click", (event) => {
-        if (hasMoved) event.preventDefault();
-      });
-      projectsTrack.addEventListener(
-        "wheel",
-        (event) => {
-          if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
-          projectsTrack.scrollLeft += event.deltaY;
-          event.preventDefault();
-        },
-        { passive: false },
-      );
-    }
-
-    const clientsTrack = document.querySelector<HTMLElement>("[data-clients-track]");
-    const clientsDotsWrap = document.querySelector<HTMLElement>("[data-clients-dots]");
-
-    if (clientsTrack) {
-      const clientCards = Array.from(clientsTrack.querySelectorAll(".client-card"));
-      const dots = clientsDotsWrap ? Array.from(clientsDotsWrap.querySelectorAll(".clients-dot")) : [];
-      let isDown = false;
-      let startX = 0;
-      let startScrollLeft = 0;
-      let hasMoved = false;
-      const canScroll = () => clientsTrack.scrollWidth > clientsTrack.clientWidth + 2;
-      const getStep = () => {
-        const first = clientCards[0] as HTMLElement | undefined;
-        if (!first) return Math.max(280, Math.round(clientsTrack.clientWidth * 0.55));
-        const styles = getComputedStyle(clientsTrack);
-        const gap = parseFloat(styles.columnGap || styles.gap || "0") || 0;
-        return first.getBoundingClientRect().width + gap;
-      };
-
-      const updateActiveDot = () => {
-        if (!dots.length) return;
-        const step = Math.max(1, getStep());
-        const index = Math.max(0, Math.min(dots.length - 1, Math.round(clientsTrack.scrollLeft / step)));
-        dots.forEach((dot, i) => dot.classList.toggle("active", i === index));
-      };
-
-      clientsTrack.addEventListener("scroll", updateActiveDot, { passive: true });
-
-      clientsTrack.addEventListener("pointerdown", (event) => {
-        if (event.pointerType !== "mouse") return;
-        if (event.button !== 0 || !canScroll()) return;
-        event.preventDefault();
-        isDown = true;
-        hasMoved = false;
-        startX = event.clientX;
-        startScrollLeft = clientsTrack.scrollLeft;
-        clientsTrack.classList.add("is-dragging");
-        clientsTrack.setPointerCapture(event.pointerId);
+        viewport.style.setProperty("--clients-drag-offset", `${clientsState.deltaX * 0.24}px`);
       });
 
-      clientsTrack.addEventListener("pointermove", (event) => {
-        if (!isDown) return;
-        const deltaX = event.clientX - startX;
-        if (Math.abs(deltaX) > 1) {
-          hasMoved = true;
-          event.preventDefault();
+      const stopClientsDrag = () => {
+        if (!clientsState.pressed && !clientsState.dragging) return;
+        const delta = clientsState.deltaX;
+        viewport.classList.remove("is-dragging");
+        viewport.style.setProperty("--clients-drag-offset", "0px");
+        clientsState.pressed = false;
+        clientsState.dragging = false;
+        clientsState.dragActivated = false;
+        clientsState.deltaX = 0;
+        clientsState.deltaY = 0;
+        if (Math.abs(delta) > 110) {
+          shiftClientsCarousel(delta > 0 ? -1 : 1);
+        } else {
+          updateClientsCarousel();
         }
-        clientsTrack.scrollLeft = startScrollLeft - deltaX * 1.15;
-      });
-
-      const stopDrag = (event?: PointerEvent) => {
-        if (!isDown) return;
-        if (event?.pointerId !== undefined && clientsTrack.hasPointerCapture(event.pointerId)) {
-          clientsTrack.releasePointerCapture(event.pointerId);
-        }
-        isDown = false;
-        clientsTrack.classList.remove("is-dragging");
       };
 
-      clientsTrack.addEventListener("pointerup", stopDrag);
-      clientsTrack.addEventListener("pointercancel", stopDrag);
-      window.addEventListener("blur", () => {
-        if (!isDown) return;
-        isDown = false;
-        clientsTrack.classList.remove("is-dragging");
+      viewport.addEventListener("pointerup", (event) => {
+        if (clientsState.pointerId !== null && viewport.hasPointerCapture(event.pointerId)) {
+          viewport.releasePointerCapture(event.pointerId);
+        }
+        stopClientsDrag();
       });
-      clientsTrack.addEventListener("dragstart", (event) => event.preventDefault());
-      clientsTrack.addEventListener("click", (event) => {
-        if (hasMoved) event.preventDefault();
-      });
-      clientsTrack.addEventListener(
-        "wheel",
-        (event) => {
-          if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
-          clientsTrack.scrollLeft += event.deltaY;
+      viewport.addEventListener("pointercancel", stopClientsDrag);
+      viewport.addEventListener("dragstart", (event) => event.preventDefault());
+      viewport.addEventListener("click", (event) => {
+        if (clientsState.moved) {
           event.preventDefault();
-        },
-        { passive: false },
-      );
+          clientsState.moved = false;
+        }
+      });
+    };
 
-      updateActiveDot();
-    }
+    setupClientsCarousel();
 
     return () => {
       window.removeEventListener("pageshow", onPageShow);
       window.removeEventListener("scroll", toggleNav);
       window.removeEventListener("resize", toggleNav);
+      window.removeEventListener("keydown", onKeyDown);
       io.disconnect();
+      metricsIo.disconnect();
     };
   }, []);
 
   return (
-    <div className="landing-shell" data-landing-shell>
+    <div
+      className={`landing-shell ${landingBodyFont.variable} ${landingDisplayFont.variable}`}
+      data-landing-shell
+    >
       <style dangerouslySetInnerHTML={{ __html: landingStyles }} />
       <div dangerouslySetInnerHTML={{ __html: landingMarkup }} />
     </div>

@@ -4953,7 +4953,7 @@ export default function StagingWorkflowPanel() {
             </div>
           ) : (
             <p className="wf-muted" style={{ marginTop: 8 }}>
-              Usa "Ver diferencias" para comparar borrador y publicado.
+              Usa &quot;Ver diferencias&quot; para comparar borrador y publicado.
             </p>
           )}
         </div>
