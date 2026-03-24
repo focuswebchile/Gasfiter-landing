@@ -155,37 +155,37 @@ export function validatePublishRequirements(
     if (isNonEmptyString(ctaPrimaryUrl) && !isValidCtaUrl(ctaPrimaryUrl)) {
       issues.push({
         code: "AUDIENCE_CTA_URL_INVALID",
-        label: "CTA Empresa válida",
+        label: "CTA Quiénes somos válida",
         path: "content.sections.audience.data.cta_primary.url",
-        message: "CTA principal de Empresa con URL inválida.",
+        message: "CTA principal de Quiénes somos con URL inválida.",
       });
     }
     if (isNonEmptyString(ctaSecondaryUrl) && !isValidCtaUrl(ctaSecondaryUrl)) {
       issues.push({
         code: "AUDIENCE_CTA_URL_INVALID",
-        label: "CTA Empresa válida",
+        label: "CTA Quiénes somos válida",
         path: "content.sections.audience.data.cta_secondary.url",
-        message: "CTA secundario de Empresa con URL inválida.",
+        message: "CTA secundario de Quiénes somos con URL inválida.",
       });
     }
   }
 
   const services = findSection("services");
-  if (!services) {
-    issues.push({
-      code: "SERVICES_SECTION_MISSING",
-      label: "Al menos un servicio",
-      path: "content.sections.services",
-      message: "Activa la sección Services para publicar.",
-    });
-  } else {
+    if (!services) {
+      issues.push({
+        code: "SERVICES_SECTION_MISSING",
+        label: "Al menos un servicio",
+        path: "content.sections.services",
+        message: "Activa la sección Servicios para publicar.",
+      });
+    } else {
     const servicesData = asRecord(services.data);
     if (!isNonEmptyString(servicesData.title)) {
       issues.push({
         code: "SERVICES_TITLE_MISSING",
         label: "Servicios con título",
         path: "content.sections.services.data.title",
-        message: "Completa el título de la sección Services para publicar.",
+        message: "Completa el título de la sección Servicios para publicar.",
       });
     }
     const count = enabledItemsCount(servicesData);
@@ -200,7 +200,7 @@ export function validatePublishRequirements(
 
     const items = Array.isArray(servicesData.items) ? (servicesData.items as Array<Record<string, unknown>>) : [];
     const enabledItems = items.filter((item) => item && item.enabled !== false);
-    const allowedServiceTargets = new Set(["consultoria", "auditorias", "certificacion", "capacitacion"]);
+    const allowedServiceTargets = new Set(["home", "servicios", "empresa", "clientes", "contacto"]);
 
     for (const [index, item] of enabledItems.entries()) {
       const title = item.title;
@@ -239,7 +239,7 @@ export function validatePublishRequirements(
           code: "SERVICES_TARGET_INVALID",
           label: "Target interno de Servicios válido",
           path: `content.sections.services.data.items[${index}].targetSection`,
-          message: "Target interno inválido en Services. Usa consultoria, auditorias, certificacion o capacitacion.",
+          message: "Target interno inválido en Servicios. Usa home, servicios, empresa, clientes o contacto.",
         });
       }
     }
@@ -252,7 +252,7 @@ export function validatePublishRequirements(
         code: "TESTIMONIALS_SECTION_MISSING",
         label: "Un testimonio",
         path: "content.sections.testimonials",
-        message: "Activa la sección Testimonials para publicar.",
+        message: "Activa la sección Testimonios para publicar.",
       });
     } else {
       const count = enabledItemsCount(asRecord(testimonials.data));
@@ -304,9 +304,9 @@ export function validatePublishRequirements(
     if (isNonEmptyString(ctaPrimaryUrl) && !isValidCtaUrl(ctaPrimaryUrl)) {
       issues.push({
         code: "URGENCY_CTA_URL_INVALID",
-        label: "CTA Banner urgente válida",
+        label: "CTA Cobertura y confianza válida",
         path: "content.sections.urgency_banner.data.cta_primary.url",
-        message: "CTA principal de Banner urgente con URL inválida.",
+        message: "CTA principal de Cobertura y confianza con URL inválida.",
       });
     }
   }

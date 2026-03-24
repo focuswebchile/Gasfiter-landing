@@ -12,6 +12,18 @@ import { validatePublishRequirements } from "@/lib/publish-requirements";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+type PublishedVersionRow = {
+  id: string;
+  version_number: number | null;
+  snapshot: Record<string, unknown> | null;
+};
+
+function isMissingRpcError(error: { code?: string; message?: string } | null) {
+  if (!error) return false;
+  const message = `${error.message ?? ""}`.toLowerCase();
+  return error.code === "42883" || message.includes("publish_site_version");
+}
+
 type PublishBody = {
   userId?: string;
   notes?: string;
@@ -101,35 +113,66 @@ export async function POST(request: Request, context: { params: Promise<{ slug: 
       );
     }
 
-    const { error: archiveError } = await supabase
-      .from("site_versions")
-      .update({ status: "archived", published_at: null })
-      .eq("site_id", site.id)
-      .eq("status", "published");
+    let published: PublishedVersionRow | null = null;
+    const publishNote = body.notes ?? `Published from draft v${sourceDraft.version_number}`;
 
-    if (archiveError) {
+    const rpcResponse = await supabase.rpc("publish_site_version", {
+      p_site_id: site.id,
+      p_snapshot: sourceDraft.snapshot,
+      p_user_id: userId,
+      p_notes: publishNote,
+    });
+
+    if (rpcResponse.error && !isMissingRpcError(rpcResponse.error)) {
       return NextResponse.json(
-        { error: "Unable to archive current published version", details: archiveError.message },
+        { error: "Unable to publish draft", details: rpcResponse.error.message },
         { status: 500 },
       );
     }
 
-    const { data: published, error: publishError } = await supabase
-      .from("site_versions")
-      .insert({
-        site_id: site.id,
-        version_number: null,
-        status: "published",
-        snapshot: sourceDraft.snapshot,
-        created_by: userId,
-        published_at: new Date().toISOString(),
-        notes: body.notes ?? `Published from draft v${sourceDraft.version_number}`,
-      })
-      .select("id, version_number, snapshot")
-      .single();
+    if (!rpcResponse.error) {
+      const rpcRow = Array.isArray(rpcResponse.data) ? rpcResponse.data[0] : rpcResponse.data;
+      published = (rpcRow as PublishedVersionRow | null) ?? null;
+    } else {
+      const { error: archiveError } = await supabase
+        .from("site_versions")
+        .update({ status: "archived", published_at: null })
+        .eq("site_id", site.id)
+        .eq("status", "published");
 
-    if (publishError) {
-      return NextResponse.json({ error: "Unable to publish draft", details: publishError.message }, { status: 500 });
+      if (archiveError) {
+        return NextResponse.json(
+          { error: "Unable to archive current published version", details: archiveError.message },
+          { status: 500 },
+        );
+      }
+
+      const fallbackInsert = await supabase
+        .from("site_versions")
+        .insert({
+          site_id: site.id,
+          version_number: null,
+          status: "published",
+          snapshot: sourceDraft.snapshot,
+          created_by: userId,
+          published_at: new Date().toISOString(),
+          notes: publishNote,
+        })
+        .select("id, version_number, snapshot")
+        .single();
+
+      if (fallbackInsert.error) {
+        return NextResponse.json(
+          { error: "Unable to publish draft", details: fallbackInsert.error.message },
+          { status: 500 },
+        );
+      }
+
+      published = fallbackInsert.data as PublishedVersionRow;
+    }
+
+    if (!published) {
+      return NextResponse.json({ error: "Unable to publish draft", details: "Missing published version payload" }, { status: 500 });
     }
 
     const settings = extractSettingsFromSnapshot(published.snapshot as Record<string, unknown> | null);

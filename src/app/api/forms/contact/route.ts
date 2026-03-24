@@ -10,6 +10,13 @@ type ContactFormBody = {
   email?: string;
   phone?: string;
   message?: string;
+  fullName?: string;
+  nombre?: string;
+  apellido?: string;
+  telefono?: string;
+  comuna?: string;
+  problem?: string;
+  problema?: string;
   siteSlug?: string;
 };
 
@@ -23,16 +30,25 @@ export async function POST(request: Request) {
   try {
     const body = ((await request.json().catch(() => ({}))) ?? {}) as ContactFormBody;
 
-    const firstName = asCleanString(body.firstName, 120);
-    const lastName = asCleanString(body.lastName, 120);
+    const firstNameRaw =
+      asCleanString(body.firstName, 120) ||
+      asCleanString(body.nombre, 120) ||
+      asCleanString(body.fullName, 160);
+    const lastNameRaw = asCleanString(body.lastName, 120) || asCleanString(body.apellido, 120);
+    const firstName = firstNameRaw;
+    const lastName = lastNameRaw;
     const email = asCleanString(body.email, 180).toLowerCase();
-    const phone = asCleanString(body.phone, 80);
-    const message = asCleanString(body.message, 5000);
+    const phone = asCleanString(body.phone, 80) || asCleanString(body.telefono, 80);
+    const commune = asCleanString(body.comuna, 120);
+    const message =
+      asCleanString(body.message, 5000) ||
+      asCleanString(body.problema, 5000) ||
+      asCleanString(body.problem, 5000);
     const siteSlug = asCleanString(body.siteSlug, 80) || "gasfiter";
 
-    if (!firstName || !lastName || !email || !message) {
+    if (!firstName || !email || !message) {
       return NextResponse.json(
-        { error: "Missing required fields: firstName, lastName, email, message" },
+        { error: "Missing required fields: firstName|nombre, email, message|problema" },
         { status: 400, headers },
       );
     }
@@ -51,6 +67,7 @@ export async function POST(request: Request) {
       { label: "Nombre", value: `${firstName} ${lastName}`.trim() },
       { label: "Email", value: email },
       { label: "Teléfono", value: phone || "-" },
+      { label: "Comuna", value: commune || "-" },
       { label: "Fecha", value: submittedAt },
       { label: "Mensaje", value: message },
     ];

@@ -11,6 +11,18 @@ import {
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+type RolledVersionRow = {
+  id: string;
+  version_number: number | null;
+  snapshot: Record<string, unknown> | null;
+};
+
+function isMissingRpcError(error: { code?: string; message?: string } | null) {
+  if (!error) return false;
+  const message = `${error.message ?? ""}`.toLowerCase();
+  return error.code === "42883" || message.includes("rollback_site_version");
+}
+
 type RollbackBody = {
   userId?: string;
   notes?: string;
@@ -57,35 +69,60 @@ export async function POST(request: Request, context: { params: Promise<{ slug: 
       return NextResponse.json({ error: "Rollback target version not found" }, { status: 404 });
     }
 
-    const { error: archiveError } = await supabase
-      .from("site_versions")
-      .update({ status: "archived", published_at: null })
-      .eq("site_id", site.id)
-      .eq("status", "published");
+    let rolled: RolledVersionRow | null = null;
+    const rollbackNote = body.notes ?? `Rollback to version ${target.version_number}`;
 
-    if (archiveError) {
-      return NextResponse.json(
-        { error: "Unable to archive current published version", details: archiveError.message },
-        { status: 500 },
-      );
+    const rpcResponse = await supabase.rpc("rollback_site_version", {
+      p_site_id: site.id,
+      p_snapshot: target.snapshot,
+      p_user_id: userId,
+      p_notes: rollbackNote,
+    });
+
+    if (rpcResponse.error && !isMissingRpcError(rpcResponse.error)) {
+      return NextResponse.json({ error: "Unable to rollback", details: rpcResponse.error.message }, { status: 500 });
     }
 
-    const { data: rolled, error: rollbackError } = await supabase
-      .from("site_versions")
-      .insert({
-        site_id: site.id,
-        version_number: null,
-        status: "published",
-        snapshot: target.snapshot,
-        created_by: userId,
-        published_at: new Date().toISOString(),
-        notes: body.notes ?? `Rollback to version ${target.version_number}`,
-      })
-      .select("id, version_number, snapshot")
-      .single();
+    if (!rpcResponse.error) {
+      const rpcRow = Array.isArray(rpcResponse.data) ? rpcResponse.data[0] : rpcResponse.data;
+      rolled = (rpcRow as RolledVersionRow | null) ?? null;
+    } else {
+      const { error: archiveError } = await supabase
+        .from("site_versions")
+        .update({ status: "archived", published_at: null })
+        .eq("site_id", site.id)
+        .eq("status", "published");
 
-    if (rollbackError) {
-      return NextResponse.json({ error: "Unable to rollback", details: rollbackError.message }, { status: 500 });
+      if (archiveError) {
+        return NextResponse.json(
+          { error: "Unable to archive current published version", details: archiveError.message },
+          { status: 500 },
+        );
+      }
+
+      const fallbackInsert = await supabase
+        .from("site_versions")
+        .insert({
+          site_id: site.id,
+          version_number: null,
+          status: "published",
+          snapshot: target.snapshot,
+          created_by: userId,
+          published_at: new Date().toISOString(),
+          notes: rollbackNote,
+        })
+        .select("id, version_number, snapshot")
+        .single();
+
+      if (fallbackInsert.error) {
+        return NextResponse.json({ error: "Unable to rollback", details: fallbackInsert.error.message }, { status: 500 });
+      }
+
+      rolled = fallbackInsert.data as RolledVersionRow;
+    }
+
+    if (!rolled) {
+      return NextResponse.json({ error: "Unable to rollback", details: "Missing rollback version payload" }, { status: 500 });
     }
 
     const settings = extractSettingsFromSnapshot(rolled.snapshot as Record<string, unknown> | null);

@@ -830,10 +830,10 @@ function mapPublishIssueToSection(
   const normalized = `${issue.code || ""} ${issue.path || ""} ${issue.label || ""} ${issue.message || ""}`.toLowerCase();
   if (normalized.includes("hero")) return { section: "hero", view: "sections", label: "Ir a Hero" };
   if (normalized.includes("empresa") || normalized.includes("audiencia")) {
-    return { section: "audience", view: "sections", label: "Ir a Empresa" };
+    return { section: "audience", view: "sections", label: "Ir a Quiénes somos" };
   }
   if (normalized.includes("urgente")) {
-    return { section: "urgency_banner", view: "sections", label: "Ir a Banner urgente" };
+    return { section: "urgency_banner", view: "sections", label: "Ir a Cobertura y confianza" };
   }
   if (normalized.includes("servicio")) return { section: "services", view: "items", label: "Ir a Servicios" };
   if (normalized.includes("testimonio")) return { section: "testimonials", view: "items", label: "Ir a Testimonios" };
@@ -846,15 +846,15 @@ function getSectionDisplayName(sectionId: string): string {
     case "hero":
       return "Hero";
     case "audience":
-      return "Audiencia";
+      return "Quiénes somos";
     case "services":
       return "Servicios";
     case "projects":
-      return "Clientes";
+      return "Proyectos";
     case "urgency_banner":
-      return "Banner urgente";
+      return "Cobertura y confianza";
     case "contact_banner":
-      return "Banner de contacto";
+      return "Contacto";
     case "testimonials":
       return "Testimonios";
     case "faq":
@@ -1897,10 +1897,10 @@ export default function StagingWorkflowPanel() {
       setAutosaveHint("Esperando fin de operación...");
       return;
     }
-    setAutosaveHint("Autosave en 1.8s...");
+    setAutosaveHint("Autosave en 15s...");
     autosaveTimerRef.current = window.setTimeout(() => {
       void saveDraftInternal({ silent: true, notes: "Autosave from v3 UX base" });
-    }, 1800);
+    }, 15000);
 
     return () => {
       if (autosaveTimerRef.current) {
@@ -3251,7 +3251,7 @@ export default function StagingWorkflowPanel() {
                             ? item.targetSection
                             : ""
                       }
-                      placeholder="Target interno (consultoria|auditorias|certificacion|capacitacion)"
+                      placeholder="Target interno (home|servicios|empresa|clientes|contacto)"
                       onChange={(e) =>
                         updateSettings((prev) => {
                           const sec = getSection(prev, section.id);
@@ -4252,9 +4252,9 @@ export default function StagingWorkflowPanel() {
 
     const titleChecks: Array<{ key: string; title: unknown; section: EditableSectionId; label: string }> = [
       { key: "hero", title: hero?.data?.title, section: "hero", label: "Hero" },
-      { key: "audience", title: audience?.data?.title, section: "audience", label: "Empresa" },
+      { key: "audience", title: audience?.data?.title, section: "audience", label: "Quiénes somos" },
       { key: "services", title: services?.data?.title, section: "services", label: "Servicios" },
-      { key: "projects", title: projects?.data?.title, section: "projects", label: "Clientes" },
+      { key: "projects", title: projects?.data?.title, section: "projects", label: "Proyectos" },
       { key: "testimonials", title: testimonials?.data?.title, section: "testimonials", label: "Testimonios" },
       { key: "faq", title: faq?.data?.title, section: "faq", label: "FAQ" },
     ];
@@ -4283,13 +4283,13 @@ export default function StagingWorkflowPanel() {
         key: "audience-secondary",
         text: (audience?.data as { cta_secondary?: { text?: unknown } } | undefined)?.cta_secondary?.text,
         section: "audience",
-        label: "CTA Empresa",
+        label: "CTA Quiénes somos",
       },
       {
         key: "urgency-primary",
         text: (urgency?.data as { cta_primary?: { text?: unknown } } | undefined)?.cta_primary?.text,
         section: "urgency_banner",
-        label: "CTA Banner urgente",
+        label: "CTA Cobertura y confianza",
       },
     ];
 
@@ -4328,7 +4328,7 @@ export default function StagingWorkflowPanel() {
     ) {
       addWarning({
         key: "projects-missing-image",
-        label: "Clientes sin imagen",
+        label: "Proyectos sin imagen",
         description: "Se usará fallback visual; recomendado cargar imagen por item.",
         section: "projects",
         view: "items",
@@ -4378,7 +4378,7 @@ export default function StagingWorkflowPanel() {
         key: "audience-secondary-url",
         url: (audience?.data as { cta_secondary?: { url?: unknown } } | undefined)?.cta_secondary?.url,
         section: "audience",
-        label: "CTA Empresa",
+        label: "CTA Quiénes somos",
       },
     ];
 
@@ -4398,7 +4398,7 @@ export default function StagingWorkflowPanel() {
       }
     }
 
-    const allowedServiceTargets = new Set(["consultoria", "auditorias", "certificacion", "capacitacion"]);
+    const allowedServiceTargets = new Set(["home", "servicios", "empresa", "clientes", "contacto"]);
     for (const item of serviceItems) {
       if (item.enabled === false) continue;
       const cta = (item.cta ?? {}) as Record<string, unknown>;
@@ -4410,7 +4410,7 @@ export default function StagingWorkflowPanel() {
         addWarning({
           key: `service-target-${String(item.id)}`,
           label: `Servicio con target interno no recomendado (${asNonEmptyString(item.title) || "sin título"})`,
-          description: "Usa: consultoria, auditorias, certificacion o capacitacion.",
+          description: "Usa: home, servicios, empresa, clientes o contacto.",
           section: "services",
           view: "items",
         });
@@ -4515,14 +4515,16 @@ export default function StagingWorkflowPanel() {
             </div>
           </div>
 
-          <div className="wf-row wf-toolbar wf-toolbar-main" style={{ marginBottom: 10 }}>
-            <input className="wf-input" value={siteSlug} onChange={(e) => setSiteSlug(e.target.value)} placeholder="slug del sitio" />
-            <input
-              className="wf-input"
-              value={userId ? "Sesión de usuario conectada" : "Sesión de usuario no detectada"}
-              disabled
-            />
-          </div>
+	          <div className="wf-row wf-toolbar wf-toolbar-main" style={{ marginBottom: 10 }}>
+	            <input className="wf-input" value={siteSlug} onChange={(e) => setSiteSlug(e.target.value)} placeholder="slug del sitio" />
+	            <input
+	              className="wf-input"
+	              value={authUserEmail ? `Sesión: ${authUserEmail}` : userId}
+	              onChange={(e) => setUserId(e.target.value)}
+	              placeholder={authEnabled ? "userId del CMS o sesión Supabase" : "userId del CMS"}
+	              disabled={Boolean(authUserEmail) || busy}
+	            />
+	          </div>
 
           <div className="wf-row wf-toolbar wf-toolbar-actions" style={{ marginBottom: 12 }}>
             {authEnabled ? (
@@ -4948,7 +4950,7 @@ export default function StagingWorkflowPanel() {
               {renderDiffSection("Hero", heroDiff.sections.hero.fields)}
               {renderDiffSection("Servicios", heroDiff.sections.services.fields)}
               {renderDiffSection("FAQ", heroDiff.sections.faq.fields)}
-              {renderDiffSection("Clientes", heroDiff.sections.projects?.fields ?? [])}
+              {renderDiffSection("Proyectos", heroDiff.sections.projects?.fields ?? [])}
               {renderDiffSection("Testimonios", heroDiff.sections.testimonials?.fields ?? [])}
             </div>
           ) : (

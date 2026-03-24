@@ -264,6 +264,9 @@ const landingStyles = String.raw`
         text-transform: uppercase;
         letter-spacing: 0.8px;
       }
+      .eyebrow[data-pending="true"] {
+        opacity: 0;
+      }
 
       .hero h1 {
         margin-top: 12px;
@@ -274,6 +277,10 @@ const landingStyles = String.raw`
         line-height: 0.98;
         font-family: var(--landing-font-hero) !important;
         visibility: visible;
+      }
+      .hero h1[data-pending="true"],
+      .hero-lead[data-pending="true"] {
+        opacity: 0;
       }
 
       .hero-line {
@@ -1460,6 +1467,27 @@ const landingStyles = String.raw`
         color: #ffffff;
       }
 
+      .contact-submit:disabled {
+        opacity: 0.72;
+        cursor: wait;
+      }
+
+      .contact-feedback {
+        min-height: 24px;
+        margin-top: 10px;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        color: #475569;
+      }
+
+      .contact-feedback.is-error {
+        color: #b91c1c;
+      }
+
+      .contact-feedback.is-success {
+        color: #0f766e;
+      }
+
       .benefits {
         background: #f8fbff;
         border: 1px solid #dbe8ff;
@@ -2488,14 +2516,14 @@ const landingMarkup = String.raw`
         </figure>
 
         <div class="hero-content">
-          <div class="hero-content-inner">
-            <span class="eyebrow" data-hero-eyebrow>SERVICIOS 24/7</span>
-            <h1 data-hero-title>
-              <span class="hero-line">Servicios de gasfitería profesional</span>
-            </h1>
-            <p class="hero-lead" data-hero-subtitle>
-              Atención técnica para fugas, destapes, calefont e instalaciones con respuesta rápida y diagnóstico claro en terreno.
-            </p>
+	          <div class="hero-content-inner">
+	            <span class="eyebrow" data-hero-eyebrow data-pending="true">SERVICIOS 24/7</span>
+		            <h1 data-hero-title data-pending="true">
+		              <span class="hero-line">Gasfiter urgente en todo SantiagoA</span>
+		            </h1>
+		            <p class="hero-lead" data-hero-subtitle data-pending="true">
+		              Atención técnica para fugas, destapes, calefont e instalaciones con respuesta rápida y diagnóstico claro en terreno.
+		            </p>
             <div class="badges">
               <span class="badge"><i class="fa-solid fa-bolt" aria-hidden="true"></i>Disponible ahora</span>
               <span class="badge"><i class="fa-solid fa-hand-holding-dollar" aria-hidden="true"></i>Pago contra trabajo</span>
@@ -2893,8 +2921,7 @@ const landingMarkup = String.raw`
         <div class="contact-card">
           <span class="contact-kicker">CONTACTO</span>
           <h2 class="contact-title">¿Tienes preguntas?<br />Escríbenos ahora.</h2>
-          <!-- Conectar a Formspree: action="https://formspree.io/f/TU_ID" method="POST" -->
-          <form class="contact-form" action="#" method="POST">
+          <form class="contact-form" action="#" method="POST" data-contact-form novalidate>
             <input class="contact-field" type="text" name="nombre" placeholder="Nombre" required />
             <input class="contact-field" type="tel" name="telefono" placeholder="Teléfono" required />
             <input class="contact-field" type="text" name="comuna" placeholder="Comuna" required />
@@ -2906,7 +2933,8 @@ const landingMarkup = String.raw`
               rows="3"
               required
             ></textarea>
-            <button class="btn contact-submit contact-full" type="submit">Enviar solicitud</button>
+            <button class="btn contact-submit contact-full" type="submit" data-contact-submit>Enviar solicitud</button>
+            <p class="contact-feedback contact-full" data-contact-feedback aria-live="polite"></p>
           </form>
         </div>
       </div>
@@ -3013,13 +3041,13 @@ const landingMarkup = String.raw`
     <footer class="section footer">
       <div class="container footer-top">
         <div>
-          <span class="footer-brand-mark">Logo</span>
-          <span class="footer-kicker">Placeholder de marca</span>
+          <span class="footer-brand-mark" data-footer-brand-mark>Logo</span>
+          <span class="footer-kicker" data-footer-brand-kicker>Placeholder de marca</span>
           <h3 style="margin-top: 14px">Gasfiter Urgencias Santiago</h3>
           <p class="footer-copy">Respuesta técnica 24/7 para fugas, destapes, calefont e instalaciones con atención en terreno.</p>
           <p style="margin-top: 16px"><a class="phone-big" href="tel:+569XXXXXXX">+56 9 XXXX XXXX</a></p>
           <p style="margin-top: 10px">
-            <a href="https://wa.me/569XXXXXXX" target="_blank" rel="noopener noreferrer">
+            <a href="https://wa.me/569XXXXXXX" target="_blank" rel="noopener noreferrer" data-footer-whatsapp>
               <i class="fa-brands fa-whatsapp"></i> WhatsApp directo
             </a>
           </p>
@@ -3029,9 +3057,9 @@ const landingMarkup = String.raw`
           <div>
             <h3>Contacto</h3>
             <div class="footer-list">
-              <span>Dirección placeholder 123</span>
+              <span data-footer-address>Dirección placeholder 123</span>
               <span>Santiago, Región Metropolitana</span>
-              <a href="mailto:contacto@gasfiter.cl">contacto@gasfiter.cl</a>
+              <a href="mailto:contacto@gasfiter.cl" data-footer-email>contacto@gasfiter.cl</a>
             </div>
             <a class="footer-map-link" href="#mapa" data-open-map-modal>Ver mapa / ubicación</a>
           </div>
@@ -3091,7 +3119,7 @@ const landingMarkup = String.raw`
 
 const DEFAULT_LANDING_VALUES = {
   hero: {
-    title: "Servicios de gasfitería profesional",
+    title: "Gasfiter urgente en todo SantiagoA",
     subtitle:
       "Atención técnica para fugas, destapes, calefont e instalaciones con respuesta rápida y diagnóstico claro en terreno.",
     eyebrow: "SERVICIOS 24/7",
@@ -3146,6 +3174,7 @@ const DEFAULT_LANDING_VALUES = {
 export default function DynamicLanding() {
   useEffect(() => {
     const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+    const siteSlug = process.env.NEXT_PUBLIC_SITE_SLUG?.trim() || "gasfiter-staging";
 
     const normalizeServiceTitle = (title: string, index: number) => {
       const compact = title.replace(/\s+/g, " ").trim();
@@ -3406,6 +3435,82 @@ export default function DynamicLanding() {
     };
     bindFaqButtons();
 
+    const bindContactForm = () => {
+      const form = document.querySelector<HTMLFormElement>("[data-contact-form]");
+      const submitBtn = document.querySelector<HTMLButtonElement>("[data-contact-submit]");
+      const feedbackEl = document.querySelector<HTMLElement>("[data-contact-feedback]");
+      if (!form || !submitBtn || !feedbackEl) return;
+
+      if (!submitBtn.dataset.defaultText) {
+        submitBtn.dataset.defaultText = submitBtn.textContent?.trim() || "Enviar solicitud";
+      }
+
+      const setFeedback = (message: string, tone: "idle" | "error" | "success" = "idle") => {
+        feedbackEl.textContent = message;
+        feedbackEl.classList.remove("is-error", "is-success");
+        if (tone === "error") feedbackEl.classList.add("is-error");
+        if (tone === "success") feedbackEl.classList.add("is-success");
+      };
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const formData = new FormData(form);
+        const nombre = String(formData.get("nombre") || "").trim();
+        const telefono = String(formData.get("telefono") || "").trim();
+        const comuna = String(formData.get("comuna") || "").trim();
+        const email = String(formData.get("email") || "").trim();
+        const problema = String(formData.get("problema") || "").trim();
+
+        if (!nombre || !email || !problema) {
+          setFeedback("Completa nombre, email y describe el problema.", "error");
+          return;
+        }
+
+        const emailIsValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        if (!emailIsValid) {
+          setFeedback("Ingresa un email válido.", "error");
+          return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Enviando...";
+        setFeedback("Enviando tu solicitud...");
+
+        try {
+          const response = await fetch("/api/forms/contact", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              nombre,
+              telefono,
+              comuna,
+              email,
+              problema,
+              siteSlug,
+            }),
+          });
+
+          const payload = (await response.json().catch(() => ({}))) as { error?: string };
+          if (!response.ok) {
+            throw new Error(payload.error || "No se pudo enviar la solicitud.");
+          }
+
+          form.reset();
+          setFeedback("Solicitud enviada. Te contactaremos a la brevedad.", "success");
+        } catch (error) {
+          const message = error instanceof Error ? error.message : "Error inesperado al enviar el formulario.";
+          setFeedback(message, "error");
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = submitBtn.dataset.defaultText || "Enviar solicitud";
+        }
+      });
+    };
+    bindContactForm();
+
     const escapeHtml = (value: string) =>
       value
         .replace(/&/g, "&amp;")
@@ -3515,16 +3620,15 @@ export default function DynamicLanding() {
         }
       }
 
-      const footerBrandLink = document.querySelector<HTMLAnchorElement>(".footer .brand[data-default-brand]");
-      if (footerBrandLink) {
+      const footerBrandMark = document.querySelector<HTMLElement>("[data-footer-brand-mark]");
+      const footerBrandKicker = document.querySelector<HTMLElement>("[data-footer-brand-kicker]");
+      if (footerBrandMark) {
         if (footerLogoUrl) {
-          const logoHeight = footerBrandLink.getAttribute("data-logo-height") || "34";
-          footerBrandLink.innerHTML = `<img src="${escapeHtml(footerLogoUrl)}" alt="Logo footer" style="height:${escapeHtml(
-            logoHeight
-          )}px; width:auto; object-fit:contain;" />`;
+          footerBrandMark.innerHTML = `<img src="${escapeHtml(footerLogoUrl)}" alt="Logo footer" style="height:32px; width:auto; object-fit:contain; display:block;" />`;
+          if (footerBrandKicker) footerBrandKicker.textContent = "";
         } else {
-          const fallbackText = footerBrandLink.getAttribute("data-default-brand") || "Gasfiter 24/7";
-          footerBrandLink.textContent = fallbackText;
+          footerBrandMark.textContent = "Logo";
+          if (footerBrandKicker) footerBrandKicker.textContent = "Placeholder de marca";
         }
       }
 
@@ -3548,6 +3652,30 @@ export default function DynamicLanding() {
         waLinks.forEach((link) => {
           link.href = whatsappHref;
         });
+      }
+
+      const footerWhatsapp = document.querySelector<HTMLAnchorElement>("[data-footer-whatsapp]");
+      if (footerWhatsapp && whatsappHref) {
+        footerWhatsapp.href = whatsappHref;
+      }
+
+      const emailValue =
+        typeof brandingContact.email === "string" && brandingContact.email.trim()
+          ? brandingContact.email.trim()
+          : "";
+      const footerEmail = document.querySelector<HTMLAnchorElement>("[data-footer-email]");
+      if (footerEmail && emailValue) {
+        footerEmail.textContent = emailValue;
+        footerEmail.href = `mailto:${emailValue}`;
+      }
+
+      const addressValue =
+        typeof brandingContact.address === "string" && brandingContact.address.trim()
+          ? brandingContact.address.trim()
+          : "";
+      const footerAddress = document.querySelector<HTMLElement>("[data-footer-address]");
+      if (footerAddress && addressValue) {
+        footerAddress.textContent = addressValue;
       }
 
       const hero = resolveHeroFromSettings({
@@ -3588,16 +3716,23 @@ export default function DynamicLanding() {
               if (span) span.textContent = heroTitle;
             }
           }
+          titleEl.removeAttribute("data-pending");
         }
       }
 
       if (heroSubtitle) {
         const subtitleEl = document.querySelector("[data-hero-subtitle]");
-        if (subtitleEl) subtitleEl.textContent = heroSubtitle;
+        if (subtitleEl) {
+          subtitleEl.textContent = heroSubtitle;
+          subtitleEl.removeAttribute("data-pending");
+        }
       }
       const eyebrowEl = document.querySelector("[data-hero-eyebrow]");
       if (eyebrowEl && heroEyebrow) {
         eyebrowEl.textContent = heroEyebrow;
+        eyebrowEl.removeAttribute("data-pending");
+      } else if (eyebrowEl) {
+        eyebrowEl.removeAttribute("data-pending");
       }
       if (heroImage) {
         const heroImg = document.querySelector<HTMLImageElement>(".hero-media img");
@@ -3799,7 +3934,10 @@ export default function DynamicLanding() {
         }
         if (contactKicker) contactKicker.textContent = contact.kicker;
         if (contactTitle) contactTitle.innerHTML = escapeHtml(contact.title).replace(/\n/g, "<br />");
-        if (contactSubmit) contactSubmit.textContent = contact.submitText;
+        if (contactSubmit) {
+          contactSubmit.textContent = contact.submitText;
+          contactSubmit.setAttribute("data-default-text", contact.submitText);
+        }
       }
 
       const testimonials = resolveTestimonialsFromSettings({
@@ -3878,7 +4016,6 @@ export default function DynamicLanding() {
 
     const hydrateFromBackend = async () => {
       try {
-        const siteSlug = process.env.NEXT_PUBLIC_SITE_SLUG?.trim();
         if (!siteSlug) return;
         const payload = await fetchSettingsBySlug({ slug: siteSlug, mode: "published" });
         applySettings(payload.settings);

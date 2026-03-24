@@ -172,14 +172,31 @@ async function getVersionedSettings(
   siteId: string,
   mode: "draft" | "published",
 ): Promise<{ payload: SettingsPayload; status: "draft" | "published"; updatedAt: string | null } | null> {
-  const { data, error } = await supabase
+  const primaryQuery = await supabase
     .from("site_versions")
-    .select("status, snapshot, version_number, created_at")
+    .select("status, snapshot, version_number, created_at, updated_at")
     .eq("site_id", siteId)
     .eq("status", mode)
     .order("version_number", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .limit(1);
+
+  let data = primaryQuery.data as Record<string, unknown> | null;
+  let error = primaryQuery.error;
+
+  if (error && "code" in error && error.code === "42703") {
+    const fallbackQuery = await supabase
+      .from("site_versions")
+      .select("status, snapshot, version_number, created_at")
+      .eq("site_id", siteId)
+      .eq("status", mode)
+      .order("version_number", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    data = (fallbackQuery.data as Record<string, unknown> | null) ?? null;
+    error = fallbackQuery.error;
+  } else {
+    data = (primaryQuery.data as Record<string, unknown> | null) ?? null;
+  }
 
   if (error) {
     const tableMissing = error.code === "42P01";
@@ -194,7 +211,8 @@ async function getVersionedSettings(
   return {
     payload: parsed,
     status: mode,
-    updatedAt: (data.created_at as string | null | undefined) ?? null,
+    updatedAt:
+      (data.updated_at as string | null | undefined) ?? (data.created_at as string | null | undefined) ?? null,
   };
 }
 
@@ -202,14 +220,31 @@ async function getLatestDraftUpdatedAt(
   supabase: ReturnType<typeof createAdminSupabaseClient>,
   siteId: string,
 ): Promise<string | null> {
-  const { data, error } = await supabase
+  const primaryQuery = await supabase
     .from("site_versions")
-    .select("created_at, version_number")
+    .select("created_at, updated_at, version_number")
     .eq("site_id", siteId)
     .eq("status", "draft")
     .order("version_number", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .limit(1);
+
+  let data = primaryQuery.data as Record<string, unknown> | null;
+  let error = primaryQuery.error;
+
+  if (error && "code" in error && error.code === "42703") {
+    const fallbackQuery = await supabase
+      .from("site_versions")
+      .select("created_at, version_number")
+      .eq("site_id", siteId)
+      .eq("status", "draft")
+      .order("version_number", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    data = (fallbackQuery.data as Record<string, unknown> | null) ?? null;
+    error = fallbackQuery.error;
+  } else {
+    data = (primaryQuery.data as Record<string, unknown> | null) ?? null;
+  }
 
   if (error) {
     const tableMissing = error.code === "42P01";
@@ -218,7 +253,7 @@ async function getLatestDraftUpdatedAt(
   }
 
   if (!data) return null;
-  return (data.created_at as string | null | undefined) ?? null;
+  return (data.updated_at as string | null | undefined) ?? (data.created_at as string | null | undefined) ?? null;
 }
 
 export async function GET(request: Request, context: { params: Promise<{ slug: string }> }) {
@@ -246,12 +281,23 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
     }
 
     const versioned = await getVersionedSettings(supabase, site.id, mode);
-    if (versioned) {
+    const draftFallbackToPublished =
+      !versioned && mode === "draft" ? await getVersionedSettings(supabase, site.id, "published") : null;
+    const resolvedVersioned =
+      versioned ??
+      (draftFallbackToPublished
+        ? {
+            ...draftFallbackToPublished,
+            status: "draft" as const,
+          }
+        : null);
+
+    if (resolvedVersioned) {
       const resolvedDraftUpdatedAt =
-        versioned.status === "draft" && !versioned.updatedAt
+        resolvedVersioned.status === "draft" && !resolvedVersioned.updatedAt
           ? await getLatestDraftUpdatedAt(supabase, site.id)
-          : versioned.status === "draft"
-            ? versioned.updatedAt
+          : resolvedVersioned.status === "draft"
+            ? resolvedVersioned.updatedAt
             : null;
 
       return jsonWithCors(
@@ -260,9 +306,9 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
           site: {
             slug: site.slug,
             name: site.name,
-            status: versioned.status,
+            status: resolvedVersioned.status,
           },
-          settings: withLegacyFromSections(versioned.payload),
+          settings: withLegacyFromSections(resolvedVersioned.payload),
           draftUpdatedAt: resolvedDraftUpdatedAt,
         },
         {
