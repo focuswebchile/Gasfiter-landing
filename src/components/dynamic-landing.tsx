@@ -3184,6 +3184,23 @@ const DEFAULT_LANDING_VALUES = {
     title: "Atención urgente para hogares y negocios en Santiago",
     description:
       "Atendemos dueños de casa, arrendatarios, pymes y administradores de edificios en Santiago que necesitan solución hoy, no mañana.",
+    bullets: [
+      {
+        text: "Diagnóstico claro",
+        description: "Explicamos el origen del problema y la solución antes de intervenir.",
+        icon: "fa-circle-check",
+      },
+      {
+        text: "Trabajo limpio",
+        description: "Ejecutamos con orden, pruebas de funcionamiento y cierre prolijo del espacio.",
+        icon: "fa-circle-check",
+      },
+      {
+        text: "Seguimiento y respaldo",
+        description: "Dejamos recomendaciones, garantía y trazabilidad básica después del servicio.",
+        icon: "fa-circle-check",
+      },
+    ],
     ctaPrimaryText: "+56 9 XXXX XXXX",
     ctaPrimaryUrl: "tel:+569XXXXXXX",
     ctaSecondaryText: "Agendar visita",
@@ -3930,7 +3947,9 @@ export default function DynamicLanding({ initialSettings = null }: DynamicLandin
             audienceList.innerHTML = audience.bullets
               .map(
                 (item) =>
-                  `<article class="about-point" data-about-highlight><strong>${escapeHtml(item.text)}</strong></article>`,
+                  `<article class="about-point" data-about-highlight><strong>${escapeHtml(item.text)}</strong>${
+                    item.description ? `<span>${escapeHtml(item.description)}</span>` : ""
+                  }</article>`,
               )
               .join("");
           } else {

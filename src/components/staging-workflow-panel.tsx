@@ -2364,6 +2364,23 @@ export default function StagingWorkflowPanel() {
                 <input
                   className="wf-input"
                   disabled={editingLocked}
+                  value={typeof bullet.description === "string" ? bullet.description : ""}
+                  placeholder="Texto de apoyo"
+                  onChange={(e) =>
+                    updateSettings((prev) => {
+                      const sec = getSection(prev, section.id);
+                      if (!sec) return prev;
+                      const nextBullets = Array.isArray(sec.data.bullets)
+                        ? [...(sec.data.bullets as Array<Record<string, unknown>>)]
+                        : [];
+                      nextBullets[index] = { ...nextBullets[index], description: e.target.value };
+                      return upsertSection(prev, { ...sec, data: { ...sec.data, bullets: nextBullets } });
+                    })
+                  }
+                />
+                <input
+                  className="wf-input"
+                  disabled={editingLocked}
                   value={typeof bullet.icon === "string" ? bullet.icon : ""}
                   placeholder="Ícono (ej: fa-circle-check)"
                   onChange={(e) =>

@@ -73,6 +73,7 @@ export type AudienceDefaults = {
   kicker: string;
   title: string;
   description: string;
+  bullets: ReadonlyArray<{ text: string; description: string; icon: string }>;
   ctaPrimaryText: string;
   ctaPrimaryUrl: string;
   ctaSecondaryText: string;
@@ -83,7 +84,7 @@ export type ResolvedAudience = {
   kicker: string;
   title: string;
   description: string;
-  bullets: Array<{ text: string; icon: string }>;
+  bullets: Array<{ text: string; description: string; icon: string }>;
   ctaPrimary: { text: string; url: string };
   ctaSecondary: { text: string; url: string };
   images: { back: string; front: string };
@@ -456,9 +457,11 @@ export const resolveAudienceFromSettings = ({
 
   const bullets = bulletsRaw
     .filter((item) => item && typeof item === "object" && (item as { enabled?: unknown }).enabled !== false)
-    .map((item) => ({
+    .map((item, index) => ({
       text: getTrimmedString((item as { text?: unknown }).text),
-      icon: getTrimmedString((item as { icon?: unknown }).icon) || "fa-circle-check",
+      description:
+        getTrimmedString((item as { description?: unknown }).description) || defaults.bullets[index]?.description || "",
+      icon: getTrimmedString((item as { icon?: unknown }).icon) || defaults.bullets[index]?.icon || "fa-circle-check",
     }))
     .filter((item) => item.text);
 
