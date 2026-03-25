@@ -929,6 +929,24 @@ const landingStyles = String.raw`
         align-items: center;
       }
 
+      .services-head {
+        display: grid;
+        gap: 14px;
+        margin-bottom: 18px;
+      }
+
+      [data-services-title] {
+        display: block;
+        margin: 0;
+      }
+
+      [data-services-subtitle] {
+        margin: 0;
+        font-size: clamp(1.18rem, 2.2vw, 1.38rem);
+        line-height: 1.65;
+        color: #415164;
+      }
+
       .projects-head-centered {
         justify-items: center;
         text-align: center;
@@ -2651,8 +2669,10 @@ const landingMarkupTemplate = String.raw`
 
     <section class="section reveal" id="servicios">
       <div class="container">
-        <h2 style="font-size: clamp(2rem, 6vw, 3.5rem); color: var(--navy)" data-services-title>¿Qué problema tienes ahora?</h2>
-        <p class="section-subtitle" data-services-subtitle>Servicios más solicitados</p>
+        <div class="services-head">
+          <h2 style="font-size: clamp(2rem, 6vw, 3.5rem); color: var(--navy)" data-services-title>¿Qué problema tienes ahora?</h2>
+          <p class="section-subtitle" data-services-subtitle>Servicios más solicitados</p>
+        </div>
         <div class="services-grid">
           <article class="service-card" data-service-card>
             <div class="service-card-media">
