@@ -3805,14 +3805,15 @@ export default function DynamicLanding() {
 
       if (sectionAudience?.data) {
         const audienceRoot = document.querySelector(".audience-wrap");
-        const audienceKicker = audienceRoot?.querySelector(".audience-kicker");
-        const audienceTitle = audienceRoot?.querySelector(".audience-copy h2");
-        const audienceDescription = audienceRoot?.querySelector(".audience-copy p");
-        const audienceList = audienceRoot?.querySelector(".audience-list");
+        const aboutRoot = document.querySelector(".about-section");
+        const audienceKicker = audienceRoot?.querySelector(".audience-kicker") ?? aboutRoot?.querySelector("[data-about-kicker]");
+        const audienceTitle = audienceRoot?.querySelector(".audience-copy h2") ?? aboutRoot?.querySelector("[data-about-title]");
+        const audienceDescription = audienceRoot?.querySelector(".audience-copy p") ?? aboutRoot?.querySelector("[data-about-description]");
+        const audienceList = audienceRoot?.querySelector(".audience-list") ?? aboutRoot?.querySelector(".about-points");
         const audiencePrimaryBtn = audienceRoot?.querySelector(".audience-cta .btn-primary");
         const audienceSecondaryBtn = audienceRoot?.querySelector(".audience-cta .btn-ghost");
-        const audienceBackImage = audienceRoot?.querySelector(".audience-image-back");
-        const audienceFrontImage = audienceRoot?.querySelector(".audience-image-front");
+        const audienceBackImage = audienceRoot?.querySelector(".audience-image-back") ?? aboutRoot?.querySelector(".about-image-primary img");
+        const audienceFrontImage = audienceRoot?.querySelector(".audience-image-front") ?? aboutRoot?.querySelector(".about-image-secondary img");
 
         const audience = resolveAudienceFromSettings({
           settings,
@@ -3823,12 +3824,21 @@ export default function DynamicLanding() {
         if (audienceTitle) audienceTitle.textContent = audience.title;
         if (audienceDescription) audienceDescription.textContent = audience.description;
         if (audienceList && audience.bullets.length) {
-          audienceList.innerHTML = audience.bullets
-            .map(
-              (item) =>
-                `<li><i class="fa-solid ${escapeHtml(item.icon || "fa-circle-check")}"></i>${escapeHtml(item.text)}</li>`,
-            )
-            .join("");
+          if (audienceList.classList.contains("about-points")) {
+            audienceList.innerHTML = audience.bullets
+              .map(
+                (item) =>
+                  `<article class="about-point" data-about-highlight><strong>${escapeHtml(item.text)}</strong></article>`,
+              )
+              .join("");
+          } else {
+            audienceList.innerHTML = audience.bullets
+              .map(
+                (item) =>
+                  `<li><i class="fa-solid ${escapeHtml(item.icon || "fa-circle-check")}"></i>${escapeHtml(item.text)}</li>`,
+              )
+              .join("");
+          }
         }
         if (audiencePrimaryBtn) {
           audiencePrimaryBtn.textContent = audience.ctaPrimary.text;

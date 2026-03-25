@@ -1093,7 +1093,7 @@ export default function StagingWorkflowPanel() {
   const editingLocked = !panelReady || publishedReadOnly || busy || autosaving || flushingPublish || draftConflict.active;
   const latestPublishedVersion = versions.find((version) => version.status === "published") ?? null;
   const latestDraftVersion = versions.find((version) => version.status === "draft") ?? null;
-  const latestDraftVersionToken = latestDraftVersion?.created_at ?? null;
+  const latestDraftVersionToken = latestDraftVersion?.updated_at ?? latestDraftVersion?.created_at ?? null;
 
 
 
@@ -1262,7 +1262,7 @@ export default function StagingWorkflowPanel() {
       const latestDraft = nextVersions.find((version) => version.status === "draft") ?? null;
       const serverDraftTs = pickTimestamp(latestDraft?.updated_at, latestDraft?.created_at);
       if (serverDraftTs) {
-        setDraftUpdatedAt((prev) => pickTimestamp(prev, serverDraftTs));
+        setDraftUpdatedAt(serverDraftTs);
       }
     }
     if (!silent) setOk("Versiones cargadas");
