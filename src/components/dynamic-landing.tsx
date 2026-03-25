@@ -280,7 +280,6 @@ const landingStyles = String.raw`
         font-family: var(--landing-font-hero) !important;
         visibility: visible;
       }
-      .hero h1[data-pending="true"],
       .hero-lead[data-pending="true"] {
         opacity: 0;
       }
@@ -2520,8 +2519,8 @@ const landingMarkup = String.raw`
         <div class="hero-content">
 	          <div class="hero-content-inner">
 	            <span class="eyebrow" data-hero-eyebrow data-pending="true">SERVICIOS 24/7</span>
-		            <h1 data-hero-title data-pending="true">
-		              <span class="hero-line">Gasfiter urgente en todo SantiagoA</span>
+		            <h1 data-hero-title>
+		              <span class="hero-line">Gasfiter urgente en Santiago</span>
 		            </h1>
 		            <p class="hero-lead" data-hero-subtitle data-pending="true">
 		              Atención técnica para fugas, destapes, calefont e instalaciones con respuesta rápida y diagnóstico claro en terreno.
@@ -3121,7 +3120,7 @@ const landingMarkup = String.raw`
 
 const DEFAULT_LANDING_VALUES = {
   hero: {
-    title: "Gasfiter urgente en todo SantiagoA",
+    title: "Gasfiter urgente en Santiago",
     subtitle:
       "Atención técnica para fugas, destapes, calefont e instalaciones con respuesta rápida y diagnóstico claro en terreno.",
     eyebrow: "SERVICIOS 24/7",

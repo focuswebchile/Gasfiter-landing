@@ -1,5 +1,5 @@
-import StagingWorkflowPanel from "@/components/staging-workflow-panel";
+import { redirect } from "next/navigation";
 
 export default function StagingPage() {
-  return <StagingWorkflowPanel />;
+  redirect("/admin");
 }

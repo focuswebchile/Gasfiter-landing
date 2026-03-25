@@ -1067,7 +1067,7 @@ export default function StagingWorkflowPanel() {
       const redirectBase = isValidHttpUrl(configuredAuthRedirectBase)
         ? configuredAuthRedirectBase.replace(/\/$/, "")
         : window.location.origin;
-      const redirectUrl = `${redirectBase}/staging?slug=${encodeURIComponent(siteSlug.trim() || defaultSlug)}`;
+      const redirectUrl = `${redirectBase}/admin?slug=${encodeURIComponent(siteSlug.trim() || defaultSlug)}`;
       const { error } = await supabaseClient.auth.signInWithOtp({
         email,
         options: { emailRedirectTo: redirectUrl },
