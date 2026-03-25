@@ -43,7 +43,7 @@ export async function POST(request: Request, context: { params: Promise<{ slug: 
 
     const supabase = createAdminSupabaseClient();
     const site = await getSiteBySlug(supabase, slug);
-    await requireSiteRole(supabase, site.id, userId, ["owner", "admin"]);
+    await requireSiteRole(supabase, site.id, userId, ["owner", "admin", "editor"]);
     const expectedUpdatedAt =
       typeof body.expectedUpdatedAt === "string" && body.expectedUpdatedAt.trim()
         ? body.expectedUpdatedAt.trim()

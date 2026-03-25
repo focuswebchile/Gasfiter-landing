@@ -1098,6 +1098,8 @@ export default function StagingWorkflowPanel() {
   const roleResolved = membership !== null;
   const isAdvancedRole = membership?.role === "owner" || membership?.role === "admin";
   const showAdvancedUi = roleResolved && isAdvancedRole;
+  const showSimplifiedUi = roleResolved && membership?.role === "editor";
+  const showTechnicalIdentity = showAdvancedUi || !panelReady;
   const publishedReadOnly = mode === "published";
   const editingLocked = !panelReady || publishedReadOnly || busy || autosaving || flushingPublish || draftConflict.active;
   const latestPublishedVersion = versions.find((version) => version.status === "published") ?? null;
@@ -4007,6 +4009,211 @@ export default function StagingWorkflowPanel() {
       }));
     };
 
+    if (!showAdvancedUi) {
+      return (
+        <div className="wf-style-stack">
+          <h3 className="wf-h3" style={{ marginBottom: 0 }}>Marca e información básica</h3>
+          <div className="wf-style-layout">
+            <section className="wf-style-card">
+              <div className="wf-style-head">
+                <h3 className="wf-style-title">Logos</h3>
+                <p className="wf-style-help">Sube logo para la barra superior y el footer.</p>
+              </div>
+              <div className="wf-style-body">
+                <div className="wf-grid2">
+                  <ImageUploadField
+                    value={branding.logoNavUrl ?? branding.logoUrl ?? ""}
+                    placeholder="Logo barra superior"
+                    disabled={editingLocked || uploadingAsset === "logoNav"}
+                    removeDisabled={editingLocked || !(branding.logoNavUrl ?? branding.logoUrl ?? "").trim()}
+                    uploading={uploadingAsset === "logoNav"}
+                    uploadingText="Subiendo logo..."
+                    fallbackText="Sin logo"
+                    guidanceText="Formatos: png, jpg, webp o svg. Máximo 2MB."
+                    previewAlt="logo navbar preview"
+                    previewWidth={240}
+                    previewHeight={42}
+                    previewStyle={{ maxHeight: 42, width: "auto", objectFit: "contain" }}
+                    accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
+                    allowedMimeTypes={LOGO_MIME_TYPES}
+                    maxSizeBytes={LOGO_MAX_BYTES}
+                    hideUrlInput
+                    controlsInline
+                    onValueChange={(nextValue) =>
+                      updateSettings((prev) => ({
+                        ...prev,
+                        branding: { ...(prev.branding ?? {}), logoNavUrl: nextValue },
+                      }))
+                    }
+                    onReplace={(file) => {
+                      void uploadBrandingAsset("logo", file, "logoNavUrl");
+                    }}
+                    onRemove={() =>
+                      updateSettings(
+                        (prev) => {
+                          const nextBranding = { ...(prev.branding ?? {}) };
+                          delete nextBranding.logoNavUrl;
+                          delete nextBranding.logoUrl;
+                          return { ...prev, branding: nextBranding };
+                        },
+                        { persistNow: true, note: "Autosave: logo navbar removed" },
+                      )
+                    }
+                  />
+                  <ImageUploadField
+                    value={branding.logoFooterUrl ?? ""}
+                    placeholder="Logo footer"
+                    disabled={editingLocked || uploadingAsset === "logoFooter"}
+                    removeDisabled={editingLocked || !(branding.logoFooterUrl ?? "").trim()}
+                    uploading={uploadingAsset === "logoFooter"}
+                    uploadingText="Subiendo logo..."
+                    fallbackText="Sin logo footer"
+                    guidanceText="Formatos: png, jpg, webp o svg. Máximo 2MB."
+                    previewAlt="logo footer preview"
+                    previewWidth={220}
+                    previewHeight={34}
+                    previewStyle={{ maxHeight: 34, width: "auto", objectFit: "contain" }}
+                    accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
+                    allowedMimeTypes={LOGO_MIME_TYPES}
+                    maxSizeBytes={LOGO_MAX_BYTES}
+                    hideUrlInput
+                    controlsInline
+                    onValueChange={(nextValue) =>
+                      updateSettings((prev) => ({
+                        ...prev,
+                        branding: { ...(prev.branding ?? {}), logoFooterUrl: nextValue },
+                      }))
+                    }
+                    onReplace={(file) => {
+                      void uploadBrandingAsset("logo", file, "logoFooterUrl");
+                    }}
+                    onRemove={() =>
+                      updateSettings(
+                        (prev) => {
+                          const nextBranding = { ...(prev.branding ?? {}) };
+                          delete nextBranding.logoFooterUrl;
+                          return { ...prev, branding: nextBranding };
+                        },
+                        { persistNow: true, note: "Autosave: logo footer removed" },
+                      )
+                    }
+                  />
+                </div>
+              </div>
+            </section>
+
+            <section className="wf-style-card">
+              <div className="wf-style-head">
+                <h3 className="wf-style-title">Favicon y contacto</h3>
+                <p className="wf-style-help">Datos básicos de marca y contacto visibles en el sitio.</p>
+              </div>
+              <div className="wf-style-body">
+                <ImageUploadField
+                  value={branding.faviconUrl ?? ""}
+                  placeholder="Favicon"
+                  disabled={editingLocked || uploadingAsset === "favicon"}
+                  removeDisabled={editingLocked || !(branding.faviconUrl ?? "").trim()}
+                  uploading={uploadingAsset === "favicon"}
+                  uploadingText="Subiendo favicon..."
+                  fallbackText="Sin favicon"
+                  guidanceText="Formato png o ico. Máximo 1MB."
+                  previewAlt="favicon preview"
+                  previewWidth={24}
+                  previewHeight={24}
+                  previewStyle={{ width: 24, height: 24, objectFit: "contain" }}
+                  accept="image/png,image/x-icon,image/vnd.microsoft.icon"
+                  allowedMimeTypes={FAVICON_MIME_TYPES}
+                  allowedExtensions={FAVICON_EXTENSIONS}
+                  maxSizeBytes={FAVICON_MAX_BYTES}
+                  hideUrlInput
+                  controlsInline
+                  onValueChange={(nextValue) =>
+                    updateSettings((prev) => ({
+                      ...prev,
+                      branding: { ...(prev.branding ?? {}), faviconUrl: nextValue },
+                    }))
+                  }
+                  onReplace={(file) => {
+                    void uploadBrandingAsset("favicon", file);
+                  }}
+                  onRemove={() =>
+                    updateSettings(
+                      (prev) => {
+                        const nextBranding = { ...(prev.branding ?? {}) };
+                        delete nextBranding.faviconUrl;
+                        return { ...prev, branding: nextBranding };
+                      },
+                      { persistNow: true, note: "Autosave: favicon removed" },
+                    )
+                  }
+                />
+
+                <div className="wf-style-subsection">
+                  <h4 className="wf-style-title">Contacto básico</h4>
+                  <div className="wf-grid2">
+                    <label className="wf-style-field">
+                      <span className="wf-style-label">WhatsApp</span>
+                      <input
+                        className="wf-input"
+                        disabled={editingLocked}
+                        placeholder="https://wa.me/..."
+                        value={contact.whatsapp ?? ""}
+                        onChange={(e) =>
+                          updateSettings((prev) => ({
+                            ...prev,
+                            branding: {
+                              ...(prev.branding ?? {}),
+                              contact: { ...(prev.branding?.contact ?? {}), whatsapp: e.target.value },
+                            },
+                          }))
+                        }
+                      />
+                    </label>
+                    <label className="wf-style-field">
+                      <span className="wf-style-label">Email</span>
+                      <input
+                        className="wf-input"
+                        disabled={editingLocked}
+                        placeholder="Email"
+                        value={contact.email ?? ""}
+                        onChange={(e) =>
+                          updateSettings((prev) => ({
+                            ...prev,
+                            branding: {
+                              ...(prev.branding ?? {}),
+                              contact: { ...(prev.branding?.contact ?? {}), email: e.target.value },
+                            },
+                          }))
+                        }
+                      />
+                    </label>
+                    <label className="wf-style-field">
+                      <span className="wf-style-label">Dirección</span>
+                      <input
+                        className="wf-input"
+                        disabled={editingLocked}
+                        placeholder="Dirección"
+                        value={contact.address ?? ""}
+                        onChange={(e) =>
+                          updateSettings((prev) => ({
+                            ...prev,
+                            branding: {
+                              ...(prev.branding ?? {}),
+                              contact: { ...(prev.branding?.contact ?? {}), address: e.target.value },
+                            },
+                          }))
+                        }
+                      />
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="wf-style-stack">
         <h3 className="wf-h3" style={{ marginBottom: 0 }}>Apariencia del sitio</h3>
@@ -4918,7 +5125,11 @@ export default function StagingWorkflowPanel() {
       <header className="wf-head">
         <div>
           <h1 className="wf-title">Gasfiter Admin - Panel</h1>
-          <p className="wf-sub">Gestiona borradores, versiones, permisos y publicación del sitio.</p>
+          <p className="wf-sub">
+            {showSimplifiedUi
+              ? "Edita textos, imágenes y datos básicos del sitio."
+              : "Gestiona borradores, versiones, permisos y publicación del sitio."}
+          </p>
         </div>
         <div className="wf-badges">
           {membership?.role ? (
@@ -4961,17 +5172,29 @@ export default function StagingWorkflowPanel() {
             </div>
           </div>
 
-	          <div className="wf-row wf-toolbar wf-toolbar-main" style={{ marginBottom: 10 }}>
-	            <input className="wf-input" value={siteSlug} onChange={(e) => setSiteSlug(e.target.value)} placeholder="slug del sitio" />
-	            <input
-	              className="wf-input"
-	              value={authUserEmail ? `Sesión: ${authUserEmail}` : userId}
-	              onChange={(e) => setUserId(e.target.value)}
-	              placeholder={authEnabled ? "userId del CMS o sesión Supabase" : "userId del CMS"}
-	              disabled={Boolean(authUserEmail) || busy}
-	            />
-	          </div>
+          {showTechnicalIdentity ? (
+            <div className="wf-row wf-toolbar wf-toolbar-main" style={{ marginBottom: 10 }}>
+              <input className="wf-input" value={siteSlug} onChange={(e) => setSiteSlug(e.target.value)} placeholder="slug del sitio" />
+              <input
+                className="wf-input"
+                value={authUserEmail ? `Sesión: ${authUserEmail}` : userId}
+                onChange={(e) => setUserId(e.target.value)}
+                placeholder={authEnabled ? "userId del CMS o sesión Supabase" : "userId del CMS"}
+                disabled={Boolean(authUserEmail) || busy}
+              />
+            </div>
+          ) : (
+            <div className="wf-row wf-toolbar wf-toolbar-main" style={{ marginBottom: 10 }}>
+              <div className="wf-preview-box" style={{ width: "100%" }}>
+                <div className="wf-kv">
+                  <div><strong>Sitio activo:</strong> {siteSlug}</div>
+                  <div><strong>Cuenta:</strong> {authUserEmail || getRoleDisplayLabel(membership?.role)}</div>
+                </div>
+              </div>
+            </div>
+          )}
 
+          {showTechnicalIdentity ? (
           <div className="wf-row wf-toolbar wf-toolbar-actions" style={{ marginBottom: 12 }}>
             {authEnabled ? (
               authUserEmail ? (
@@ -5004,19 +5227,24 @@ export default function StagingWorkflowPanel() {
               <span className="wf-muted">Auth por magic link no configurado en este entorno.</span>
             )}
           </div>
+          ) : null}
 
-          <div className="wf-row wf-toolbar wf-toolbar-actions" style={{ marginBottom: 12 }}>
-            <select className="wf-select" value={mode} onChange={(e) => handleModeChange(e.target.value as Mode)}>
-              <option value="draft">Borrador (editable)</option>
-              <option value="published">Publicado (solo referencia)</option>
-            </select>
-            <button className="wf-btn wf-btn-soft" onClick={loadPanel} disabled={busy}>
-              Cargar panel
-            </button>
-          </div>
-          <p className="wf-muted" style={{ marginTop: -6, marginBottom: 12 }}>
-            Usa <strong>Borrador</strong> para editar. Usa <strong>Publicado</strong> solo para revisar la versión en vivo.
-          </p>
+          {showTechnicalIdentity ? (
+            <>
+              <div className="wf-row wf-toolbar wf-toolbar-actions" style={{ marginBottom: 12 }}>
+                <select className="wf-select" value={mode} onChange={(e) => handleModeChange(e.target.value as Mode)}>
+                  <option value="draft">Borrador (editable)</option>
+                  <option value="published">Publicado (solo referencia)</option>
+                </select>
+                <button className="wf-btn wf-btn-soft" onClick={loadPanel} disabled={busy}>
+                  Cargar panel
+                </button>
+              </div>
+              <p className="wf-muted" style={{ marginTop: -6, marginBottom: 12 }}>
+                Usa <strong>Borrador</strong> para editar. Usa <strong>Publicado</strong> solo para revisar la versión en vivo.
+              </p>
+            </>
+          ) : null}
 
           <div className="wf-editorial-status">
             <div className="wf-editorial-status-title">
@@ -5028,15 +5256,19 @@ export default function StagingWorkflowPanel() {
             <div className="wf-editorial-status-desc">{editorialStatus.detail}</div>
             <div className="wf-editorial-status-meta">
               <span className="wf-pill wf-pill-neutral">
-                Permiso actual: {getRoleDisplayLabel(membership?.role)}
+                {showSimplifiedUi ? `Perfil: ${getRoleDisplayLabel(membership?.role)}` : `Permiso actual: ${getRoleDisplayLabel(membership?.role)}`}
               </span>
               <span className="wf-pill wf-pill-primary">{actionAvailableLabel}</span>
-              <span className="wf-pill wf-pill-neutral">
-                {latestDraftVersion ? `Borrador v${latestDraftVersion.version_number}` : "Sin borrador activo"}
-              </span>
-              <span className="wf-pill wf-pill-neutral">
-                {latestPublishedVersion ? `Publicado v${latestPublishedVersion.version_number}` : "Sin versión publicada"}
-              </span>
+              {showAdvancedUi ? (
+                <>
+                  <span className="wf-pill wf-pill-neutral">
+                    {latestDraftVersion ? `Borrador v${latestDraftVersion.version_number}` : "Sin borrador activo"}
+                  </span>
+                  <span className="wf-pill wf-pill-neutral">
+                    {latestPublishedVersion ? `Publicado v${latestPublishedVersion.version_number}` : "Sin versión publicada"}
+                  </span>
+                </>
+              ) : null}
 
               {autosaving || flushingPublish ? (
                 <span className="wf-pill wf-pill-neutral">{flushingPublish ? "Preparando publicación..." : "Guardando..."}</span>
@@ -5093,7 +5325,7 @@ export default function StagingWorkflowPanel() {
                 title={actionContext.saveDisabled ? actionContext.saveDisabledReason : "Guardar cambios en borrador"}
                 aria-describedby={actionContext.saveDisabled ? "panel-action-help" : undefined}
               >
-                Guardar borrador
+                {showSimplifiedUi ? "Guardar cambios" : "Guardar borrador"}
               </button>
             ) : null}
             {actionContext.showPublish ? (
@@ -5114,7 +5346,7 @@ export default function StagingWorkflowPanel() {
               </button>
             ) : null}
             <button className="wf-btn wf-btn-soft" onClick={openPreview} disabled={busy || !panelReady}>
-              {showAdvancedUi ? "Vista previa" : "Previsualizar"}
+              {showAdvancedUi ? "Vista previa" : "Ver sitio"}
             </button>
             {showAdvancedUi ? (
               <button
@@ -5279,10 +5511,10 @@ export default function StagingWorkflowPanel() {
 
           {view === "items" ? (
             <>
-              <h2 className="wf-h3">Elementos</h2>
+              <h2 className="wf-h3">{showSimplifiedUi ? "Listas y tarjetas" : "Elementos"}</h2>
               <div className="wf-row" style={{ marginBottom: 10 }}>
                 <button className="wf-btn wf-btn-soft" onClick={() => setEditableSection("services")}>Servicios</button>
-                <button className="wf-btn wf-btn-soft" onClick={() => setEditableSection("projects")}>Clientes</button>
+                <button className="wf-btn wf-btn-soft" onClick={() => setEditableSection("projects")}>Proyectos</button>
                 {!hideFaqAndTestimonialsInItems ? (
                   <button className="wf-btn wf-btn-soft" onClick={() => setEditableSection("faq")}>FAQ</button>
                 ) : null}
@@ -5294,7 +5526,7 @@ export default function StagingWorkflowPanel() {
             </>
           ) : null}
 
-          {view === "style" ? <><h2 className="wf-h3">Estilo</h2>{renderStyleEditor()}</> : null}
+          {view === "style" ? <><h2 className="wf-h3">{showSimplifiedUi ? "Marca e información" : "Estilo"}</h2>{renderStyleEditor()}</> : null}
 
           {view === "versions" ? (
             <>

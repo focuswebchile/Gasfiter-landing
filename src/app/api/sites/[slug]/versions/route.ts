@@ -53,7 +53,7 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
           role,
           permissions: {
             canSaveDraft: ["owner", "admin", "editor"].includes(role),
-            canPublish: ["owner", "admin"].includes(role),
+            canPublish: ["owner", "admin", "editor"].includes(role),
             canRollback: ["owner", "admin"].includes(role),
             readOnly: role === "viewer",
           },
