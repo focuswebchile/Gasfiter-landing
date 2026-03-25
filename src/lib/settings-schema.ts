@@ -3,7 +3,9 @@ import { z } from "zod";
 export const sectionIdSchema = z.enum([
   "hero",
   "audience",
+  "trust",
   "services",
+  "process",
   "projects",
   "urgency_banner",
   "contact_banner",

@@ -89,6 +89,41 @@ export type ResolvedAudience = {
   images: { back: string; front: string };
 };
 
+export type TrustDefaults = {
+  kicker: string;
+  title: string;
+  subtitle: string;
+  image: string;
+  logoPrimary: string;
+  logoSecondary: string;
+};
+
+export type ResolvedTrust = {
+  kicker: string;
+  title: string;
+  subtitle: string;
+  image: string;
+  logos: { primary: string; secondary: string };
+  bullets: Array<{ text: string; icon: string }>;
+  hasSectionSource: boolean;
+};
+
+export type ProcessDefaults = {
+  kicker: string;
+  title: string;
+  subtitle: string;
+  image: string;
+};
+
+export type ResolvedProcess = {
+  kicker: string;
+  title: string;
+  subtitle: string;
+  image: string;
+  steps: Array<{ title: string; description: string }>;
+  hasSectionSource: boolean;
+};
+
 export type ServicesDefaults = {
   title: string;
   subtitle: string;
@@ -570,6 +605,93 @@ export const resolveProjectsFromSettings = ({
     description,
     controlsEnabled,
     items,
+  };
+};
+
+export const resolveTrustFromSettings = ({
+  settings,
+  defaults,
+}: {
+  settings: CmsSettings | null;
+  defaults: TrustDefaults;
+}): ResolvedTrust => {
+  const content = settings?.content && typeof settings.content === "object" ? settings.content : {};
+  const sections = Array.isArray(content.sections) ? content.sections : [];
+  const sectionTrust = sections.find(
+    (section) =>
+      section &&
+      typeof section === "object" &&
+      section.id === "trust" &&
+      section.enabled !== false &&
+      section.data &&
+      typeof section.data === "object",
+  );
+  const sectionData = sectionTrust?.data && typeof sectionTrust.data === "object" ? sectionTrust.data : {};
+
+  const bullets = toServicesArray((sectionData as { bullets?: unknown }).bullets)
+    .filter((item) => item.enabled !== false)
+    .map((item) => {
+      const text = getTrimmedString(item.text);
+      if (!text) return null;
+      const icon = getTrimmedString(item.icon) || "fa-check";
+      return { text, icon };
+    })
+    .filter((item): item is { text: string; icon: string } => !!item);
+
+  const logos = (sectionData as { logos?: unknown }).logos;
+  const logosRecord = logos && typeof logos === "object" ? (logos as Record<string, unknown>) : {};
+
+  return {
+    kicker: getTrimmedString((sectionData as { kicker?: unknown }).kicker) || defaults.kicker,
+    title: getTrimmedString((sectionData as { title?: unknown }).title) || defaults.title,
+    subtitle: getTrimmedString((sectionData as { subtitle?: unknown }).subtitle) || defaults.subtitle,
+    image: getTrimmedString((sectionData as { image?: unknown }).image) || defaults.image,
+    logos: {
+      primary: getTrimmedString(logosRecord.primary) || defaults.logoPrimary,
+      secondary: getTrimmedString(logosRecord.secondary) || defaults.logoSecondary,
+    },
+    bullets,
+    hasSectionSource: !!sectionTrust,
+  };
+};
+
+export const resolveProcessFromSettings = ({
+  settings,
+  defaults,
+}: {
+  settings: CmsSettings | null;
+  defaults: ProcessDefaults;
+}): ResolvedProcess => {
+  const content = settings?.content && typeof settings.content === "object" ? settings.content : {};
+  const sections = Array.isArray(content.sections) ? content.sections : [];
+  const sectionProcess = sections.find(
+    (section) =>
+      section &&
+      typeof section === "object" &&
+      section.id === "process" &&
+      section.enabled !== false &&
+      section.data &&
+      typeof section.data === "object",
+  );
+  const sectionData = sectionProcess?.data && typeof sectionProcess.data === "object" ? sectionProcess.data : {};
+
+  const steps = toServicesArray((sectionData as { steps?: unknown }).steps)
+    .filter((item) => item.enabled !== false)
+    .map((item) => {
+      const title = getTrimmedString(item.title);
+      const description = getTrimmedString(item.description);
+      if (!title || !description) return null;
+      return { title, description };
+    })
+    .filter((item): item is { title: string; description: string } => !!item);
+
+  return {
+    kicker: getTrimmedString((sectionData as { kicker?: unknown }).kicker) || defaults.kicker,
+    title: getTrimmedString((sectionData as { title?: unknown }).title) || defaults.title,
+    subtitle: getTrimmedString((sectionData as { subtitle?: unknown }).subtitle) || defaults.subtitle,
+    image: getTrimmedString((sectionData as { image?: unknown }).image) || defaults.image,
+    steps,
+    hasSectionSource: !!sectionProcess,
   };
 };
 

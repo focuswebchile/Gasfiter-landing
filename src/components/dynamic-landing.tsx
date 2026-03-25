@@ -8,9 +8,11 @@ import {
   resolveAudienceFromSettings,
   resolveFaqFromSettings,
   resolveHeroFromSettings,
+  resolveProcessFromSettings,
   resolveProjectsFromSettings,
   resolveServicesFromSettings,
   resolveTestimonialsFromSettings,
+  resolveTrustFromSettings,
   resolveUrgencyFromSettings,
   type CmsSettings,
 } from "@/lib/cms-settings-client";
@@ -2610,15 +2612,15 @@ const landingMarkup = String.raw`
                 La licencia SEC acredita intervención autorizada en instalaciones de gas, calefont y trabajos críticos donde la seguridad importa.
               </p>
 
-              <ul class="trust-bullets">
+              <ul class="trust-bullets" data-trust-bullets>
                 <li><i class="fa-solid fa-check" aria-hidden="true"></i>Garantía destacada</li>
                 <li><i class="fa-solid fa-check" aria-hidden="true"></i>Norma de seguridad</li>
                 <li><i class="fa-solid fa-check" aria-hidden="true"></i>Certificación profesional</li>
               </ul>
 
               <div class="trust-proof" aria-label="Certificaciones y respaldos">
-                <img class="trust-proof-logo" src="/images/sec.webp" alt="Licencia SEC" loading="lazy" />
-                <img class="trust-proof-logo" src="/images/sello_verde.webp" alt="Sello verde" loading="lazy" />
+                <img class="trust-proof-logo" data-trust-logo-primary src="/images/sec.webp" alt="Licencia SEC" loading="lazy" />
+                <img class="trust-proof-logo" data-trust-logo-secondary src="/images/sello_verde.webp" alt="Sello verde" loading="lazy" />
               </div>
             </div>
           </div>
@@ -2721,7 +2723,7 @@ const landingMarkup = String.raw`
             </p>
           </div>
 
-          <div class="process-timeline">
+          <div class="process-timeline" data-process-timeline>
             <article class="process-step" data-process-step>
               <span class="process-number">01</span>
               <div class="process-step-copy">
@@ -3134,6 +3136,13 @@ const DEFAULT_LANDING_VALUES = {
     subtitle: "Servicios más solicitados",
     ctaText: "Llamar por esto",
   },
+  process: {
+    kicker: "PROCESO DE TRABAJO",
+    title: "Un proceso claro para responder rápido sin perder control técnico",
+    subtitle:
+      "Cada paso está pensado para dar visibilidad, orden y cierre correcto desde el primer contacto hasta la validación final.",
+    image: "/images/gasfiter-emergencias.webp",
+  },
   projects: {
     title: "Trabajos realizados en Santiago",
     description:
@@ -3159,6 +3168,15 @@ const DEFAULT_LANDING_VALUES = {
     ctaPrimaryUrl: "tel:+569XXXXXXX",
     ctaSecondaryText: "Agendar visita",
     ctaSecondaryUrl: "#contacto",
+  },
+  trust: {
+    kicker: "Certificación y seguridad",
+    title: "Respaldo técnico para trabajos donde no se puede improvisar",
+    subtitle:
+      "La licencia SEC acredita intervención autorizada en instalaciones de gas, calefont y trabajos críticos donde la seguridad importa.",
+    image: "/images/gasfiter-calefont.webp",
+    logoPrimary: "/images/sec.webp",
+    logoSecondary: "/images/sello_verde.webp",
   },
   urgency: {
     title: "¿Tienes una urgencia ahora?",
@@ -3584,12 +3602,16 @@ export default function DynamicLanding() {
         el.style.display = visible ? "" : "none";
       };
       const sectionAudience = findSection("audience");
+      const sectionTrust = findSection("trust");
+      const sectionProcess = findSection("process");
       const sectionProjects = findSection("projects");
       const sectionUrgency = findSection("urgency_banner");
       const sectionContact = findSection("contact_banner");
       setVisible("#inicio", !isExplicitlyDisabled("hero"));
       setVisible(".band-dark", !isExplicitlyDisabled("audience"));
+      setVisible("#certificacion", !isExplicitlyDisabled("trust"));
       setVisible("#servicios", !isExplicitlyDisabled("services"));
+      setVisible("#proceso", !isExplicitlyDisabled("process"));
       setVisible("#trabajos", !isExplicitlyDisabled("projects"));
       setVisible(".trust-band", !isExplicitlyDisabled("urgency_banner"));
       setVisible("#contacto", !isExplicitlyDisabled("contact_banner"));
@@ -3862,6 +3884,69 @@ export default function DynamicLanding() {
         }
       }
 
+      if (sectionTrust?.data) {
+        const trustRoot = document.getElementById("certificacion");
+        const trustImage = trustRoot?.querySelector<HTMLImageElement>(".trust-media-bleed img");
+        const trustKicker = trustRoot?.querySelector<HTMLElement>("[data-trust-kicker]");
+        const trustTitle = trustRoot?.querySelector<HTMLElement>("[data-trust-title]");
+        const trustSubtitle = trustRoot?.querySelector<HTMLElement>("[data-trust-subtitle]");
+        const trustBullets = trustRoot?.querySelector<HTMLElement>("[data-trust-bullets]");
+        const trustLogoPrimary = trustRoot?.querySelector<HTMLImageElement>("[data-trust-logo-primary]");
+        const trustLogoSecondary = trustRoot?.querySelector<HTMLImageElement>("[data-trust-logo-secondary]");
+        const trust = resolveTrustFromSettings({
+          settings,
+          defaults: DEFAULT_LANDING_VALUES.trust,
+        });
+
+        if (trustKicker) trustKicker.textContent = trust.kicker;
+        if (trustTitle) trustTitle.textContent = trust.title;
+        if (trustSubtitle) trustSubtitle.textContent = trust.subtitle;
+        if (trustImage && trust.image) trustImage.src = trust.image;
+        if (trustBullets && trust.bullets.length) {
+          trustBullets.innerHTML = trust.bullets
+            .map(
+              (item) =>
+                `<li><i class="fa-solid ${escapeHtml(item.icon || "fa-check")}" aria-hidden="true"></i>${escapeHtml(item.text)}</li>`,
+            )
+            .join("");
+        }
+        if (trustLogoPrimary && trust.logos.primary) trustLogoPrimary.src = trust.logos.primary;
+        if (trustLogoSecondary && trust.logos.secondary) trustLogoSecondary.src = trust.logos.secondary;
+      }
+
+      if (sectionProcess?.data) {
+        const processRoot = document.getElementById("proceso");
+        const processImage = processRoot?.querySelector<HTMLImageElement>(".process-media img");
+        const processKicker = processRoot?.querySelector<HTMLElement>("[data-process-kicker]");
+        const processTitle = processRoot?.querySelector<HTMLElement>("[data-process-title]");
+        const processSubtitle = processRoot?.querySelector<HTMLElement>("[data-process-subtitle]");
+        const processTimeline = processRoot?.querySelector<HTMLElement>("[data-process-timeline]");
+        const process = resolveProcessFromSettings({
+          settings,
+          defaults: DEFAULT_LANDING_VALUES.process,
+        });
+
+        if (processKicker) processKicker.textContent = process.kicker;
+        if (processTitle) processTitle.textContent = process.title;
+        if (processSubtitle) processSubtitle.textContent = process.subtitle;
+        if (processImage && process.image) processImage.src = process.image;
+        if (processTimeline && process.steps.length) {
+          processTimeline.innerHTML = process.steps
+            .map(
+              (step, index) => `
+                <article class="process-step" data-process-step>
+                  <span class="process-number">${String(index + 1).padStart(2, "0")}</span>
+                  <div class="process-step-copy">
+                    <h3>${escapeHtml(step.title)}</h3>
+                    <p>${escapeHtml(step.description)}</p>
+                  </div>
+                </article>
+              `,
+            )
+            .join("");
+        }
+      }
+
       if (sectionProjects?.data) {
         const projectsRoot = document.getElementById("trabajos");
         const projectsTitle = projectsRoot?.querySelector(".projects-head h2");
@@ -3871,7 +3956,9 @@ export default function DynamicLanding() {
           settings,
           defaults: DEFAULT_LANDING_VALUES.projects,
         });
-        if (projectsTitle) projectsTitle.textContent = "Proyectos";
+        if (projectsTitle && projects.title) {
+          projectsTitle.textContent = projects.title;
+        }
         const renderProjectsGroup = (items: typeof projects.items) => {
           const source = items.length ? items : projects.items;
           return source
@@ -3897,6 +3984,24 @@ export default function DynamicLanding() {
           if (projectsTrackBottom) {
             projectsTrackBottom.innerHTML = `<div class="projects-marquee-group">${bottomMarkup}</div><div class="projects-marquee-group" aria-hidden="true">${bottomMarkup}</div>`;
           }
+        }
+      }
+
+      if (sectionUrgency?.data) {
+        const trustBandRoot = document.querySelector(".trust-band");
+        const trustBandTitle = trustBandRoot?.querySelector(".trust-band-copy h2");
+        const trustBandDescription = trustBandRoot?.querySelector(".trust-band-copy p");
+        const urgency = resolveUrgencyFromSettings({
+          settings,
+          defaults: DEFAULT_LANDING_VALUES.urgency,
+          heroPrimaryUrl,
+        });
+
+        if (trustBandTitle && urgency.title) {
+          trustBandTitle.textContent = urgency.title;
+        }
+        if (trustBandDescription && urgency.description) {
+          trustBandDescription.textContent = urgency.description;
         }
       }
 

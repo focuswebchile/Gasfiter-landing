@@ -10,7 +10,9 @@ type Role = "owner" | "admin" | "editor" | "viewer";
 type EditableSectionId =
   | "hero"
   | "audience"
+  | "trust"
   | "services"
+  | "process"
   | "projects"
   | "faq"
   | "urgency_banner"
@@ -832,6 +834,9 @@ function mapPublishIssueToSection(
   if (normalized.includes("empresa") || normalized.includes("audiencia")) {
     return { section: "audience", view: "sections", label: "Ir a Quiénes somos" };
   }
+  if (normalized.includes("certific") || normalized.includes("seguridad") || normalized.includes("trust")) {
+    return { section: "trust", view: "sections", label: "Ir a Certificación y seguridad" };
+  }
   if (normalized.includes("urgente")) {
     return { section: "urgency_banner", view: "sections", label: "Ir a Cobertura y confianza" };
   }
@@ -847,8 +852,12 @@ function getSectionDisplayName(sectionId: string): string {
       return "Hero";
     case "audience":
       return "Quiénes somos";
+    case "trust":
+      return "Certificación y seguridad";
     case "services":
       return "Servicios";
+    case "process":
+      return "Proceso de trabajo";
     case "projects":
       return "Proyectos";
     case "urgency_banner":
@@ -1105,6 +1114,8 @@ export default function StagingWorkflowPanel() {
 
   const heroSection = settings ? getSection(settings, "hero") : null;
   const audienceSection = settings ? getSection(settings, "audience") : null;
+  const trustSection = settings ? getSection(settings, "trust") : null;
+  const processSection = settings ? getSection(settings, "process") : null;
   const servicesSection = settings ? getSection(settings, "services") : null;
   const projectsSection = settings ? getSection(settings, "projects") : null;
   const faqSection = settings ? getSection(settings, "faq") : null;
@@ -1116,7 +1127,9 @@ export default function StagingWorkflowPanel() {
     const supported: EditableSectionId[] = [
       "hero",
       "audience",
+      "trust",
       "services",
+      "process",
       "projects",
       "faq",
       "urgency_banner",
@@ -1128,8 +1141,25 @@ export default function StagingWorkflowPanel() {
 
   const visibleSectionsForSectionsView = useMemo(() => {
     const sections = settings?.content?.sections ?? [];
-    if (!hiddenSectionsInSectionsView) return sections;
-    return sections.filter((section) => !hiddenSectionsInSectionsView.has(section.id as EditableSectionId));
+    const merged = [...sections];
+    const knownDefaults: Section[] = [
+      { id: "hero", enabled: true, order: 10, data: {} },
+      { id: "audience", enabled: true, order: 20, data: {} },
+      { id: "trust", enabled: true, order: 25, data: {} },
+      { id: "services", enabled: true, order: 30, data: {} },
+      { id: "process", enabled: true, order: 35, data: {} },
+      { id: "projects", enabled: true, order: 40, data: {} },
+      { id: "urgency_banner", enabled: true, order: 50, data: {} },
+      { id: "contact_banner", enabled: true, order: 60, data: {} },
+      { id: "testimonials", enabled: true, order: 70, data: {} },
+      { id: "faq", enabled: true, order: 80, data: {} },
+    ];
+    knownDefaults.forEach((section) => {
+      if (!merged.some((existing) => existing.id === section.id)) merged.push(section);
+    });
+    merged.sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+    if (!hiddenSectionsInSectionsView) return merged;
+    return merged.filter((section) => !hiddenSectionsInSectionsView.has(section.id as EditableSectionId));
   }, [settings?.content?.sections, hiddenSectionsInSectionsView]);
 
   useEffect(() => {
@@ -1774,8 +1804,15 @@ export default function StagingWorkflowPanel() {
     };
 
   const uploadContentAsset = async (params: {
-    sectionId: "hero" | "projects" | "testimonials" | "contact_banner" | "audience";
-    field: "image" | "avatar" | "background_image" | "image_back" | "image_front";
+    sectionId: "hero" | "projects" | "testimonials" | "contact_banner" | "audience" | "trust" | "process";
+    field:
+      | "image"
+      | "avatar"
+      | "background_image"
+      | "image_back"
+      | "image_front"
+      | "image_primary"
+      | "image_secondary";
     file: File | null;
     itemId?: string;
   }) => {
@@ -1842,6 +1879,19 @@ export default function StagingWorkflowPanel() {
                   ...section.data,
                   images: {
                     ...((section.data.images as Record<string, unknown>) ?? {}),
+                    [key]: payload.url,
+                  },
+                },
+              });
+            }
+            if (sectionId === "trust" && (field === "image_primary" || field === "image_secondary")) {
+              const key = field === "image_primary" ? "primary" : "secondary";
+              return upsertSection(prev, {
+                ...section,
+                data: {
+                  ...section.data,
+                  logos: {
+                    ...((section.data.logos as Record<string, unknown>) ?? {}),
                     [key]: payload.url,
                   },
                 },
@@ -2348,6 +2398,400 @@ export default function StagingWorkflowPanel() {
               </label>
             </div>
           ))}
+        </div>
+      );
+    }
+
+    if (editableSection === "trust") {
+      const section = trustSection ?? { id: "trust", enabled: true, order: 25, data: {} };
+      const bullets = Array.isArray(section.data.bullets)
+        ? (section.data.bullets as Array<Record<string, unknown>>)
+        : [];
+      const trustImage = typeof section.data.image === "string" ? section.data.image : "";
+      const trustLogos = (section.data.logos as { primary?: unknown; secondary?: unknown } | undefined) ?? {};
+      const trustLogoPrimary = typeof trustLogos.primary === "string" ? trustLogos.primary : "";
+      const trustLogoSecondary = typeof trustLogos.secondary === "string" ? trustLogos.secondary : "";
+      return (
+        <div className="wf-sections">
+          <div className="wf-toggle">
+            <input
+              disabled={editingLocked}
+              type="checkbox"
+              checked={section.enabled}
+              onChange={(e) => updateSettings((prev) => upsertSection(prev, { ...section, enabled: e.target.checked }))}
+            />
+            {getSectionDisplayName(section.id)} habilitada
+          </div>
+          <input
+            className="wf-input"
+            disabled={editingLocked}
+            value={typeof section.data.kicker === "string" ? section.data.kicker : ""}
+            placeholder="Etiqueta"
+            onChange={(e) =>
+              updateSettings((prev) => upsertSection(prev, { ...section, data: { ...section.data, kicker: e.target.value } }))
+            }
+          />
+          <input
+            className="wf-input"
+            disabled={editingLocked}
+            value={typeof section.data.title === "string" ? section.data.title : ""}
+            placeholder="Título"
+            onChange={(e) =>
+              updateSettings((prev) => upsertSection(prev, { ...section, data: { ...section.data, title: e.target.value } }))
+            }
+          />
+          <textarea
+            className="wf-textarea"
+            disabled={editingLocked}
+            value={typeof section.data.subtitle === "string" ? section.data.subtitle : ""}
+            placeholder="Subtítulo"
+            onChange={(e) =>
+              updateSettings((prev) =>
+                upsertSection(prev, { ...section, data: { ...section.data, subtitle: e.target.value } }),
+              )
+            }
+          />
+          <ImageUploadField
+            value={trustImage}
+            placeholder="Imagen principal (URL/ruta)"
+            disabled={editingLocked}
+            removeDisabled={editingLocked || !trustImage.trim()}
+            uploading={uploadingContentAssetKey === "trust:section:image"}
+            uploadingText="Subiendo imagen..."
+            fallbackText="Sin imagen (usa fallback del layout)"
+            guidanceText="Formatos: png, jpg, webp, svg. Máximo 5MB."
+            previewAlt="trust section preview"
+            previewWidth={320}
+            previewHeight={92}
+            accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
+            allowedMimeTypes={CONTENT_IMAGE_MIME_TYPES}
+            maxSizeBytes={CONTENT_IMAGE_MAX_BYTES}
+            onValueChange={(nextValue) =>
+              updateSettings((prev) => upsertSection(prev, { ...section, data: { ...section.data, image: nextValue } }))
+            }
+            onReplace={(file) => {
+              void uploadContentAsset({ sectionId: "trust", field: "image", file });
+            }}
+            onRemove={() =>
+              updateSettings(
+                (prev) => upsertSection(prev, { ...section, data: { ...section.data, image: "" } }),
+                { persistNow: true, note: "Autosave: trust image removed" },
+              )
+            }
+          />
+          <div className="wf-grid2">
+            <ImageUploadField
+              value={trustLogoPrimary}
+              placeholder="Logo principal (URL/ruta)"
+              disabled={editingLocked}
+              removeDisabled={editingLocked || !trustLogoPrimary.trim()}
+              uploading={uploadingContentAssetKey === "trust:section:image_primary"}
+              uploadingText="Subiendo logo..."
+              fallbackText="Sin logo principal"
+              guidanceText="Formatos: png, jpg, webp, svg. Máximo 5MB."
+              previewAlt="trust primary logo preview"
+              previewWidth={220}
+              previewHeight={84}
+              accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
+              allowedMimeTypes={CONTENT_IMAGE_MIME_TYPES}
+              maxSizeBytes={CONTENT_IMAGE_MAX_BYTES}
+              onValueChange={(nextValue) =>
+                updateSettings((prev) =>
+                  upsertSection(prev, {
+                    ...section,
+                    data: { ...section.data, logos: { ...((section.data.logos as Record<string, unknown>) ?? {}), primary: nextValue } },
+                  }),
+                )
+              }
+              onReplace={(file) => {
+                void uploadContentAsset({ sectionId: "trust", field: "image_primary", file });
+              }}
+              onRemove={() =>
+                updateSettings(
+                  (prev) =>
+                    upsertSection(prev, {
+                      ...section,
+                      data: { ...section.data, logos: { ...((section.data.logos as Record<string, unknown>) ?? {}), primary: "" } },
+                    }),
+                  { persistNow: true, note: "Autosave: trust primary logo removed" },
+                )
+              }
+            />
+            <ImageUploadField
+              value={trustLogoSecondary}
+              placeholder="Logo secundario (URL/ruta)"
+              disabled={editingLocked}
+              removeDisabled={editingLocked || !trustLogoSecondary.trim()}
+              uploading={uploadingContentAssetKey === "trust:section:image_secondary"}
+              uploadingText="Subiendo logo..."
+              fallbackText="Sin logo secundario"
+              guidanceText="Formatos: png, jpg, webp, svg. Máximo 5MB."
+              previewAlt="trust secondary logo preview"
+              previewWidth={220}
+              previewHeight={84}
+              accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
+              allowedMimeTypes={CONTENT_IMAGE_MIME_TYPES}
+              maxSizeBytes={CONTENT_IMAGE_MAX_BYTES}
+              onValueChange={(nextValue) =>
+                updateSettings((prev) =>
+                  upsertSection(prev, {
+                    ...section,
+                    data: { ...section.data, logos: { ...((section.data.logos as Record<string, unknown>) ?? {}), secondary: nextValue } },
+                  }),
+                )
+              }
+              onReplace={(file) => {
+                void uploadContentAsset({ sectionId: "trust", field: "image_secondary", file });
+              }}
+              onRemove={() =>
+                updateSettings(
+                  (prev) =>
+                    upsertSection(prev, {
+                      ...section,
+                      data: { ...section.data, logos: { ...((section.data.logos as Record<string, unknown>) ?? {}), secondary: "" } },
+                    }),
+                  { persistNow: true, note: "Autosave: trust secondary logo removed" },
+                )
+              }
+            />
+          </div>
+          {bullets.map((bullet, index) => (
+            <div key={index} className="wf-row-item">
+              <div style={{ flex: 1, display: "grid", gap: 6 }}>
+                <input
+                  className="wf-input"
+                  disabled={editingLocked}
+                  value={typeof bullet.text === "string" ? bullet.text : ""}
+                  placeholder={`Bullet ${index + 1}`}
+                  onChange={(e) =>
+                    updateSettings((prev) => {
+                      const sec = getSection(prev, section.id);
+                      if (!sec) return prev;
+                      const nextBullets = Array.isArray(sec.data.bullets)
+                        ? [...(sec.data.bullets as Array<Record<string, unknown>>)]
+                        : [];
+                      nextBullets[index] = { ...nextBullets[index], text: e.target.value };
+                      return upsertSection(prev, { ...sec, data: { ...sec.data, bullets: nextBullets } });
+                    })
+                  }
+                />
+                <input
+                  className="wf-input"
+                  disabled={editingLocked}
+                  value={typeof bullet.icon === "string" ? bullet.icon : ""}
+                  placeholder="Ícono (ej: fa-check)"
+                  onChange={(e) =>
+                    updateSettings((prev) => {
+                      const sec = getSection(prev, section.id);
+                      if (!sec) return prev;
+                      const nextBullets = Array.isArray(sec.data.bullets)
+                        ? [...(sec.data.bullets as Array<Record<string, unknown>>)]
+                        : [];
+                      nextBullets[index] = { ...nextBullets[index], icon: e.target.value };
+                      return upsertSection(prev, { ...sec, data: { ...sec.data, bullets: nextBullets } });
+                    })
+                  }
+                />
+              </div>
+              <label className="wf-toggle">
+                <input
+                  disabled={editingLocked}
+                  type="checkbox"
+                  checked={bullet.enabled !== false}
+                  onChange={(e) =>
+                    updateSettings((prev) => {
+                      const sec = getSection(prev, section.id);
+                      if (!sec) return prev;
+                      const nextBullets = Array.isArray(sec.data.bullets)
+                        ? [...(sec.data.bullets as Array<Record<string, unknown>>)]
+                        : [];
+                      nextBullets[index] = { ...nextBullets[index], enabled: e.target.checked };
+                      return upsertSection(prev, { ...sec, data: { ...sec.data, bullets: nextBullets } });
+                    })
+                  }
+                />
+                habilitada
+              </label>
+            </div>
+          ))}
+          <div className="wf-row">
+            <button
+              className="wf-btn wf-btn-soft"
+              disabled={editingLocked}
+              onClick={() =>
+                updateSettings((prev) => {
+                  const sec = getSection(prev, section.id) ?? section;
+                  const nextBullets = Array.isArray(sec.data.bullets)
+                    ? [...(sec.data.bullets as Array<Record<string, unknown>>)]
+                    : [];
+                  nextBullets.push({ text: "Nuevo respaldo", icon: "fa-check", enabled: true, order: nextBullets.length + 1 });
+                  return upsertSection(prev, { ...sec, data: { ...sec.data, bullets: nextBullets } });
+                })
+              }
+            >
+              + Agregar bullet
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    if (editableSection === "process") {
+      const section = processSection ?? { id: "process", enabled: true, order: 35, data: {} };
+      const steps = Array.isArray(section.data.steps)
+        ? (section.data.steps as Array<Record<string, unknown>>)
+        : [];
+      const processImage = typeof section.data.image === "string" ? section.data.image : "";
+      return (
+        <div className="wf-sections">
+          <div className="wf-toggle">
+            <input
+              disabled={editingLocked}
+              type="checkbox"
+              checked={section.enabled}
+              onChange={(e) => updateSettings((prev) => upsertSection(prev, { ...section, enabled: e.target.checked }))}
+            />
+            {getSectionDisplayName(section.id)} habilitada
+          </div>
+          <input
+            className="wf-input"
+            disabled={editingLocked}
+            value={typeof section.data.kicker === "string" ? section.data.kicker : ""}
+            placeholder="Etiqueta"
+            onChange={(e) =>
+              updateSettings((prev) => upsertSection(prev, { ...section, data: { ...section.data, kicker: e.target.value } }))
+            }
+          />
+          <input
+            className="wf-input"
+            disabled={editingLocked}
+            value={typeof section.data.title === "string" ? section.data.title : ""}
+            placeholder="Título"
+            onChange={(e) =>
+              updateSettings((prev) => upsertSection(prev, { ...section, data: { ...section.data, title: e.target.value } }))
+            }
+          />
+          <textarea
+            className="wf-textarea"
+            disabled={editingLocked}
+            value={typeof section.data.subtitle === "string" ? section.data.subtitle : ""}
+            placeholder="Subtítulo"
+            onChange={(e) =>
+              updateSettings((prev) =>
+                upsertSection(prev, { ...section, data: { ...section.data, subtitle: e.target.value } }),
+              )
+            }
+          />
+          <ImageUploadField
+            value={processImage}
+            placeholder="Imagen principal (URL/ruta)"
+            disabled={editingLocked}
+            removeDisabled={editingLocked || !processImage.trim()}
+            uploading={uploadingContentAssetKey === "process:section:image"}
+            uploadingText="Subiendo imagen..."
+            fallbackText="Sin imagen (usa fallback del layout)"
+            guidanceText="Formatos: png, jpg, webp, svg. Máximo 5MB."
+            previewAlt="process preview"
+            previewWidth={320}
+            previewHeight={92}
+            accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
+            allowedMimeTypes={CONTENT_IMAGE_MIME_TYPES}
+            maxSizeBytes={CONTENT_IMAGE_MAX_BYTES}
+            onValueChange={(nextValue) =>
+              updateSettings((prev) => upsertSection(prev, { ...section, data: { ...section.data, image: nextValue } }))
+            }
+            onReplace={(file) => {
+              void uploadContentAsset({ sectionId: "process", field: "image", file });
+            }}
+            onRemove={() =>
+              updateSettings(
+                (prev) => upsertSection(prev, { ...section, data: { ...section.data, image: "" } }),
+                { persistNow: true, note: "Autosave: process image removed" },
+              )
+            }
+          />
+          {steps.map((step, index) => (
+            <div key={index} className="wf-row-item">
+              <div style={{ flex: 1, display: "grid", gap: 6 }}>
+                <input
+                  className="wf-input"
+                  disabled={editingLocked}
+                  value={typeof step.title === "string" ? step.title : ""}
+                  placeholder={`Paso ${index + 1} título`}
+                  onChange={(e) =>
+                    updateSettings((prev) => {
+                      const sec = getSection(prev, section.id);
+                      if (!sec) return prev;
+                      const nextSteps = Array.isArray(sec.data.steps)
+                        ? [...(sec.data.steps as Array<Record<string, unknown>>)]
+                        : [];
+                      nextSteps[index] = { ...nextSteps[index], title: e.target.value };
+                      return upsertSection(prev, { ...sec, data: { ...sec.data, steps: nextSteps } });
+                    })
+                  }
+                />
+                <textarea
+                  className="wf-textarea"
+                  disabled={editingLocked}
+                  value={typeof step.description === "string" ? step.description : ""}
+                  placeholder={`Paso ${index + 1} descripción`}
+                  onChange={(e) =>
+                    updateSettings((prev) => {
+                      const sec = getSection(prev, section.id);
+                      if (!sec) return prev;
+                      const nextSteps = Array.isArray(sec.data.steps)
+                        ? [...(sec.data.steps as Array<Record<string, unknown>>)]
+                        : [];
+                      nextSteps[index] = { ...nextSteps[index], description: e.target.value };
+                      return upsertSection(prev, { ...sec, data: { ...sec.data, steps: nextSteps } });
+                    })
+                  }
+                />
+              </div>
+              <label className="wf-toggle">
+                <input
+                  disabled={editingLocked}
+                  type="checkbox"
+                  checked={step.enabled !== false}
+                  onChange={(e) =>
+                    updateSettings((prev) => {
+                      const sec = getSection(prev, section.id);
+                      if (!sec) return prev;
+                      const nextSteps = Array.isArray(sec.data.steps)
+                        ? [...(sec.data.steps as Array<Record<string, unknown>>)]
+                        : [];
+                      nextSteps[index] = { ...nextSteps[index], enabled: e.target.checked };
+                      return upsertSection(prev, { ...sec, data: { ...sec.data, steps: nextSteps } });
+                    })
+                  }
+                />
+                habilitado
+              </label>
+            </div>
+          ))}
+          <div className="wf-row">
+            <button
+              className="wf-btn wf-btn-soft"
+              disabled={editingLocked}
+              onClick={() =>
+                updateSettings((prev) => {
+                  const sec = getSection(prev, section.id) ?? section;
+                  const nextSteps = Array.isArray(sec.data.steps)
+                    ? [...(sec.data.steps as Array<Record<string, unknown>>)]
+                    : [];
+                  nextSteps.push({
+                    title: `Nuevo paso ${nextSteps.length + 1}`,
+                    description: "Describe este paso del proceso.",
+                    enabled: true,
+                    order: nextSteps.length + 1,
+                  });
+                  return upsertSection(prev, { ...sec, data: { ...sec.data, steps: nextSteps } });
+                })
+              }
+            >
+              + Agregar paso
+            </button>
+          </div>
         </div>
       );
     }
@@ -4421,13 +4865,15 @@ export default function StagingWorkflowPanel() {
   }, [settings, testimonialsApplicable]);
 
   const actionHelpText = useMemo(() => {
-    if (actionContext.publishDisabledReason) return actionContext.publishDisabledReason;
-    if (actionContext.saveDisabledReason) return actionContext.saveDisabledReason;
+    if (actionContext.showPublish && actionContext.publishDisabledReason) return actionContext.publishDisabledReason;
+    if (actionContext.showSave && actionContext.saveDisabledReason) return actionContext.saveDisabledReason;
     return actionContext.message;
   }, [
     actionContext.message,
     actionContext.publishDisabledReason,
     actionContext.saveDisabledReason,
+    actionContext.showPublish,
+    actionContext.showSave,
   ]);
 
   const actionHelpIsError = Boolean(draftConflict.active);

@@ -171,14 +171,23 @@ async function getVersionedSettings(
   supabase: ReturnType<typeof createAdminSupabaseClient>,
   siteId: string,
   mode: "draft" | "published",
-): Promise<{ payload: SettingsPayload; status: "draft" | "published"; updatedAt: string | null } | null> {
+): Promise<{
+  payload: SettingsPayload;
+  status: "draft" | "published";
+  updatedAt: string | null;
+  found: boolean;
+  invalidSnapshot?: {
+    issues: Array<{ path: string; message: string }>;
+  };
+} | null> {
   const primaryQuery = await supabase
     .from("site_versions")
     .select("status, snapshot, version_number, created_at, updated_at")
     .eq("site_id", siteId)
     .eq("status", mode)
     .order("version_number", { ascending: false })
-    .limit(1);
+    .limit(1)
+    .maybeSingle();
 
   let data = primaryQuery.data as Record<string, unknown> | null;
   let error = primaryQuery.error;
@@ -206,13 +215,34 @@ async function getVersionedSettings(
 
   if (!data) return null;
 
-  const parsed = extractSettingsFromSnapshot(data.snapshot as Record<string, unknown> | null);
-  if (!parsed) return null;
+  const snapshot = data.snapshot as Record<string, unknown> | null;
+  const rootSettings = snapshot?.settings;
+  const candidate =
+    rootSettings && typeof rootSettings === "object"
+      ? (rootSettings as SettingsPayload)
+      : (snapshot as SettingsPayload | null);
+  const parsed = settingsSchema.safeParse(candidate);
+  if (!parsed.success) {
+    return {
+      payload: {} as SettingsPayload,
+      status: mode,
+      updatedAt:
+        (data.updated_at as string | null | undefined) ?? (data.created_at as string | null | undefined) ?? null,
+      found: true,
+      invalidSnapshot: {
+        issues: parsed.error.issues.map((issue) => ({
+          path: issue.path.join("."),
+          message: issue.message,
+        })),
+      },
+    };
+  }
   return {
-    payload: parsed,
+    payload: extractSettingsFromSnapshot(snapshot) as SettingsPayload,
     status: mode,
     updatedAt:
       (data.updated_at as string | null | undefined) ?? (data.created_at as string | null | undefined) ?? null,
+    found: true,
   };
 }
 
@@ -226,7 +256,8 @@ async function getLatestDraftUpdatedAt(
     .eq("site_id", siteId)
     .eq("status", "draft")
     .order("version_number", { ascending: false })
-    .limit(1);
+    .limit(1)
+    .maybeSingle();
 
   let data = primaryQuery.data as Record<string, unknown> | null;
   let error = primaryQuery.error;
@@ -281,8 +312,30 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
     }
 
     const versioned = await getVersionedSettings(supabase, site.id, mode);
+    if (versioned?.invalidSnapshot) {
+      return jsonWithCors(
+        request,
+        {
+          error: "Invalid versioned snapshot",
+          mode,
+          issues: versioned.invalidSnapshot.issues,
+        },
+        { status: 422 },
+      );
+    }
     const draftFallbackToPublished =
       !versioned && mode === "draft" ? await getVersionedSettings(supabase, site.id, "published") : null;
+    if (draftFallbackToPublished?.invalidSnapshot) {
+      return jsonWithCors(
+        request,
+        {
+          error: "Invalid published snapshot used as draft fallback",
+          mode,
+          issues: draftFallbackToPublished.invalidSnapshot.issues,
+        },
+        { status: 422 },
+      );
+    }
     const resolvedVersioned =
       versioned ??
       (draftFallbackToPublished
