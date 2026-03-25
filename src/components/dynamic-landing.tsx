@@ -2619,7 +2619,7 @@ const landingMarkupTemplate = String.raw`
               </ul>
 
               <div class="trust-proof" aria-label="Certificaciones y respaldos">
-                <img class="trust-proof-logo" data-trust-logo-primary src="/images/sec.webp" alt="Licencia SEC" loading="lazy" />
+                <img class="trust-proof-logo" data-trust-logo-primary src="/images/licencia_sec.webp" alt="Licencia SEC" loading="lazy" />
                 <img class="trust-proof-logo" data-trust-logo-secondary src="/images/sello_verde.webp" alt="Sello verde" loading="lazy" />
               </div>
             </div>
@@ -3175,7 +3175,7 @@ const DEFAULT_LANDING_VALUES = {
     subtitle:
       "La licencia SEC acredita intervención autorizada en instalaciones de gas, calefont y trabajos críticos donde la seguridad importa.",
     image: "/images/gasfiter-calefont.webp",
-    logoPrimary: "/images/sec.webp",
+    logoPrimary: "/images/licencia_sec.webp",
     logoSecondary: "/images/sello_verde.webp",
   },
   urgency: {
