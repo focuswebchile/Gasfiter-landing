@@ -15,6 +15,7 @@ import {
   resolveTrustFromSettings,
   resolveUrgencyFromSettings,
   type CmsSettings,
+  type ResolvedHero,
 } from "@/lib/cms-settings-client";
 
 const landingBodyFont = Inter({
@@ -2490,7 +2491,7 @@ const landingStyles = String.raw`
       }
 `;
 
-const landingMarkup = String.raw`
+const landingMarkupTemplate = String.raw`
     <nav class="top-nav">
       <div class="top-nav-inner">
         <a class="brand" href="#inicio" data-default-brand="" data-logo-height="42" aria-label="Inicio"></a>
@@ -3188,7 +3189,67 @@ const DEFAULT_LANDING_VALUES = {
   },
 } as const;
 
-export default function DynamicLanding() {
+type DynamicLandingProps = {
+  initialSettings?: CmsSettings | null;
+};
+
+const escapeStaticHtml = (value: string) =>
+  value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
+const buildHeroTitleMarkup = (title: string) => {
+  const lines = title
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .slice(0, 2);
+
+  if (lines.length === 2) {
+    return `<span class="hero-line">${escapeStaticHtml(lines[0])}</span><span class="hero-line">${escapeStaticHtml(lines[1])}</span>`;
+  }
+
+  return `<span class="hero-line">${escapeStaticHtml(title)}</span>`;
+};
+
+const buildLandingMarkup = (initialHero: ResolvedHero) =>
+  landingMarkupTemplate
+    .replace(
+      'src="/images/heroseccion.webp"',
+      `src="${escapeStaticHtml(initialHero.image)}"`,
+    )
+    .replace(
+      '<span class="eyebrow" data-hero-eyebrow data-pending="true">SERVICIOS 24/7</span>',
+      `<span class="eyebrow" data-hero-eyebrow>${escapeStaticHtml(initialHero.eyebrow)}</span>`,
+    )
+    .replace(
+      /<h1 data-hero-title>[\s\S]*?<\/h1>/,
+      `<h1 data-hero-title>${buildHeroTitleMarkup(initialHero.title)}</h1>`,
+    )
+    .replace(
+      /<p class="hero-lead" data-hero-subtitle data-pending="true">[\s\S]*?<\/p>/,
+      `<p class="hero-lead" data-hero-subtitle>${escapeStaticHtml(initialHero.subtitle)}</p>`,
+    )
+    .replace(
+      'href="tel:+569XXXXXXX" data-hero-cta-primary',
+      `href="${escapeStaticHtml(initialHero.primaryUrl)}" data-hero-cta-primary`,
+    )
+    .replace(
+      'href="https://wa.me/569XXXXXXX" target="_blank" rel="noopener noreferrer" data-hero-cta-secondary',
+      `href="${escapeStaticHtml(initialHero.secondaryUrl)}" target="_blank" rel="noopener noreferrer" data-hero-cta-secondary`,
+    );
+
+export default function DynamicLanding({ initialSettings = null }: DynamicLandingProps) {
+  const initialHero = resolveHeroFromSettings({
+    settings: initialSettings,
+    defaults: DEFAULT_LANDING_VALUES.hero,
+    fallbackWhatsappUrl: DEFAULT_LANDING_VALUES.hero.secondaryUrl,
+  });
+  const landingMarkup = buildLandingMarkup(initialHero);
+
   useEffect(() => {
     const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
     const siteSlug = process.env.NEXT_PUBLIC_SITE_SLUG?.trim() || "gasfiter-staging";
