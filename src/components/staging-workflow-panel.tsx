@@ -39,6 +39,23 @@ type SettingsPayload = {
       whatsapp?: string;
       email?: string;
       address?: string;
+      phone?: string;
+    };
+    footer?: {
+      title?: string;
+      subtitle?: string;
+      whatsappLabel?: string;
+      contactHeading?: string;
+      region?: string;
+      coverageHeading?: string;
+      coverage?: string;
+      hoursHeading?: string;
+      hoursPrimary?: string;
+      hoursSecondary?: string;
+      payments?: string[];
+      paymentLogos?: string[];
+      mapLabel?: string;
+      legal?: string;
     };
   };
   content?: {
@@ -418,6 +435,7 @@ const panelStyles = String.raw`
   .wf-nav-btn{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--wf-border);background:var(--wf-surface-soft);border-radius:10px;padding:10px 12px;font-weight:700;font-size:13px;line-height:1.3;color:#334155;cursor:pointer}
   .wf-nav-btn.active{background:var(--wf-primary-soft);border-color:#9db4ee;color:var(--wf-primary-ink)}
   .wf-grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .wf-grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
   .wf-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
   .wf-toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;border:1px solid #e2e8f0;border-radius:12px;background:var(--wf-surface-soft);padding:10px 12px}
   .wf-toolbar-main .wf-input{min-width:260px}
@@ -572,6 +590,7 @@ const panelStyles = String.raw`
     .wf-workspace{max-width:100%}
     .wf-flowbar-head{align-items:flex-start;flex-direction:column}
     .wf-grid2{grid-template-columns:1fr}
+    .wf-grid3{grid-template-columns:1fr}
     .wf-style-layout{grid-template-columns:1fr}
     .wf-color-grid{grid-template-columns:1fr}
     .wf-overlay-panel{width:min(820px,100vw)}
@@ -925,7 +944,7 @@ export default function StagingWorkflowPanel() {
   const [showPreviewOverlay, setShowPreviewOverlay] = useState(false);
   const [showDiffOverlay, setShowDiffOverlay] = useState(false);
   const [sendingRequestPublishReminder, setSendingRequestPublishReminder] = useState(false);
-  const [uploadingAsset, setUploadingAsset] = useState<"logoNav" | "logoFooter" | "favicon" | null>(null);
+  const [uploadingAsset, setUploadingAsset] = useState<"logoNav" | "logoFooter" | "favicon" | "payment1" | "payment2" | "payment3" | null>(null);
   const [uploadingContentAssetKey, setUploadingContentAssetKey] = useState<string | null>(null);
   const [publishValidationMissing, setPublishValidationMissing] = useState<PublishValidationIssue[]>([]);
   const [authEmail, setAuthEmail] = useState("");
@@ -1810,6 +1829,69 @@ export default function StagingWorkflowPanel() {
         setUploadingAsset(null);
       }
     };
+
+  const uploadFooterPaymentLogo = async (slot: 0 | 1 | 2, file: File | null) => {
+    if (!file) return;
+    const validationError = validateImageFile(file, {
+      allowedMimeTypes: LOGO_MIME_TYPES,
+      maxSizeBytes: LOGO_MAX_BYTES,
+    });
+    if (validationError) return setError(validationError);
+    if (!panelReady) return setError("Primero usa Cargar panel");
+    if (!userId.trim()) return setError("No se detectó sesión de usuario. Inicia sesión nuevamente.");
+    if (!canSaveDraft) return setError("Tu rol no puede editar este contenido");
+    if (publishedReadOnly) return setError("Activa modo draft para editar");
+
+    const uploadTarget = slot === 0 ? "payment1" : slot === 1 ? "payment2" : "payment3";
+    setUploadingAsset(uploadTarget);
+    try {
+      const form = new FormData();
+      form.append("userId", userId.trim());
+      form.append("assetType", "logo");
+      form.append("file", file);
+
+      const response = await fetch(`${endpointBase}/branding-upload`, {
+        method: "POST",
+        body: form,
+      });
+      const payload = (await response.json().catch(() => ({}))) as {
+        error?: string;
+        details?: string;
+        url?: string;
+      };
+      if (!response.ok || !payload.url) {
+        throw new Error(payload.error || payload.details || "No se pudo subir archivo");
+      }
+      const uploadedUrl = payload.url;
+
+      updateSettings(
+        (prev) => {
+          const current = Array.isArray(prev.branding?.footer?.paymentLogos)
+            ? [...(prev.branding?.footer?.paymentLogos ?? [])]
+            : [];
+          current[slot] = uploadedUrl;
+          return {
+            ...prev,
+            branding: {
+              ...(prev.branding ?? {}),
+              footer: {
+                ...(prev.branding?.footer ?? {}),
+                paymentLogos: current,
+              },
+            },
+          };
+        },
+        {
+          persistNow: true,
+          note: `Autosave: footer payment logo ${slot + 1} updated`,
+        },
+      );
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "No se pudo subir archivo");
+    } finally {
+      setUploadingAsset(null);
+    }
+  };
 
   const uploadContentAsset = async (params: {
     sectionId: "hero" | "projects" | "testimonials" | "contact_banner" | "audience" | "trust" | "process";
@@ -4001,6 +4083,8 @@ export default function StagingWorkflowPanel() {
     const typography = settings.typography ?? {};
     const branding = settings.branding ?? {};
     const contact = branding.contact ?? {};
+    const footer = branding.footer ?? {};
+    const paymentLogos = Array.isArray(footer.paymentLogos) ? footer.paymentLogos : [];
     const colorFields: Array<{
       key: "primary" | "secondary" | "background" | "text";
       label: string;
@@ -4039,7 +4123,7 @@ export default function StagingWorkflowPanel() {
     if (!showAdvancedUi) {
       return (
         <div className="wf-style-stack">
-          <h3 className="wf-h3" style={{ marginBottom: 0 }}>Marca e información básica</h3>
+          <h3 className="wf-h3" style={{ marginBottom: 0 }}>Marca y pie de página</h3>
           <div className="wf-style-layout">
             <section className="wf-style-card">
               <div className="wf-style-head">
@@ -4131,8 +4215,8 @@ export default function StagingWorkflowPanel() {
 
             <section className="wf-style-card">
               <div className="wf-style-head">
-                <h3 className="wf-style-title">Favicon y contacto</h3>
-                <p className="wf-style-help">Datos básicos de marca y contacto visibles en el sitio.</p>
+                <h3 className="wf-style-title">Favicon, contacto y pie de página</h3>
+                <p className="wf-style-help">Datos visibles del sitio, contacto y textos del footer.</p>
               </div>
               <div className="wf-style-body">
                 <ImageUploadField
@@ -4178,6 +4262,24 @@ export default function StagingWorkflowPanel() {
                 <div className="wf-style-subsection">
                   <h4 className="wf-style-title">Contacto básico</h4>
                   <div className="wf-grid2">
+                    <label className="wf-style-field">
+                      <span className="wf-style-label">Teléfono visible</span>
+                      <input
+                        className="wf-input"
+                        disabled={editingLocked}
+                        placeholder="+56 9 ..."
+                        value={contact.phone ?? ""}
+                        onChange={(e) =>
+                          updateSettings((prev) => ({
+                            ...prev,
+                            branding: {
+                              ...(prev.branding ?? {}),
+                              contact: { ...(prev.branding?.contact ?? {}), phone: e.target.value },
+                            },
+                          }))
+                        }
+                      />
+                    </label>
                     <label className="wf-style-field">
                       <span className="wf-style-label">WhatsApp</span>
                       <input
@@ -4232,6 +4334,201 @@ export default function StagingWorkflowPanel() {
                         }
                       />
                     </label>
+                  </div>
+                </div>
+
+                <div className="wf-style-subsection">
+                  <h4 className="wf-style-title">Pie de página</h4>
+                  <div className="wf-grid2">
+                    <label className="wf-style-field">
+                      <span className="wf-style-label">Título del footer</span>
+                      <input
+                        className="wf-input"
+                        disabled={editingLocked}
+                        placeholder="Título principal"
+                        value={footer.title ?? ""}
+                        onChange={(e) =>
+                          updateSettings((prev) => ({
+                            ...prev,
+                            branding: {
+                              ...(prev.branding ?? {}),
+                              footer: { ...(prev.branding?.footer ?? {}), title: e.target.value },
+                            },
+                          }))
+                        }
+                      />
+                    </label>
+                    <label className="wf-style-field">
+                      <span className="wf-style-label">Texto de apoyo</span>
+                      <input
+                        className="wf-input"
+                        disabled={editingLocked}
+                        placeholder="Subtítulo del footer"
+                        value={footer.subtitle ?? ""}
+                        onChange={(e) =>
+                          updateSettings((prev) => ({
+                            ...prev,
+                            branding: {
+                              ...(prev.branding ?? {}),
+                              footer: { ...(prev.branding?.footer ?? {}), subtitle: e.target.value },
+                            },
+                          }))
+                        }
+                      />
+                    </label>
+                    <label className="wf-style-field">
+                      <span className="wf-style-label">Cobertura</span>
+                      <input
+                        className="wf-input"
+                        disabled={editingLocked}
+                        placeholder="Comunas o zonas cubiertas"
+                        value={footer.coverage ?? ""}
+                        onChange={(e) =>
+                          updateSettings((prev) => ({
+                            ...prev,
+                            branding: {
+                              ...(prev.branding ?? {}),
+                              footer: { ...(prev.branding?.footer ?? {}), coverage: e.target.value },
+                            },
+                          }))
+                        }
+                      />
+                    </label>
+                    <label className="wf-style-field">
+                      <span className="wf-style-label">Horario principal</span>
+                      <input
+                        className="wf-input"
+                        disabled={editingLocked}
+                        placeholder="Lunes a viernes..."
+                        value={footer.hoursPrimary ?? ""}
+                        onChange={(e) =>
+                          updateSettings((prev) => ({
+                            ...prev,
+                            branding: {
+                              ...(prev.branding ?? {}),
+                              footer: { ...(prev.branding?.footer ?? {}), hoursPrimary: e.target.value },
+                            },
+                          }))
+                        }
+                      />
+                    </label>
+                    <label className="wf-style-field">
+                      <span className="wf-style-label">Horario secundario</span>
+                      <input
+                        className="wf-input"
+                        disabled={editingLocked}
+                        placeholder="Texto adicional de disponibilidad"
+                        value={footer.hoursSecondary ?? ""}
+                        onChange={(e) =>
+                          updateSettings((prev) => ({
+                            ...prev,
+                            branding: {
+                              ...(prev.branding ?? {}),
+                              footer: { ...(prev.branding?.footer ?? {}), hoursSecondary: e.target.value },
+                            },
+                          }))
+                        }
+                      />
+                    </label>
+                    <label className="wf-style-field">
+                      <span className="wf-style-label">Etiqueta WhatsApp</span>
+                      <input
+                        className="wf-input"
+                        disabled={editingLocked}
+                        placeholder="WhatsApp directo"
+                        value={footer.whatsappLabel ?? ""}
+                        onChange={(e) =>
+                          updateSettings((prev) => ({
+                            ...prev,
+                            branding: {
+                              ...(prev.branding ?? {}),
+                              footer: { ...(prev.branding?.footer ?? {}), whatsappLabel: e.target.value },
+                            },
+                          }))
+                        }
+                      />
+                    </label>
+                    <label className="wf-style-field">
+                      <span className="wf-style-label">Texto enlace mapa</span>
+                      <input
+                        className="wf-input"
+                        disabled={editingLocked}
+                        placeholder="Ver mapa / ubicación"
+                        value={footer.mapLabel ?? ""}
+                        onChange={(e) =>
+                          updateSettings((prev) => ({
+                            ...prev,
+                            branding: {
+                              ...(prev.branding ?? {}),
+                              footer: { ...(prev.branding?.footer ?? {}), mapLabel: e.target.value },
+                            },
+                          }))
+                        }
+                      />
+                    </label>
+                    <div className="wf-style-field" style={{ gridColumn: "1 / -1", display: "grid", gap: 10 }}>
+                      <span className="wf-style-label">Logos de pago</span>
+                      <div className="wf-grid3">
+                        {[0, 1, 2].map((slot) => (
+                          <ImageUploadField
+                            key={slot}
+                            value={paymentLogos[slot] ?? ""}
+                            placeholder={`Logo pago ${slot + 1}`}
+                            disabled={editingLocked || uploadingAsset === (`payment${slot + 1}` as "payment1" | "payment2" | "payment3")}
+                            removeDisabled={editingLocked || !(paymentLogos[slot] ?? "").trim()}
+                            uploading={uploadingAsset === (`payment${slot + 1}` as "payment1" | "payment2" | "payment3")}
+                            uploadingText="Subiendo logo..."
+                            fallbackText={`Sin logo ${slot + 1}`}
+                            guidanceText="Formatos: png, jpg, webp o svg. Máximo 2MB."
+                            previewAlt={`payment logo ${slot + 1}`}
+                            previewWidth={140}
+                            previewHeight={48}
+                            previewStyle={{ maxHeight: 38, width: "auto", objectFit: "contain" }}
+                            accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
+                            allowedMimeTypes={LOGO_MIME_TYPES}
+                            maxSizeBytes={LOGO_MAX_BYTES}
+                            hideUrlInput
+                            controlsInline
+                            onValueChange={(nextValue) =>
+                              updateSettings((prev) => {
+                                const current = Array.isArray(prev.branding?.footer?.paymentLogos)
+                                  ? [...(prev.branding?.footer?.paymentLogos ?? [])]
+                                  : [];
+                                current[slot] = nextValue;
+                                return {
+                                  ...prev,
+                                  branding: {
+                                    ...(prev.branding ?? {}),
+                                    footer: { ...(prev.branding?.footer ?? {}), paymentLogos: current },
+                                  },
+                                };
+                              })
+                            }
+                            onReplace={(file) => {
+                              void uploadFooterPaymentLogo(slot as 0 | 1 | 2, file);
+                            }}
+                            onRemove={() =>
+                              updateSettings(
+                                (prev) => {
+                                  const current = Array.isArray(prev.branding?.footer?.paymentLogos)
+                                    ? [...(prev.branding?.footer?.paymentLogos ?? [])]
+                                    : [];
+                                  current[slot] = "";
+                                  return {
+                                    ...prev,
+                                    branding: {
+                                      ...(prev.branding ?? {}),
+                                      footer: { ...(prev.branding?.footer ?? {}), paymentLogos: current },
+                                    },
+                                  };
+                                },
+                                { persistNow: true, note: `Autosave: footer payment logo ${slot + 1} removed` },
+                              )
+                            }
+                          />
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

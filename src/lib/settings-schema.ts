@@ -65,6 +65,25 @@ export const settingsSchema = z
             whatsapp: z.string().trim().optional(),
             email: z.string().trim().optional(),
             address: z.string().trim().optional(),
+            phone: z.string().trim().optional(),
+          })
+          .optional(),
+        footer: z
+          .object({
+            title: z.string().trim().optional(),
+            subtitle: z.string().trim().optional(),
+            whatsappLabel: z.string().trim().optional(),
+            contactHeading: z.string().trim().optional(),
+            region: z.string().trim().optional(),
+            coverageHeading: z.string().trim().optional(),
+            coverage: z.string().trim().optional(),
+            hoursHeading: z.string().trim().optional(),
+            hoursPrimary: z.string().trim().optional(),
+            hoursSecondary: z.string().trim().optional(),
+            payments: z.array(z.string().trim()).optional(),
+            paymentLogos: z.array(z.string().url()).optional(),
+            mapLabel: z.string().trim().optional(),
+            legal: z.string().trim().optional(),
           })
           .optional(),
       })

@@ -22,6 +22,23 @@ export type CmsSettings = {
       whatsapp?: string;
       email?: string;
       address?: string;
+      phone?: string;
+    };
+    footer?: {
+      title?: string;
+      subtitle?: string;
+      whatsappLabel?: string;
+      contactHeading?: string;
+      region?: string;
+      coverageHeading?: string;
+      coverage?: string;
+      hoursHeading?: string;
+      hoursPrimary?: string;
+      hoursSecondary?: string;
+      payments?: string[];
+      paymentLogos?: string[];
+      mapLabel?: string;
+      legal?: string;
     };
   };
   content?: {

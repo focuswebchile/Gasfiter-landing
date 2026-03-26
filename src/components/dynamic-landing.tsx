@@ -1299,6 +1299,29 @@ const landingStyles = String.raw`
         color: #e2e8f0;
       }
 
+      .footer-payment-logo {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 140px;
+        flex: 0 0 140px;
+        min-height: 54px;
+        padding: 4px 0;
+      }
+
+      .footer-payment-logo:first-child {
+        width: 108px;
+        flex-basis: 108px;
+      }
+
+      .footer-payment-logo img {
+        display: block;
+        max-width: 100%;
+        max-height: 34px;
+        width: auto;
+        object-fit: contain;
+      }
+
       .trust-band {
         background:
           radial-gradient(circle at top left, rgba(43, 108, 176, 0.22), transparent 36%),
@@ -1594,14 +1617,20 @@ const landingStyles = String.raw`
       .faq-content {
         max-height: 0;
         overflow: hidden;
-        transition: max-height 0.32s ease;
-        padding: 0 14px;
+        transition: max-height 0.36s ease, padding 0.28s ease;
+        padding: 0 16px;
         color: #4b5563;
+        visibility: hidden;
+      }
+
+      .faq-content p {
+        margin: 0;
+        line-height: 1.65;
       }
 
       .faq-item.active .faq-content {
-        max-height: 220px;
-        padding: 0 16px 14px;
+        padding: 6px 16px 18px;
+        visibility: visible;
       }
 
       .footer {
@@ -1645,6 +1674,7 @@ const landingStyles = String.raw`
         display: grid;
         grid-template-columns: 1fr;
         gap: 22px;
+        align-items: start;
       }
 
       .footer h3 {
@@ -1664,17 +1694,12 @@ const landingStyles = String.raw`
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        min-width: 44px;
-        height: 44px;
-        padding: 0 14px;
-        border-radius: 999px;
-        border: 1px solid rgba(148, 163, 184, 0.26);
-        background: rgba(255, 255, 255, 0.06);
+        min-width: 0;
+        height: auto;
+        padding: 0;
+        border: 0;
+        background: transparent;
         color: #f8fbff;
-        font-family: var(--landing-font-hero);
-        font-size: 0.95rem;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
       }
 
       .footer-kicker {
@@ -1699,6 +1724,20 @@ const landingStyles = String.raw`
         color: #c5d5ea;
         font-size: 0.98rem;
         line-height: 1.6;
+      }
+
+      .footer-list span,
+      .footer-list a {
+        overflow-wrap: anywhere;
+      }
+
+      .footer-list--coverage {
+        gap: 6px;
+      }
+
+      .footer-coverage-lines {
+        display: grid;
+        gap: 6px;
       }
 
       .footer-list a {
@@ -2089,12 +2128,13 @@ const landingStyles = String.raw`
         }
 
         .footer-grid {
-          grid-template-columns: repeat(3, minmax(0, 1fr));
+          grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr) minmax(0, 1fr);
+          gap: 26px 54px;
         }
 
         .footer-top {
           grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
-          gap: 42px;
+          gap: 52px;
         }
       }
 
@@ -3065,51 +3105,46 @@ const landingMarkupTemplate = String.raw`
         <div>
           <span class="footer-brand-mark" data-footer-brand-mark>Logo</span>
           <span class="footer-kicker" data-footer-brand-kicker>Placeholder de marca</span>
-          <h3 style="margin-top: 14px">Gasfiter Urgencias Santiago</h3>
-          <p class="footer-copy">Respuesta técnica 24/7 para fugas, destapes, calefont e instalaciones con atención en terreno.</p>
-          <p style="margin-top: 16px"><a class="phone-big" href="tel:+569XXXXXXX">+56 9 XXXX XXXX</a></p>
-          <p style="margin-top: 10px">
-            <a href="https://wa.me/569XXXXXXX" target="_blank" rel="noopener noreferrer" data-footer-whatsapp>
-              <i class="fa-brands fa-whatsapp"></i> WhatsApp directo
-            </a>
-          </p>
+          <h3 style="margin-top: 14px" data-footer-title>Gasfiter Urgencias Santiago</h3>
+          <p class="footer-copy" data-footer-subtitle>Respuesta técnica 24/7 para fugas, destapes, calefont e instalaciones con atención en terreno.</p>
+          <p style="margin-top: 16px"><a class="phone-big" href="tel:+569XXXXXXX" data-footer-phone>+56 9 XXXX XXXX</a></p>
         </div>
 
         <div class="footer-grid">
           <div>
-            <h3>Contacto</h3>
+            <h3 data-footer-contact-heading>Contacto</h3>
             <div class="footer-list">
               <span data-footer-address>Dirección placeholder 123</span>
-              <span>Santiago, Región Metropolitana</span>
-              <a href="mailto:contacto@gasfiter.cl" data-footer-email>contacto@gasfiter.cl</a>
+              <span data-footer-region>Santiago, Región Metropolitana</span>
+              <a href="#contacto" data-footer-email>Escríbenos</a>
             </div>
-            <a class="footer-map-link" href="#mapa" data-open-map-modal>Ver mapa / ubicación</a>
+            <a class="footer-map-link" href="#mapa" data-open-map-modal data-footer-map-label>Ver mapa / ubicación</a>
           </div>
 
           <div>
-            <h3>Cobertura</h3>
-            <div class="footer-list">
-              <span>Providencia, Ñuñoa, Las Condes, Santiago Centro, La Florida y más.</span>
+            <h3 data-footer-coverage-heading>Cobertura</h3>
+            <div class="footer-list footer-list--coverage">
+              <span class="footer-coverage-lines" data-footer-coverage>Providencia, Ñuñoa, Las Condes, Santiago Centro, La Florida y más.</span>
             </div>
           </div>
 
           <div>
-            <h3>Horario y pagos</h3>
+            <h3 data-footer-hours-heading>Horario y pagos</h3>
             <div class="footer-list">
-              <span>Atención 24/7</span>
-              <span>Servicio sujeto a disponibilidad por comuna y emergencia.</span>
+              <span data-footer-hours-primary>Atención 24/7</span>
+              <span data-footer-hours-secondary>Servicio sujeto a disponibilidad por comuna y emergencia.</span>
             </div>
           </div>
         </div>
       </div>
       <div class="container footer-meta">
-        <div class="payments footer-payments" aria-label="Métodos de pago">
+        <div class="payments footer-payments" aria-label="Métodos de pago" data-footer-payments>
           <span class="pay-badge">Webpay</span>
           <span class="pay-badge">Transferencia</span>
           <span class="pay-badge">Débito / Crédito</span>
           <span class="pay-badge">Efectivo</span>
         </div>
-        <div class="footer-legal">Desarrollado por FOCUSWEB CHILE</div>
+        <div class="footer-legal" data-footer-legal>Desarrollado por FOCUSWEB CHILE</div>
       </div>
     </footer>
 
@@ -3118,7 +3153,7 @@ const landingMarkupTemplate = String.raw`
         <div class="map-modal-head">
           <div>
             <strong id="map-modal-title">Ubicación referencial</strong>
-            <span>Santiago, Región Metropolitana · Placeholder editable desde contenido final</span>
+            <span data-map-modal-subtitle>Santiago, Región Metropolitana · Placeholder editable desde contenido final</span>
           </div>
           <button class="map-modal-close" type="button" aria-label="Cerrar mapa" data-close-map-modal>×</button>
         </div>
@@ -3223,6 +3258,23 @@ const DEFAULT_LANDING_VALUES = {
   },
   faq: {
     title: "Preguntas frecuentes",
+  },
+  footer: {
+    title: "Gasfiter Urgencias Santiago",
+    subtitle: "Respuesta técnica 24/7 para fugas, destapes, calefont e instalaciones con atención en terreno.",
+    phone: "+56 9 XXXX XXXX",
+    whatsappLabel: "WhatsApp directo",
+    contactHeading: "Contacto",
+    region: "Santiago, Región Metropolitana",
+    coverageHeading: "Cobertura",
+    coverage: "Providencia, Ñuñoa, Las Condes, Santiago Centro, La Florida y más.",
+    hoursHeading: "Horarios",
+    hoursPrimary: "Atención 24/7",
+    hoursSecondary: "Servicio sujeto a disponibilidad por comuna y emergencia.",
+    payments: ["Webpay", "Transferencia", "Débito / Crédito", "Efectivo"],
+    paymentLogos: [],
+    mapLabel: "Ver mapa / ubicación",
+    legal: "Desarrollado por FOCUSWEB CHILE",
   },
 } as const;
 
@@ -3539,13 +3591,26 @@ export default function DynamicLanding({ initialSettings = null }: DynamicLandin
     window.addEventListener("keydown", onKeyDown);
 
     const bindFaqButtons = () => {
-      const faqBtns = document.querySelectorAll(".faq-btn");
-      faqBtns.forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const item = btn.closest(".faq-item");
-          if (!item) return;
-          item.classList.toggle("active");
-        });
+      const faqItems = document.querySelectorAll<HTMLElement>(".faq-item");
+      faqItems.forEach((item) => {
+        const content = item.querySelector<HTMLElement>(".faq-content");
+        if (!content) return;
+        content.style.maxHeight = item.classList.contains("active") ? `${content.scrollHeight}px` : "0px";
+      });
+
+      const faqList = document.querySelector<HTMLElement>("[data-faq-list]");
+      if (!faqList || faqList.dataset.bound === "true") return;
+      faqList.dataset.bound = "true";
+      faqList.addEventListener("click", (event) => {
+        const target = event.target as HTMLElement | null;
+        const button = target?.closest<HTMLElement>(".faq-btn");
+        if (!button) return;
+        const item = button.closest<HTMLElement>(".faq-item");
+        const content = item?.querySelector<HTMLElement>(".faq-content");
+        if (!item || !content) return;
+        const willOpen = !item.classList.contains("active");
+        item.classList.toggle("active", willOpen);
+        content.style.maxHeight = willOpen ? `${content.scrollHeight}px` : "0px";
       });
     };
     bindFaqButtons();
@@ -3717,6 +3782,8 @@ export default function DynamicLanding({ initialSettings = null }: DynamicLandin
       const branding = settings.branding && typeof settings.branding === "object" ? settings.branding : {};
       const brandingContact =
         branding.contact && typeof branding.contact === "object" ? branding.contact : {};
+      const brandingFooter =
+        branding.footer && typeof branding.footer === "object" ? branding.footer : {};
 
       const navLogoUrl =
         (typeof branding.logoNavUrl === "string" && branding.logoNavUrl.trim()) ||
@@ -3773,19 +3840,21 @@ export default function DynamicLanding({ initialSettings = null }: DynamicLandin
         });
       }
 
-      const footerWhatsapp = document.querySelector<HTMLAnchorElement>("[data-footer-whatsapp]");
-      if (footerWhatsapp && whatsappHref) {
-        footerWhatsapp.href = whatsappHref;
-      }
-
       const emailValue =
         typeof brandingContact.email === "string" && brandingContact.email.trim()
           ? brandingContact.email.trim()
           : "";
       const footerEmail = document.querySelector<HTMLAnchorElement>("[data-footer-email]");
-      if (footerEmail && emailValue) {
-        footerEmail.textContent = emailValue;
-        footerEmail.href = `mailto:${emailValue}`;
+      if (footerEmail) {
+        footerEmail.textContent = "Escríbenos";
+        footerEmail.href = "#contacto";
+        if (emailValue) {
+          footerEmail.title = emailValue;
+          footerEmail.setAttribute("aria-label", `Escríbenos (${emailValue})`);
+        } else {
+          footerEmail.removeAttribute("title");
+          footerEmail.setAttribute("aria-label", "Escríbenos");
+        }
       }
 
       const addressValue =
@@ -3795,6 +3864,130 @@ export default function DynamicLanding({ initialSettings = null }: DynamicLandin
       const footerAddress = document.querySelector<HTMLElement>("[data-footer-address]");
       if (footerAddress && addressValue) {
         footerAddress.textContent = addressValue;
+      }
+
+      const phoneValue =
+        typeof brandingContact.phone === "string" && brandingContact.phone.trim()
+          ? brandingContact.phone.trim()
+          : DEFAULT_LANDING_VALUES.footer.phone;
+      const phoneHrefValue = phoneValue.replace(/\s+/g, "");
+      const footerPhone = document.querySelector<HTMLAnchorElement>("[data-footer-phone]");
+      if (footerPhone && phoneValue) {
+        footerPhone.textContent = phoneValue;
+        footerPhone.href = `tel:${phoneHrefValue}`;
+      }
+
+      const applyText = (selector: string, value: string) => {
+        const el = document.querySelector<HTMLElement>(selector);
+        if (el && value.trim()) {
+          el.textContent = value;
+        }
+      };
+
+      applyText(
+        "[data-footer-title]",
+        (typeof brandingFooter.title === "string" && brandingFooter.title.trim()) || DEFAULT_LANDING_VALUES.footer.title,
+      );
+      applyText(
+        "[data-footer-subtitle]",
+        (typeof brandingFooter.subtitle === "string" && brandingFooter.subtitle.trim()) ||
+          DEFAULT_LANDING_VALUES.footer.subtitle,
+      );
+      applyText(
+        "[data-footer-contact-heading]",
+        (typeof brandingFooter.contactHeading === "string" && brandingFooter.contactHeading.trim()) ||
+          DEFAULT_LANDING_VALUES.footer.contactHeading,
+      );
+      const footerRegion = document.querySelector<HTMLElement>("[data-footer-region]");
+      const footerRegionValue =
+        (typeof brandingFooter.region === "string" && brandingFooter.region.trim()) || "";
+      if (footerRegion) {
+        if (footerRegionValue) {
+          footerRegion.textContent = footerRegionValue;
+          footerRegion.style.display = "";
+        } else {
+          footerRegion.textContent = "";
+          footerRegion.style.display = "none";
+        }
+      }
+      applyText(
+        "[data-footer-coverage-heading]",
+        (typeof brandingFooter.coverageHeading === "string" && brandingFooter.coverageHeading.trim()) ||
+          DEFAULT_LANDING_VALUES.footer.coverageHeading,
+      );
+      const coverageValue =
+        (typeof brandingFooter.coverage === "string" && brandingFooter.coverage.trim()) ||
+        DEFAULT_LANDING_VALUES.footer.coverage;
+      const footerCoverage = document.querySelector<HTMLElement>("[data-footer-coverage]");
+      if (footerCoverage) {
+        const coverageParts = coverageValue
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean);
+        if (coverageParts.length > 1) {
+          footerCoverage.innerHTML = coverageParts
+            .map((item) => `<span>${escapeHtml(item)}</span>`)
+            .join("");
+        } else {
+          footerCoverage.textContent = coverageValue;
+        }
+      }
+      applyText(
+        "[data-footer-hours-heading]",
+        (typeof brandingFooter.hoursHeading === "string" && brandingFooter.hoursHeading.trim()) ||
+          DEFAULT_LANDING_VALUES.footer.hoursHeading,
+      );
+      applyText(
+        "[data-footer-hours-primary]",
+        (typeof brandingFooter.hoursPrimary === "string" && brandingFooter.hoursPrimary.trim()) ||
+          DEFAULT_LANDING_VALUES.footer.hoursPrimary,
+      );
+      applyText(
+        "[data-footer-hours-secondary]",
+        (typeof brandingFooter.hoursSecondary === "string" && brandingFooter.hoursSecondary.trim()) ||
+          DEFAULT_LANDING_VALUES.footer.hoursSecondary,
+      );
+      applyText(
+        "[data-footer-map-label]",
+        (typeof brandingFooter.mapLabel === "string" && brandingFooter.mapLabel.trim()) ||
+          DEFAULT_LANDING_VALUES.footer.mapLabel,
+      );
+      applyText(
+        "[data-footer-legal]",
+        (typeof brandingFooter.legal === "string" && brandingFooter.legal.trim()) ||
+          DEFAULT_LANDING_VALUES.footer.legal,
+      );
+
+      const paymentsRaw = Array.isArray(brandingFooter.payments)
+        ? brandingFooter.payments.filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+        : [];
+      const paymentLogosRaw = Array.isArray(brandingFooter.paymentLogos)
+        ? brandingFooter.paymentLogos.filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+        : [];
+      const footerPayments = document.querySelector<HTMLElement>("[data-footer-payments]");
+      const paymentValues = paymentsRaw.length ? paymentsRaw : [...DEFAULT_LANDING_VALUES.footer.payments];
+      if (footerPayments) {
+        if (paymentLogosRaw.length) {
+          footerPayments.innerHTML = paymentLogosRaw
+            .slice(0, 3)
+            .map(
+              (logo, index) =>
+                `<span class="footer-payment-logo"><img src="${escapeHtml(logo)}" alt="Método de pago ${index + 1}" /></span>`,
+            )
+            .join("");
+        } else if (paymentValues.length) {
+          footerPayments.innerHTML = paymentValues
+            .map((payment) => `<span class="pay-badge">${escapeHtml(payment)}</span>`)
+            .join("");
+        } else {
+          footerPayments.innerHTML = "";
+        }
+      }
+
+      const mapModalSubtitle = document.querySelector<HTMLElement>("[data-map-modal-subtitle]");
+      if (mapModalSubtitle) {
+        const modalAddress = addressValue || "Dirección por confirmar";
+        mapModalSubtitle.textContent = modalAddress;
       }
 
       const hero = resolveHeroFromSettings({
