@@ -1372,12 +1372,17 @@ const landingStyles = String.raw`
 
       .trust-band-areas {
         margin-top: 18px;
-        display: flex;
-        flex-wrap: wrap;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, max-content));
         gap: 10px;
+        align-items: start;
       }
 
       .trust-band-area {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
         padding: 10px 14px;
         border-radius: 999px;
         background: rgba(255, 255, 255, 0.08);
@@ -1615,12 +1620,16 @@ const landingStyles = String.raw`
       }
 
       .faq-content {
-        max-height: 0;
-        overflow: hidden;
-        transition: max-height 0.36s ease, padding 0.28s ease;
+        display: grid;
+        grid-template-rows: 0fr;
+        transition: grid-template-rows 0.36s ease, padding 0.28s ease;
         padding: 0 16px;
         color: #4b5563;
-        visibility: hidden;
+      }
+
+      .faq-content-inner {
+        overflow: hidden;
+        min-height: 0;
       }
 
       .faq-content p {
@@ -1629,8 +1638,8 @@ const landingStyles = String.raw`
       }
 
       .faq-item.active .faq-content {
+        grid-template-rows: 1fr;
         padding: 6px 16px 18px;
-        visibility: visible;
       }
 
       .footer {
@@ -3069,23 +3078,23 @@ const landingMarkupTemplate = String.raw`
         <div class="faq-list" data-faq-list>
           <article class="faq-item">
             <button class="faq-btn" type="button">¿Cobran visita? <i class="fa-solid fa-chevron-down"></i></button>
-            <div class="faq-content"><p>Cobramos solo si hay diagnóstico en terreno y siempre se informa antes de iniciar.</p></div>
+            <div class="faq-content"><div class="faq-content-inner"><p>Cobramos solo si hay diagnóstico en terreno y siempre se informa antes de iniciar.</p></div></div>
           </article>
           <article class="faq-item">
             <button class="faq-btn" type="button">¿Cuánto demoran en llegar? <i class="fa-solid fa-chevron-down"></i></button>
-            <div class="faq-content"><p>En promedio 40 minutos en Santiago, según tráfico y comuna.</p></div>
+            <div class="faq-content"><div class="faq-content-inner"><p>En promedio 40 minutos en Santiago, según tráfico y comuna.</p></div></div>
           </article>
           <article class="faq-item">
             <button class="faq-btn" type="button">¿Atienden de noche y feriados? <i class="fa-solid fa-chevron-down"></i></button>
-            <div class="faq-content"><p>Sí, tenemos atención 24/7 para urgencias reales en domicilio o negocio.</p></div>
+            <div class="faq-content"><div class="faq-content-inner"><p>Sí, tenemos atención 24/7 para urgencias reales en domicilio o negocio.</p></div></div>
           </article>
           <article class="faq-item">
             <button class="faq-btn" type="button">¿Los trabajos tienen garantía? <i class="fa-solid fa-chevron-down"></i></button>
-            <div class="faq-content"><p>Sí, entregamos garantía de 30 días sobre la intervención realizada.</p></div>
+            <div class="faq-content"><div class="faq-content-inner"><p>Sí, entregamos garantía de 30 días sobre la intervención realizada.</p></div></div>
           </article>
           <article class="faq-item">
             <button class="faq-btn" type="button">¿Trabajan en departamentos y locales? <i class="fa-solid fa-chevron-down"></i></button>
-            <div class="faq-content"><p>Sí, atendemos casas, departamentos, oficinas, restaurantes y comercio en general.</p></div>
+            <div class="faq-content"><div class="faq-content-inner"><p>Sí, atendemos casas, departamentos, oficinas, restaurantes y comercio en general.</p></div></div>
           </article>
         </div>
       </div>
@@ -3591,13 +3600,6 @@ export default function DynamicLanding({ initialSettings = null }: DynamicLandin
     window.addEventListener("keydown", onKeyDown);
 
     const bindFaqButtons = () => {
-      const faqItems = document.querySelectorAll<HTMLElement>(".faq-item");
-      faqItems.forEach((item) => {
-        const content = item.querySelector<HTMLElement>(".faq-content");
-        if (!content) return;
-        content.style.maxHeight = item.classList.contains("active") ? `${content.scrollHeight}px` : "0px";
-      });
-
       const faqList = document.querySelector<HTMLElement>("[data-faq-list]");
       if (!faqList || faqList.dataset.bound === "true") return;
       faqList.dataset.bound = "true";
@@ -3606,11 +3608,9 @@ export default function DynamicLanding({ initialSettings = null }: DynamicLandin
         const button = target?.closest<HTMLElement>(".faq-btn");
         if (!button) return;
         const item = button.closest<HTMLElement>(".faq-item");
-        const content = item?.querySelector<HTMLElement>(".faq-content");
-        if (!item || !content) return;
+        if (!item) return;
         const willOpen = !item.classList.contains("active");
         item.classList.toggle("active", willOpen);
-        content.style.maxHeight = willOpen ? `${content.scrollHeight}px` : "0px";
       });
     };
     bindFaqButtons();
@@ -4312,7 +4312,7 @@ export default function DynamicLanding({ initialSettings = null }: DynamicLandin
               return `
                 <article class="faq-item">
                   <button class="faq-btn" type="button">${faq.question} <i class="fa-solid fa-chevron-down"></i></button>
-                  <div class="faq-content"><p>${faq.answer}</p></div>
+                  <div class="faq-content"><div class="faq-content-inner"><p>${faq.answer}</p></div></div>
                 </article>
               `;
             })
