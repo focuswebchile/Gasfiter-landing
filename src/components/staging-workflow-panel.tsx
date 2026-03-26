@@ -143,6 +143,12 @@ type HeroDiffResult = {
   };
 };
 
+const AUDIENCE_BULLET_DESCRIPTION_FALLBACKS = [
+  "Explicamos el origen del problema y la solución antes de intervenir.",
+  "Ejecutamos con orden, pruebas de funcionamiento y cierre prolijo del espacio.",
+  "Dejamos recomendaciones, garantía y trazabilidad básica después del servicio.",
+] as const;
+
 type PublishChecklistItem = {
   key: "hero_cta" | "services" | "testimonials" | "contact";
   label: string;
@@ -2364,7 +2370,11 @@ export default function StagingWorkflowPanel() {
                 <input
                   className="wf-input"
                   disabled={editingLocked}
-                  value={typeof bullet.description === "string" ? bullet.description : ""}
+                  value={
+                    typeof bullet.description === "string" && bullet.description.trim().length > 0
+                      ? bullet.description
+                      : (AUDIENCE_BULLET_DESCRIPTION_FALLBACKS[index] ?? "")
+                  }
                   placeholder="Texto de apoyo"
                   onChange={(e) =>
                     updateSettings((prev) => {
