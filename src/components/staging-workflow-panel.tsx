@@ -3612,27 +3612,13 @@ export default function StagingWorkflowPanel() {
               + Agregar testimonio
             </button>
           </div>
-          {items.map((item) => {
-            const itemId = String(item.id);
-            return (
+        {items.map((item) => {
+          const itemId = String(item.id);
+          return (
               <div
                 key={itemId}
-                className={`wf-row-item ${draggingItemId === itemId ? "dragging" : ""}`}
-                draggable={!editingLocked}
-                onDragStart={() => setDraggingItemId(itemId)}
-                onDragOver={(event) => event.preventDefault()}
-                onDrop={() => {
-                  if (!editingLocked && draggingItemId !== null) {
-                    updateSettings(
-                      (prev) => reorderItemsInSection(prev, section.id, draggingItemId, itemId),
-                      { persistNow: true, note: "Autosave: item order updated (testimonials)" },
-                    );
-                  }
-                  setDraggingItemId(null);
-                }}
-                onDragEnd={() => setDraggingItemId(null)}
+                className="wf-row-item"
               >
-                <span className="wf-drag">⋮⋮</span>
                 <div style={{ flex: 1, display: "grid", gap: 6 }}>
                   <input
                     className="wf-input"
@@ -3902,18 +3888,22 @@ export default function StagingWorkflowPanel() {
           const labelA = section.id === "services" ? "title" : "question";
           const labelB = section.id === "services" ? "description" : "answer";
           const simplifyServiceItem = showSimplifiedUi && section.id === "services";
+          const disableItemDrag = simplifyServiceItem || section.id === "faq";
           return (
             <div
               key={itemId}
-              className={`wf-row-item ${draggingItemId === itemId ? "dragging" : ""}`}
-              draggable={!editingLocked && !simplifyServiceItem}
+              className={`wf-row-item ${!disableItemDrag && draggingItemId === itemId ? "dragging" : ""}`}
+              draggable={!editingLocked && !disableItemDrag}
               onDragStart={() => {
-                if (simplifyServiceItem) return;
+                if (disableItemDrag) return;
                 setDraggingItemId(itemId);
               }}
-              onDragOver={(event) => event.preventDefault()}
+              onDragOver={(event) => {
+                if (disableItemDrag) return;
+                event.preventDefault();
+              }}
               onDrop={() => {
-                if (!simplifyServiceItem && !editingLocked && draggingItemId !== null) {
+                if (!disableItemDrag && !editingLocked && draggingItemId !== null) {
                   updateSettings(
                     (prev) => reorderItemsInSection(prev, section.id, draggingItemId, itemId),
                     { persistNow: true, note: `Autosave: item order updated (${section.id})` },
@@ -3923,7 +3913,7 @@ export default function StagingWorkflowPanel() {
               }}
               onDragEnd={() => setDraggingItemId(null)}
             >
-              {!simplifyServiceItem ? <span className="wf-drag">⋮⋮</span> : null}
+              {!disableItemDrag ? <span className="wf-drag">⋮⋮</span> : null}
               <div style={{ flex: 1, display: "grid", gap: 6 }}>
                 <input
                   className="wf-input"

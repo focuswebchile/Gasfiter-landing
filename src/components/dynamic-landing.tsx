@@ -2416,7 +2416,7 @@ const landingStyles = String.raw`
         }
 
         .hero-line {
-          white-space: nowrap;
+          white-space: normal;
         }
 
         .hero-stats {
