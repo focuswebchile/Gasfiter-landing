@@ -558,15 +558,15 @@ const panelStyles = String.raw`
   .wf-checklist-item{display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid #e2e8f0;background:#fff;padding:8px 10px;border-radius:10px}
   .wf-checklist-item.ok{border-color:var(--wf-success-border);background:var(--wf-success-bg)}
   .wf-checklist-item.warn{border-color:var(--wf-warn-border);background:var(--wf-warn-bg)}
-  .wf-checklist-left{display:grid;gap:2px}
-  .wf-checklist-left strong{font-size:16px;line-height:1.3}
-  .wf-checklist-left span{font-size:12px;color:#64748b;line-height:1.4}
+  .wf-checklist-left{display:grid;gap:2px;min-width:0}
+  .wf-checklist-left strong{font-size:16px;line-height:1.2}
+  .wf-checklist-left span{font-size:17px;color:#64748b;line-height:1.9}
   .wf-warn-block{display:grid;gap:8px;border:1px solid var(--wf-warn-border);border-radius:12px;padding:10px;background:var(--wf-warn-bg);margin-bottom:12px}
   .wf-warn-title{display:flex;align-items:center;justify-content:space-between;gap:8px}
   .wf-warn-item{display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid #fcd34d;background:#fffaf0;padding:8px 10px;border-radius:10px}
   .wf-warn-item strong{font-size:16px;line-height:1.3}
   .wf-warn-item span{font-size:12px;color:#7c2d12;line-height:1.4}
-  .wf-check-icon{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:999px;font-size:12px;font-weight:800}
+  .wf-check-icon{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:999px;font-size:12px;font-weight:800;flex:0 0 18px;align-self:center}
   .wf-check-icon.ok{background:#166534;color:#fff}
   .wf-check-icon.warn{background:#b45309;color:#fff}
   .wf-action-help{min-height:18px;margin-top:-6px;margin-bottom:12px;font-size:12px;color:var(--wf-muted);display:flex;align-items:center}

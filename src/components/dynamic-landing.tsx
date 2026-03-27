@@ -239,6 +239,8 @@ const landingStyles = String.raw`
         object-fit: cover;
         object-position: 28% center;
         display: block;
+        user-select: none;
+        -webkit-user-drag: none;
       }
 
       .hero-content {
@@ -605,6 +607,8 @@ const landingStyles = String.raw`
         width: 100%;
         height: 100%;
         object-fit: cover;
+        user-select: none;
+        -webkit-user-drag: none;
       }
 
       .about-image-primary {
@@ -789,6 +793,8 @@ const landingStyles = String.raw`
         height: 100%;
         object-fit: cover;
         object-position: center;
+        user-select: none;
+        -webkit-user-drag: none;
       }
 
       .process-content {
@@ -1673,6 +1679,8 @@ const landingStyles = String.raw`
         height: 300px;
         object-fit: cover;
         display: block;
+        user-select: none;
+        -webkit-user-drag: none;
         transition: filter 0.24s ease;
       }
 
@@ -2221,13 +2229,28 @@ const landingStyles = String.raw`
 
         .footer-payments {
           display: flex;
-          flex-wrap: wrap;
-          gap: 10px;
+          flex-wrap: nowrap;
+          gap: 8px;
           justify-content: flex-start;
+          align-items: center;
         }
 
-        .footer-payments .pay-badge {
+        .footer-payment-logo {
           width: auto;
+          flex: 1 1 0;
+          min-width: 0;
+          min-height: 42px;
+          padding: 2px 0;
+        }
+
+        .footer-payment-logo:first-child {
+          width: auto;
+          flex-basis: 0;
+        }
+
+        .footer-payment-logo img {
+          max-width: 100%;
+          max-height: 28px;
         }
       }
 
@@ -2323,6 +2346,8 @@ const landingStyles = String.raw`
           max-width: none;
           margin: 0;
           padding: 22px 38px;
+          justify-content: flex-end;
+          gap: 22px;
         }
 
         .top-nav .nav-links,
@@ -2597,7 +2622,7 @@ const landingMarkupTemplate = String.raw`
             alt="Gasfiter profesional listo para atención de urgencia en Santiago"
             loading="eager"
           />
-          <div class="floating">⭐ 4.9 Google · +500 trabajos</div>
+          <div class="floating">⭐ 4.9 Google · +98 trabajos</div>
         </figure>
 
         <div class="hero-content">
@@ -4537,15 +4562,6 @@ export default function DynamicLanding({ initialSettings = null }: DynamicLandin
 
     const clientsState = {
       active: 1,
-      pointerId: null as number | null,
-      startX: 0,
-      startY: 0,
-      deltaX: 0,
-      deltaY: 0,
-      pressed: false,
-      dragging: false,
-      dragActivated: false,
-      moved: false,
       bound: false,
     };
 
@@ -4600,7 +4616,6 @@ export default function DynamicLanding({ initialSettings = null }: DynamicLandin
       next?.addEventListener("click", () => shiftClientsCarousel(1));
 
       stage.addEventListener("click", (event) => {
-        if (clientsState.moved) return;
         const target = event.target as HTMLElement | null;
         const slide = target?.closest<HTMLElement>(".client-slide");
         if (!slide) return;
@@ -4609,80 +4624,7 @@ export default function DynamicLanding({ initialSettings = null }: DynamicLandin
         clientsState.active = nextIndex;
         updateClientsCarousel();
       });
-
-      viewport.addEventListener("pointerdown", (event) => {
-        if (event.button !== 0) return;
-        clientsState.pointerId = event.pointerId;
-        clientsState.startX = event.clientX;
-        clientsState.startY = event.clientY;
-        clientsState.deltaX = 0;
-        clientsState.deltaY = 0;
-        clientsState.pressed = true;
-        clientsState.dragging = false;
-        clientsState.dragActivated = false;
-        clientsState.moved = false;
-      });
-
-      viewport.addEventListener("pointermove", (event) => {
-        if (!clientsState.pressed) return;
-        clientsState.deltaX = event.clientX - clientsState.startX;
-        clientsState.deltaY = event.clientY - clientsState.startY;
-
-        if (!clientsState.dragActivated) {
-          const absX = Math.abs(clientsState.deltaX);
-          const absY = Math.abs(clientsState.deltaY);
-          if (absX < 18) return;
-          if (absY > absX * 0.75) {
-            clientsState.pressed = false;
-            clientsState.deltaX = 0;
-            clientsState.deltaY = 0;
-            return;
-          }
-          clientsState.dragging = true;
-          clientsState.dragActivated = true;
-          viewport.classList.add("is-dragging");
-          viewport.setPointerCapture(event.pointerId);
-        }
-
-        if (!clientsState.dragging) return;
-        if (Math.abs(clientsState.deltaX) > 12) {
-          clientsState.moved = true;
-          event.preventDefault();
-        }
-        viewport.style.setProperty("--clients-drag-offset", `${clientsState.deltaX * 0.24}px`);
-      });
-
-      const stopClientsDrag = () => {
-        if (!clientsState.pressed && !clientsState.dragging) return;
-        const delta = clientsState.deltaX;
-        viewport.classList.remove("is-dragging");
-        viewport.style.setProperty("--clients-drag-offset", "0px");
-        clientsState.pressed = false;
-        clientsState.dragging = false;
-        clientsState.dragActivated = false;
-        clientsState.deltaX = 0;
-        clientsState.deltaY = 0;
-        if (Math.abs(delta) > 110) {
-          shiftClientsCarousel(delta > 0 ? -1 : 1);
-        } else {
-          updateClientsCarousel();
-        }
-      };
-
-      viewport.addEventListener("pointerup", (event) => {
-        if (clientsState.pointerId !== null && viewport.hasPointerCapture(event.pointerId)) {
-          viewport.releasePointerCapture(event.pointerId);
-        }
-        stopClientsDrag();
-      });
-      viewport.addEventListener("pointercancel", stopClientsDrag);
       viewport.addEventListener("dragstart", (event) => event.preventDefault());
-      viewport.addEventListener("click", (event) => {
-        if (clientsState.moved) {
-          event.preventDefault();
-          clientsState.moved = false;
-        }
-      });
     };
 
     setupClientsCarousel();
