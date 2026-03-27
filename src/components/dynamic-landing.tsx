@@ -274,7 +274,7 @@ const landingStyles = String.raw`
       .hero h1 {
         margin-top: 12px;
         font-size: clamp(2.1rem, 7.6vw, 4.45rem);
-        color: var(--text);
+        color: var(--navy);
         max-width: none;
         letter-spacing: -0.02em;
         line-height: 0.98;
@@ -292,33 +292,38 @@ const landingStyles = String.raw`
 
       .hero-lead {
         margin-top: 14px;
-        font-size: clamp(1rem, 2.4vw, 1.22rem);
-        color: var(--muted);
+        font-size: clamp(1.08rem, 2.5vw, 1.34rem);
+        font-weight: 500;
+        color: #4c647d;
         max-width: 54ch;
+        line-height: 1.55;
       }
 
-      .badges {
-        margin-top: 18px;
+      .hero-trust-line {
+        margin-top: 22px;
         display: flex;
         flex-wrap: wrap;
-        gap: 10px;
+        align-items: center;
+        gap: 8px;
+        color: #4b6580;
+        font-size: 1rem;
+        line-height: 1.6;
+        font-weight: 600;
       }
 
-      .badge {
-        background: #ffffff;
-        border: 1px solid #dbe3ef;
-        border-radius: 999px;
-        font-size: 13px;
-        font-weight: 700;
-        color: var(--navy);
-        padding: 9px 13px;
+      .hero-trust-item {
         display: inline-flex;
         align-items: center;
-        gap: 7px;
+        gap: 8px;
       }
 
-      .badge i {
-        font-size: 15px;
+      .hero-trust-item::before {
+        content: "•";
+        color: #94a3b8;
+      }
+
+      .hero-trust-item:first-child::before {
+        content: none;
       }
 
       .hero-cta {
@@ -956,7 +961,7 @@ const landingStyles = String.raw`
 
       .projects-head h2 {
         font-size: clamp(2.65rem, 5.4vw, 4.6rem);
-        color: var(--text);
+        color: var(--navy);
         line-height: 0.98;
         letter-spacing: -0.03em;
         max-width: none;
@@ -1089,7 +1094,7 @@ const landingStyles = String.raw`
 
       .clients-title {
         font-size: clamp(2.35rem, 4.8vw, 4.1rem);
-        color: var(--text);
+        color: var(--navy);
         line-height: 1;
         letter-spacing: -0.02em;
         max-width: none;
@@ -1475,7 +1480,7 @@ const landingStyles = String.raw`
         font-size: clamp(1.95rem, 4vw, 3.45rem);
         line-height: 1;
         letter-spacing: -0.02em;
-        color: var(--text);
+        color: var(--navy);
         max-width: none;
         white-space: nowrap;
       }
@@ -1504,14 +1509,14 @@ const landingStyles = String.raw`
 
       .contact-field:focus {
         outline: none;
-        border-bottom-color: #0f766e;
+        border-bottom-color: var(--navy);
       }
 
       .contact-submit {
         margin-top: 4px;
         width: 170px;
-        border-radius: 0;
-        background: #0f766e;
+        border-radius: 14px;
+        background: var(--navy);
         color: #ffffff;
       }
 
@@ -1533,7 +1538,7 @@ const landingStyles = String.raw`
       }
 
       .contact-feedback.is-success {
-        color: #0f766e;
+        color: var(--navy);
       }
 
       .benefits {
@@ -1860,13 +1865,15 @@ const landingStyles = String.raw`
       }
 
       .mobile-call {
-        background: var(--orange);
-        color: #0f172a;
+        background: var(--navy);
+        color: #ffffff;
+        box-shadow: 0 10px 24px rgba(12, 74, 110, 0.22);
       }
 
       .mobile-wa {
-        background: var(--wa);
-        color: #fff;
+        background: #f8fbff;
+        color: var(--navy);
+        border: 1px solid rgba(43, 108, 176, 0.22);
       }
 
       .reveal {
@@ -2148,11 +2155,20 @@ const landingStyles = String.raw`
       }
 
       @media (max-width: 767px) {
+        .projects-head h2 {
+          white-space: normal;
+          font-size: clamp(2.2rem, 8.6vw, 3rem);
+          line-height: 0.98;
+          max-width: 14ch;
+          margin-inline: auto;
+        }
+
         .clients-title {
-          font-size: clamp(1.95rem, 9vw, 2.75rem);
+          font-size: clamp(2.1rem, 8.4vw, 2.95rem);
           white-space: normal;
           line-height: 0.98;
-          max-width: 12ch;
+          max-width: 14ch;
+          margin-inline: auto;
         }
 
         .clients-viewport {
@@ -2593,10 +2609,10 @@ const landingMarkupTemplate = String.raw`
 		            <p class="hero-lead" data-hero-subtitle data-pending="true">
 		              Atención técnica para fugas, destapes, calefont e instalaciones con respuesta rápida y diagnóstico claro en terreno.
 		            </p>
-            <div class="badges">
-              <span class="badge"><i class="fa-solid fa-bolt" aria-hidden="true"></i>Disponible ahora</span>
-              <span class="badge"><i class="fa-solid fa-hand-holding-dollar" aria-hidden="true"></i>Pago contra trabajo</span>
-              <span class="badge"><i class="fa-solid fa-certificate" aria-hidden="true"></i>Técnicos certificados</span>
+            <div class="hero-trust-line">
+              <span class="hero-trust-item">Atención en terreno</span>
+              <span class="hero-trust-item">Diagnóstico claro</span>
+              <span class="hero-trust-item">Técnicos certificados</span>
             </div>
             <div class="hero-cta">
               <a class="btn btn-primary" href="tel:+569XXXXXXX" data-hero-cta-primary>
@@ -2657,8 +2673,8 @@ const landingMarkupTemplate = String.raw`
             <img src="/images/gasfiter-calefont.webp" alt="Detalle de instalación de gasfitería" loading="lazy" />
           </figure>
           <div class="about-badge">
-            <strong>24/7</strong>
-            <span>Respuesta en Santiago con criterio técnico</span>
+            <strong data-about-badge-value>24/7</strong>
+            <span data-about-badge-text>Respuesta en Santiago con criterio técnico</span>
           </div>
         </div>
       </div>
@@ -2951,13 +2967,13 @@ const landingMarkupTemplate = String.raw`
     <section class="section trust-band reveal">
       <div class="container trust-band-inner">
         <div class="trust-band-copy">
-          <span class="trust-band-kicker">Cobertura y confianza</span>
-          <h2>Atención técnica en Santiago, con respuesta clara y cobertura real</h2>
-          <p>
+          <span class="trust-band-kicker" data-urgency-kicker>Cobertura y confianza</span>
+          <h2 data-urgency-title>Atención técnica en Santiago, con respuesta clara y cobertura real</h2>
+          <p data-urgency-description>
             Atendemos hogares, departamentos, oficinas y locales comerciales con servicio rápido según comuna,
             diagnóstico transparente y respaldo en cada visita.
           </p>
-          <div class="trust-band-areas">
+          <div class="trust-band-areas" data-urgency-areas>
             <span class="trust-band-area">Providencia</span>
             <span class="trust-band-area">Ñuñoa</span>
             <span class="trust-band-area">Las Condes</span>
@@ -2966,7 +2982,7 @@ const landingMarkupTemplate = String.raw`
             <span class="trust-band-area">Maipú</span>
           </div>
         </div>
-        <div class="trust-band-points">
+        <div class="trust-band-points" data-urgency-points>
           <article class="trust-point">
             <strong>Atención 24/7</strong>
             <span>Disponibilidad para urgencias reales y visitas programadas según comuna.</span>
@@ -3245,6 +3261,8 @@ const DEFAULT_LANDING_VALUES = {
         icon: "fa-circle-check",
       },
     ],
+    badgeValue: "24/7",
+    badgeText: "Respuesta en Santiago con criterio técnico",
     ctaPrimaryText: "+56 9 XXXX XXXX",
     ctaPrimaryUrl: "tel:+569XXXXXXX",
     ctaSecondaryText: "Agendar visita",
@@ -3260,10 +3278,28 @@ const DEFAULT_LANDING_VALUES = {
     logoSecondary: "/images/sello_verde.webp",
   },
   urgency: {
+    kicker: "Cobertura y confianza",
     title: "¿Tienes una urgencia ahora?",
     description: "Te atendemos hoy, en tu comuna, con respuesta rápida y técnica.",
-    ctaText: "Llamar ahora",
-    ctaUrl: "tel:+569XXXXXXX",
+    areas: ["Providencia", "Ñuñoa", "Las Condes", "Santiago Centro", "La Florida", "Maipú"],
+    points: [
+      {
+        title: "Atención 24/7",
+        description: "Disponibilidad para urgencias reales y visitas programadas según comuna.",
+      },
+      {
+        title: "Técnicos verificados",
+        description: "Servicio profesional, ordenado y enfocado en soluciones duraderas.",
+      },
+      {
+        title: "Presupuesto claro",
+        description: "Se informa el trabajo y el costo antes de comenzar la intervención.",
+      },
+      {
+        title: "Medios de pago",
+        description: "Transferencia, Webpay, débito, crédito y comprobante cuando corresponde.",
+      },
+    ],
   },
   faq: {
     title: "Preguntas frecuentes",
@@ -3271,6 +3307,7 @@ const DEFAULT_LANDING_VALUES = {
   footer: {
     title: "Gasfiter Urgencias Santiago",
     subtitle: "Respuesta técnica 24/7 para fugas, destapes, calefont e instalaciones con atención en terreno.",
+    showAddress: true,
     phone: "+56 9 XXXX XXXX",
     whatsappLabel: "WhatsApp directo",
     contactHeading: "Contacto",
@@ -3334,6 +3371,10 @@ const buildLandingMarkup = (initialHero: ResolvedHero) =>
     .replace(
       'href="tel:+569XXXXXXX" data-hero-cta-primary',
       `href="${escapeStaticHtml(initialHero.primaryUrl)}" data-hero-cta-primary`,
+    )
+    .replace(
+      /(<a class="btn btn-primary"[^>]*data-hero-cta-primary[^>]*>\s*<i class="fa-solid fa-phone-volume" aria-hidden="true"><\/i>\s*)[^<]*(\s*<\/a>)/,
+      `$1${escapeStaticHtml(initialHero.primaryText)}$2`,
     )
     .replace(
       'href="https://wa.me/569XXXXXXX" target="_blank" rel="noopener noreferrer" data-hero-cta-secondary',
@@ -3861,9 +3902,19 @@ export default function DynamicLanding({ initialSettings = null }: DynamicLandin
         typeof brandingContact.address === "string" && brandingContact.address.trim()
           ? brandingContact.address.trim()
           : "";
+      const showFooterAddress =
+        typeof brandingFooter.showAddress === "boolean"
+          ? brandingFooter.showAddress
+          : DEFAULT_LANDING_VALUES.footer.showAddress;
       const footerAddress = document.querySelector<HTMLElement>("[data-footer-address]");
-      if (footerAddress && addressValue) {
-        footerAddress.textContent = addressValue;
+      if (footerAddress) {
+        if (showFooterAddress && addressValue) {
+          footerAddress.textContent = addressValue;
+          footerAddress.style.display = "";
+        } else {
+          footerAddress.textContent = "";
+          footerAddress.style.display = "none";
+        }
       }
 
       const phoneValue =
@@ -4055,9 +4106,29 @@ export default function DynamicLanding({ initialSettings = null }: DynamicLandin
       if (primaryBtn && heroPrimaryUrl) {
         primaryBtn.setAttribute("href", heroPrimaryUrl);
       }
+      if (primaryBtn && heroPrimaryText) {
+        const icon = primaryBtn.querySelector("i");
+        primaryBtn.textContent = "";
+        if (icon) {
+          primaryBtn.appendChild(icon);
+          primaryBtn.append(` ${heroPrimaryText}`);
+        } else {
+          primaryBtn.textContent = heroPrimaryText;
+        }
+      }
       const secondaryBtn = document.querySelector("[data-hero-cta-secondary]");
       if (secondaryBtn && heroSecondaryUrl) {
         secondaryBtn.setAttribute("href", heroSecondaryUrl);
+      }
+      if (secondaryBtn && heroSecondaryText) {
+        const icon = secondaryBtn.querySelector("i");
+        secondaryBtn.textContent = "";
+        if (icon) {
+          secondaryBtn.appendChild(icon);
+          secondaryBtn.append(` ${heroSecondaryText}`);
+        } else {
+          secondaryBtn.textContent = heroSecondaryText;
+        }
       }
 
       const quickCallLinks = document.querySelectorAll<HTMLAnchorElement>("[data-quick-call]");
@@ -4126,6 +4197,8 @@ export default function DynamicLanding({ initialSettings = null }: DynamicLandin
         const audienceSecondaryBtn = audienceRoot?.querySelector(".audience-cta .btn-ghost");
         const audienceBackImage = audienceRoot?.querySelector(".audience-image-back") ?? aboutRoot?.querySelector(".about-image-primary img");
         const audienceFrontImage = audienceRoot?.querySelector(".audience-image-front") ?? aboutRoot?.querySelector(".about-image-secondary img");
+        const audienceBadgeValue = aboutRoot?.querySelector<HTMLElement>("[data-about-badge-value]");
+        const audienceBadgeText = aboutRoot?.querySelector<HTMLElement>("[data-about-badge-text]");
 
         const audience = resolveAudienceFromSettings({
           settings,
@@ -4135,6 +4208,8 @@ export default function DynamicLanding({ initialSettings = null }: DynamicLandin
         if (audienceKicker) audienceKicker.textContent = audience.kicker;
         if (audienceTitle) audienceTitle.textContent = audience.title;
         if (audienceDescription) audienceDescription.textContent = audience.description;
+        if (audienceBadgeValue) audienceBadgeValue.textContent = audience.badge.value;
+        if (audienceBadgeText) audienceBadgeText.textContent = audience.badge.text;
         if (audienceList && audience.bullets.length) {
           if (audienceList.classList.contains("about-points")) {
             audienceList.innerHTML = audience.bullets
@@ -4281,19 +4356,41 @@ export default function DynamicLanding({ initialSettings = null }: DynamicLandin
 
       if (sectionUrgency?.data) {
         const trustBandRoot = document.querySelector(".trust-band");
-        const trustBandTitle = trustBandRoot?.querySelector(".trust-band-copy h2");
-        const trustBandDescription = trustBandRoot?.querySelector(".trust-band-copy p");
+        const trustBandKicker = trustBandRoot?.querySelector<HTMLElement>("[data-urgency-kicker]");
+        const trustBandTitle = trustBandRoot?.querySelector<HTMLElement>("[data-urgency-title]");
+        const trustBandDescription = trustBandRoot?.querySelector<HTMLElement>("[data-urgency-description]");
+        const trustBandAreas = trustBandRoot?.querySelector<HTMLElement>("[data-urgency-areas]");
+        const trustBandPoints = trustBandRoot?.querySelector<HTMLElement>("[data-urgency-points]");
         const urgency = resolveUrgencyFromSettings({
           settings,
           defaults: DEFAULT_LANDING_VALUES.urgency,
-          heroPrimaryUrl,
         });
 
+        if (trustBandKicker && urgency.kicker) {
+          trustBandKicker.textContent = urgency.kicker;
+        }
         if (trustBandTitle && urgency.title) {
           trustBandTitle.textContent = urgency.title;
         }
         if (trustBandDescription && urgency.description) {
           trustBandDescription.textContent = urgency.description;
+        }
+        if (trustBandAreas && urgency.areas.length) {
+          trustBandAreas.innerHTML = urgency.areas
+            .map((area) => `<span class="trust-band-area">${escapeHtml(area)}</span>`)
+            .join("");
+        }
+        if (trustBandPoints && urgency.points.length) {
+          trustBandPoints.innerHTML = urgency.points
+            .map(
+              (point) => `
+                <article class="trust-point">
+                  <strong>${escapeHtml(point.title)}</strong>
+                  <span>${escapeHtml(point.description)}</span>
+                </article>
+              `,
+            )
+            .join("");
         }
       }
 

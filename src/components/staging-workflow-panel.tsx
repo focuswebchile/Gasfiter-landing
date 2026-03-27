@@ -44,6 +44,7 @@ type SettingsPayload = {
     footer?: {
       title?: string;
       subtitle?: string;
+      showAddress?: boolean;
       whatsappLabel?: string;
       contactHeading?: string;
       region?: string;
@@ -202,6 +203,7 @@ type ImageUploadFieldProps = {
   maxSizeBytes: number;
   hideUrlInput?: boolean;
   controlsInline?: boolean;
+  previewShellClassName?: string;
   onValueChange: (nextValue: string) => void;
   onReplace: (file: File | null) => void;
   onRemove: () => void;
@@ -287,6 +289,7 @@ function ImageUploadField({
   maxSizeBytes,
   hideUrlInput = false,
   controlsInline = false,
+  previewShellClassName,
   onValueChange,
   onReplace,
   onRemove,
@@ -317,10 +320,13 @@ function ImageUploadField({
           onChange={(e) => onValueChange(e.target.value)}
         />
       ) : null}
-      {controlsInline ? <div className="wf-asset-preview-shell">{previewNode}</div> : null}
+      {controlsInline ? (
+        <div className={`wf-asset-preview-shell${previewShellClassName ? ` ${previewShellClassName}` : ""}`}>{previewNode}</div>
+      ) : null}
+      {!controlsInline && hideUrlInput ? previewNode : null}
       <div className="wf-row" style={{ gap: 8, flexWrap: "wrap" }}>
         <label className="wf-btn wf-btn-soft" style={{ cursor: disabled ? "default" : "pointer" }}>
-          Reemplazar
+          {hasValue ? "Cambiar imagen" : "Subir imagen"}
           <input
             type="file"
             hidden
@@ -347,7 +353,7 @@ function ImageUploadField({
       </div>
       {validationError ? <span className="wf-upload-error">{validationError}</span> : null}
       {guidanceText ? <span className="wf-muted">{guidanceText}</span> : null}
-      {!controlsInline ? previewNode : null}
+      {!controlsInline && !hideUrlInput ? previewNode : null}
     </div>
   );
 }
@@ -394,8 +400,8 @@ const panelStyles = String.raw`
     --wf-danger-border:#fecaca;
     --wf-danger-ink:#991b1b;
     --wf-fs-title:30px;
-    --wf-fs-h2:21px;
-    --wf-fs-h3:18px;
+    --wf-fs-h2:20px;
+    --wf-fs-h3:16px;
     --wf-fs-body:14px;
     --wf-fs-meta:12px;
     --wf-lh-tight:1.2;
@@ -407,14 +413,14 @@ const panelStyles = String.raw`
   .wf-sub{margin:6px 0 0;color:var(--wf-muted);font-size:var(--wf-fs-body);line-height:var(--wf-lh-base)}
   .wf-flowbar{border:1px solid var(--wf-border);background:var(--wf-surface-soft);border-radius:10px;padding:10px 12px;margin:0 0 12px}
   .wf-flowbar-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
-  .wf-flowbar-title{font-size:13px;font-weight:700;color:var(--wf-text)}
+  .wf-flowbar-title{font-size:14px;font-weight:700;color:var(--wf-text)}
   .wf-flowbar-track{height:8px;border-radius:999px;background:#e2e8f0;overflow:hidden;margin-top:8px}
   .wf-flowbar-fill{height:100%;background:var(--wf-success-ink);transition:width .2s ease}
   .wf-badges{display:flex;gap:8px;flex-wrap:wrap}
   .wf-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#e2e8f0;color:var(--wf-text)}
   .wf-badge-env{background:#fef3c7;color:var(--wf-warn-ink)}
   .wf-badge-role{background:#dbeafe;color:var(--wf-primary-ink)}
-  .wf-badge-role-main{font-size:14px;font-weight:800;padding:8px 14px}
+  .wf-badge-role-main{font-size:16px;font-weight:800;padding:8px 14px}
   .wf-badge-warn{background:#ffedd5;color:#9a3412}
   .wf-layout{display:grid;gap:16px}
   @media(min-width:1180px){.wf-layout{grid-template-columns:250px minmax(0,1fr);align-items:start}}
@@ -431,8 +437,8 @@ const panelStyles = String.raw`
   }
   .wf-nav-group{display:grid;gap:6px}
   .wf-nav-group + .wf-nav-group{margin-top:6px;padding-top:10px;border-top:1px solid #e2e8f0}
-  .wf-nav-group-title{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--wf-muted);font-weight:800;padding:0 4px}
-  .wf-nav-btn{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--wf-border);background:var(--wf-surface-soft);border-radius:10px;padding:10px 12px;font-weight:700;font-size:13px;line-height:1.3;color:#334155;cursor:pointer}
+  .wf-nav-group-title{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--wf-muted);font-weight:800;padding:0 4px}
+  .wf-nav-btn{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--wf-border);background:var(--wf-surface-soft);border-radius:10px;padding:10px 12px;font-weight:700;font-size:14px;line-height:1.3;color:#334155;cursor:pointer}
   .wf-nav-btn.active{background:var(--wf-primary-soft);border-color:#9db4ee;color:var(--wf-primary-ink)}
   .wf-grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   .wf-grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
@@ -443,8 +449,8 @@ const panelStyles = String.raw`
   .wf-toolbar-status{display:flex;gap:8px;flex-wrap:wrap;padding:2px 0}
   .wf-editorial-status{display:grid;gap:8px;border:1px solid var(--wf-border);border-radius:12px;background:var(--wf-surface-soft);padding:12px 14px;margin-bottom:12px}
   .wf-editorial-status-title{display:flex;align-items:center;justify-content:space-between;gap:10px}
-  .wf-editorial-status-title strong{font-size:15px;line-height:1.25}
-  .wf-editorial-status-desc{font-size:13px;line-height:1.4;color:var(--wf-muted)}
+  .wf-editorial-status-title strong{font-size:16px;line-height:1.25}
+  .wf-editorial-status-desc{font-size:14px;line-height:1.4;color:var(--wf-muted)}
   .wf-editorial-status-meta{display:flex;flex-wrap:wrap;gap:8px}
   .wf-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#e2e8f0;color:var(--wf-text)}
   .wf-pill-primary{background:var(--wf-primary-soft);color:var(--wf-primary-ink)}
@@ -456,7 +462,7 @@ const panelStyles = String.raw`
   .wf-input{min-width:200px;flex:1}
   .wf-select{min-width:150px}
   .wf-textarea{width:100%;min-height:88px;resize:vertical}
-  .wf-btn{height:38px;border:0;border-radius:10px;padding:0 12px;font-weight:700;font-size:13px;letter-spacing:.01em;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;line-height:1;text-align:center;vertical-align:middle}
+  .wf-btn{height:38px;border:0;border-radius:10px;padding:0 12px;font-weight:700;font-size:14px;letter-spacing:.01em;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;line-height:1;text-align:center;vertical-align:middle}
   .wf-btn-sm{height:32px;padding:0 10px;font-size:12px}
   .wf-btn-compact{width:auto;min-width:max-content}
   .wf-btn:disabled{opacity:.5;cursor:not-allowed}
@@ -472,27 +478,30 @@ const panelStyles = String.raw`
   .wf-err{background:#fee2e2;color:var(--wf-danger-ink)}
   .wf-alert{border:1px solid var(--wf-danger-border);background:var(--wf-danger-bg);color:var(--wf-danger-ink);border-radius:10px;padding:10px 12px}
   .wf-alert-title{font-size:14px;font-weight:800;margin-bottom:6px}
-  .wf-alert-list{margin:0;padding-left:18px;font-size:13px;line-height:1.4;display:grid;gap:4px}
+  .wf-alert-list{margin:0;padding-left:18px;font-size:14px;line-height:1.4;display:grid;gap:4px}
   .wf-readonly{border:1px solid var(--wf-warn-border);background:var(--wf-warn-bg);color:var(--wf-warn-ink);border-radius:10px;padding:10px 12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
-  .wf-readonly strong{font-size:13px}
+  .wf-readonly strong{font-size:14px}
   .wf-readonly small{display:block;font-size:12px;color:#a16207}
   .wf-h3{margin:2px 0 10px;font-size:var(--wf-fs-h3);line-height:1.25;font-weight:800;letter-spacing:-.01em}
   .wf-muted{color:var(--wf-muted);font-size:var(--wf-fs-meta);line-height:1.4}
   .wf-sections,.wf-versions,.wf-items{display:grid;gap:8px}
   .wf-row-item{border:1px solid #e2e8f0;border-radius:10px;padding:8px 10px;background:var(--wf-surface);display:flex;gap:8px;align-items:center;justify-content:space-between}
+  .wf-projects-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+  .wf-project-card{border:1px solid #e2e8f0;border-radius:12px;padding:10px;background:var(--wf-surface);display:grid;gap:8px;align-items:start}
+  .wf-project-card.dragging{opacity:.65;border-style:dashed}
   .wf-drag{cursor:grab;font-size:16px;color:#64748b;user-select:none;padding:0 2px}
   .wf-row-item.dragging{opacity:.65;border-style:dashed}
   .wf-row-item.active{border-color:#9db4ee;background:#f8fbff}
-  .wf-toggle{display:flex;gap:8px;align-items:center;font-size:13px}
+  .wf-toggle{display:flex;gap:8px;align-items:center;font-size:14px}
   .wf-toggle input{width:16px;height:16px}
   .wf-code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;background:#f8fafc;padding:10px;border-radius:8px;overflow:auto;max-height:280px}
   .wf-upload-error{font-size:12px;color:#991b1b;font-weight:600}
   .wf-preview{display:grid;gap:12px}
   .wf-preview-box{border:1px solid var(--wf-border);border-radius:10px;background:var(--wf-surface-soft);padding:12px}
-  .wf-kv{display:grid;gap:6px;font-size:13px}
+  .wf-kv{display:grid;gap:6px;font-size:14px}
   .wf-steps{display:grid;gap:8px;margin-bottom:12px;opacity:.8}
   .wf-step{display:flex;gap:8px;align-items:flex-start;padding:9px 10px;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0}
-  .wf-step strong{font-size:13px;line-height:1.25}
+  .wf-step strong{font-size:14px;line-height:1.25}
   .wf-step-num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:999px;background:#e2e8f0;color:#334155;font-size:12px;font-weight:800}
   .wf-step.active{border-color:#cbd5e1;background:#fff;opacity:1}
   .wf-step.active .wf-step-num{background:#dbeafe;color:#1d4ed8}
@@ -508,13 +517,13 @@ const panelStyles = String.raw`
   .wf-progress{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;background:#eef2ff;color:var(--wf-primary-ink);font-size:12px;font-weight:700;letter-spacing:.01em}
   .wf-status{display:flex;gap:8px;flex-wrap:wrap}
   .wf-sticky{position:sticky;top:10px;z-index:30;border:1px solid var(--wf-border);background:var(--wf-surface-soft);padding:10px 12px;border-radius:12px;margin-bottom:12px;display:flex;gap:8px;align-items:center;justify-content:space-between;min-height:46px}
-  .wf-sticky strong{font-size:13px}
+  .wf-sticky strong{font-size:14px}
   .wf-sticky small{color:#64748b}
   .wf-sticky-ok{border-color:var(--wf-success-border);background:var(--wf-success-bg)}
   .wf-sticky-warn{border-color:var(--wf-warn-border);background:var(--wf-warn-bg)}
   .wf-sticky-err{border-color:var(--wf-danger-border);background:var(--wf-danger-bg)}
   .wf-toast-stack{position:fixed;right:16px;bottom:16px;z-index:60;display:grid;gap:8px;max-width:min(420px,calc(100vw - 32px))}
-  .wf-toast{border-radius:10px;padding:10px 12px;font-size:13px;font-weight:700;border:1px solid}
+  .wf-toast{border-radius:10px;padding:10px 12px;font-size:14px;font-weight:700;border:1px solid}
   .wf-toast-success{background:#dcfce7;border-color:var(--wf-success-border);color:var(--wf-success-ink)}
   .wf-toast-error{background:#fee2e2;border-color:var(--wf-danger-border);color:var(--wf-danger-ink)}
   .wf-toast-info{background:#e0ebff;border-color:#bfd1f4;color:var(--wf-primary-ink)}
@@ -528,18 +537,19 @@ const panelStyles = String.raw`
   .wf-diff-cell{border:1px solid #e2e8f0;border-radius:8px;padding:8px;background:#f8fafc;font-size:12px}
   .wf-checklist{display:grid;gap:8px;border:1px solid var(--wf-border);border-radius:12px;padding:10px;background:var(--wf-surface-soft);margin-bottom:12px}
   .wf-checklist-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
-  .wf-checklist-head strong{font-size:14px}
+  .wf-checklist-head strong{font-size:16px}
   .wf-checklist-list{display:grid;gap:6px}
+  .wf-checklist-list-inline{grid-template-columns:repeat(4,minmax(0,1fr))}
   .wf-checklist-item{display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid #e2e8f0;background:#fff;padding:8px 10px;border-radius:10px}
   .wf-checklist-item.ok{border-color:var(--wf-success-border);background:var(--wf-success-bg)}
   .wf-checklist-item.warn{border-color:var(--wf-warn-border);background:var(--wf-warn-bg)}
   .wf-checklist-left{display:grid;gap:2px}
-  .wf-checklist-left strong{font-size:14px;line-height:1.3}
+  .wf-checklist-left strong{font-size:16px;line-height:1.3}
   .wf-checklist-left span{font-size:12px;color:#64748b;line-height:1.4}
   .wf-warn-block{display:grid;gap:8px;border:1px solid var(--wf-warn-border);border-radius:12px;padding:10px;background:var(--wf-warn-bg);margin-bottom:12px}
   .wf-warn-title{display:flex;align-items:center;justify-content:space-between;gap:8px}
   .wf-warn-item{display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid #fcd34d;background:#fffaf0;padding:8px 10px;border-radius:10px}
-  .wf-warn-item strong{font-size:14px;line-height:1.3}
+  .wf-warn-item strong{font-size:16px;line-height:1.3}
   .wf-warn-item span{font-size:12px;color:#7c2d12;line-height:1.4}
   .wf-check-icon{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:999px;font-size:12px;font-weight:800}
   .wf-check-icon.ok{background:#166534;color:#fff}
@@ -554,8 +564,8 @@ const panelStyles = String.raw`
   .wf-overlay-head h3{margin:0;font-size:20px;line-height:1.2;font-weight:800}
   .wf-overlay-body{overflow:auto;padding:14px;display:grid;gap:12px}
   .wf-style-stack{display:grid;gap:12px}
-  .wf-style-layout{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  .wf-style-card{border:1px solid var(--wf-border);border-radius:12px;background:var(--wf-surface-soft);display:grid;gap:10px;align-content:start}
+  .wf-style-layout{display:grid;grid-template-columns:minmax(320px,.92fr) minmax(0,1.08fr);gap:12px;align-items:start}
+  .wf-style-card{border:1px solid var(--wf-border);border-radius:12px;background:var(--wf-surface-soft);display:grid;gap:10px;align-content:start;height:max-content}
   .wf-style-head{display:grid;gap:4px;padding:12px 12px 0}
   .wf-style-body{display:grid;gap:10px;padding:0 12px 12px}
   .wf-style-title{margin:0;font-size:16px;line-height:1.3;font-weight:800;letter-spacing:-.01em}
@@ -566,7 +576,17 @@ const panelStyles = String.raw`
   .wf-color-field{display:grid;gap:6px}
   .wf-style-subsection{display:grid;gap:8px;padding-top:8px;border-top:1px solid #e2e8f0}
   .wf-asset-preview-shell{display:flex;align-items:center;min-height:74px;border:1px solid #dbe3f0;border-radius:10px;padding:10px 12px;background:#f8fafc}
-  .wf-checkbox{display:inline-flex;align-items:center;gap:10px;font-size:13px;line-height:1.35}
+  .wf-asset-preview-shell.compact{min-height:auto;width:max-content;max-width:100%;padding:8px 10px}
+  .wf-asset-preview-shell.compact img{display:block}
+  .wf-style-compact-grid{display:grid;gap:12px}
+  .wf-style-section-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .wf-style-assets-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;align-items:start}
+  .wf-style-asset{display:grid;gap:8px;align-content:start}
+  .wf-style-switch{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid #dbe3f0;border-radius:10px;padding:10px 12px;background:#fff}
+  .wf-style-switch-copy{display:grid;gap:2px}
+  .wf-style-switch-copy strong{font-size:16px;line-height:1.3}
+  .wf-style-switch-copy span{font-size:12px;line-height:1.45;color:var(--wf-muted)}
+  .wf-checkbox{display:inline-flex;align-items:center;gap:10px;font-size:14px;line-height:1.35}
   .wf-checkbox input{margin:0;width:16px;height:16px;flex:0 0 auto}
   .wf-sr-only{
     position:absolute!important;
@@ -591,13 +611,17 @@ const panelStyles = String.raw`
     .wf-flowbar-head{align-items:flex-start;flex-direction:column}
     .wf-grid2{grid-template-columns:1fr}
     .wf-grid3{grid-template-columns:1fr}
+    .wf-checklist-list-inline{grid-template-columns:1fr}
     .wf-style-layout{grid-template-columns:1fr}
+    .wf-projects-grid{grid-template-columns:1fr}
+    .wf-style-assets-grid{grid-template-columns:1fr}
+    .wf-style-section-grid{grid-template-columns:1fr}
     .wf-color-grid{grid-template-columns:1fr}
     .wf-overlay-panel{width:min(820px,100vw)}
   }
   @media(max-width:768px){
     .wf-head{align-items:flex-start}
-    :root{--wf-fs-title:24px;--wf-fs-h2:19px;--wf-fs-h3:17px}
+    :root{--wf-fs-title:30px;--wf-fs-h2:20px;--wf-fs-h3:16px}
     .wf-title{font-size:var(--wf-fs-title)}
     .wf-row{align-items:stretch}
     .wf-toolbar{padding:10px}
@@ -955,7 +979,6 @@ export default function StagingWorkflowPanel() {
   const queryUserIdRef = useRef<string | null>(null);
   const normalizedSiteSlug = siteSlug.trim().toLowerCase();
   const hideFaqAndTestimonialsInItems = false;
-  const hiddenSectionsInSectionsView = useMemo<Set<EditableSectionId> | null>(() => null, []);
 
   const baseUrl = useMemo(() => {
     if (typeof window === "undefined") {
@@ -1124,6 +1147,10 @@ export default function StagingWorkflowPanel() {
   const isAdvancedRole = membership?.role === "owner" || membership?.role === "admin";
   const showAdvancedUi = roleResolved && isAdvancedRole;
   const showSimplifiedUi = roleResolved && membership?.role === "editor";
+  const hiddenSectionsInSectionsView = useMemo<Set<EditableSectionId> | null>(() => {
+    if (!showSimplifiedUi) return null;
+    return new Set<EditableSectionId>(["process"]);
+  }, [showSimplifiedUi]);
   const showTechnicalIdentity = showAdvancedUi || !panelReady;
   const publishedReadOnly = mode === "published";
   const editingLocked = !panelReady || publishedReadOnly || busy || autosaving || flushingPublish || draftConflict.active;
@@ -1374,8 +1401,12 @@ export default function StagingWorkflowPanel() {
 
   const openPreview = useCallback(() => {
     if (!panelReady) return setError("Primero usa Cargar panel");
+    if (showSimplifiedUi) {
+      if (typeof window !== "undefined") window.open(`${baseUrl.replace(/\/$/, "")}/`, "_blank", "noopener,noreferrer");
+      return;
+    }
     setShowPreviewOverlay(true);
-  }, [panelReady, setError]);
+  }, [baseUrl, panelReady, setError, showSimplifiedUi]);
 
   const openDiff = useCallback(async () => {
     if (!panelReady) return setError("Primero usa Cargar panel");
@@ -2070,7 +2101,7 @@ export default function StagingWorkflowPanel() {
             className="wf-input"
             disabled={editingLocked}
             value={typeof section.data.eyebrow === "string" ? section.data.eyebrow : ""}
-            placeholder="Eyebrow hero (badge superior)"
+            placeholder={showSimplifiedUi ? "Etiqueta superior" : "Eyebrow hero (badge superior)"}
             onChange={(e) =>
               updateSettings((prev) =>
                 upsertSection(prev, { ...section, data: { ...section.data, eyebrow: e.target.value } }),
@@ -2106,6 +2137,7 @@ export default function StagingWorkflowPanel() {
             accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
             allowedMimeTypes={CONTENT_IMAGE_MIME_TYPES}
             maxSizeBytes={CONTENT_IMAGE_MAX_BYTES}
+            hideUrlInput={showSimplifiedUi}
             onValueChange={(nextValue) =>
               updateSettings((prev) =>
                 upsertSection(prev, { ...section, data: { ...section.data, image: nextValue } }),
@@ -2126,7 +2158,7 @@ export default function StagingWorkflowPanel() {
               className="wf-input"
               disabled={editingLocked}
               value={typeof (section.data.cta_primary as { text?: unknown } | undefined)?.text === "string" ? ((section.data.cta_primary as { text: string }).text ?? "") : ""}
-              placeholder="Texto CTA"
+              placeholder={showSimplifiedUi ? "Texto botón principal" : "Texto CTA"}
               onChange={(e) =>
                 updateSettings((prev) =>
                   upsertSection(prev, {
@@ -2145,17 +2177,17 @@ export default function StagingWorkflowPanel() {
             <input
               className="wf-input"
               disabled={editingLocked}
-              value={typeof (section.data.cta_primary as { url?: unknown } | undefined)?.url === "string" ? ((section.data.cta_primary as { url: string }).url ?? "") : ""}
-              placeholder="URL CTA"
+              value={typeof (section.data.cta_secondary as { text?: unknown } | undefined)?.text === "string" ? ((section.data.cta_secondary as { text: string }).text ?? "") : ""}
+              placeholder={showSimplifiedUi ? "Texto botón secundario" : "Texto CTA secundario"}
               onChange={(e) =>
                 updateSettings((prev) =>
                   upsertSection(prev, {
                     ...section,
                     data: {
                       ...section.data,
-                      cta_primary: {
-                        ...((section.data.cta_primary as Record<string, unknown>) ?? {}),
-                        url: e.target.value,
+                      cta_secondary: {
+                        ...((section.data.cta_secondary as Record<string, unknown>) ?? {}),
+                        text: e.target.value,
                       },
                     },
                   }),
@@ -2163,6 +2195,50 @@ export default function StagingWorkflowPanel() {
               }
             />
           </div>
+          {!showSimplifiedUi ? (
+            <div className="wf-grid2">
+              <input
+                className="wf-input"
+                disabled={editingLocked}
+                value={typeof (section.data.cta_primary as { url?: unknown } | undefined)?.url === "string" ? ((section.data.cta_primary as { url: string }).url ?? "") : ""}
+                placeholder="URL CTA"
+                onChange={(e) =>
+                  updateSettings((prev) =>
+                    upsertSection(prev, {
+                      ...section,
+                      data: {
+                        ...section.data,
+                        cta_primary: {
+                          ...((section.data.cta_primary as Record<string, unknown>) ?? {}),
+                          url: e.target.value,
+                        },
+                      },
+                    }),
+                  )
+                }
+              />
+              <input
+                className="wf-input"
+                disabled={editingLocked}
+                value={typeof (section.data.cta_secondary as { url?: unknown } | undefined)?.url === "string" ? ((section.data.cta_secondary as { url: string }).url ?? "") : ""}
+                placeholder="URL CTA secundario"
+                onChange={(e) =>
+                  updateSettings((prev) =>
+                    upsertSection(prev, {
+                      ...section,
+                      data: {
+                        ...section.data,
+                        cta_secondary: {
+                          ...((section.data.cta_secondary as Record<string, unknown>) ?? {}),
+                          url: e.target.value,
+                        },
+                      },
+                    }),
+                  )
+                }
+              />
+            </div>
+          ) : null}
         </div>
       );
     }
@@ -2215,42 +2291,44 @@ export default function StagingWorkflowPanel() {
               )
             }
           />
-          <div className="wf-grid2">
-            <input
-              className="wf-input"
-              disabled={editingLocked}
-              value={audienceBackImage}
-              placeholder="Imagen fondo"
-              onChange={(e) =>
-                updateSettings((prev) =>
-                  upsertSection(prev, {
-                    ...section,
-                    data: {
-                      ...section.data,
-                      images: { ...((section.data.images as Record<string, unknown>) ?? {}), back: e.target.value },
-                    },
-                  }),
-                )
-              }
-            />
-            <input
-              className="wf-input"
-              disabled={editingLocked}
-              value={audienceFrontImage}
-              placeholder="Imagen frontal"
-              onChange={(e) =>
-                updateSettings((prev) =>
-                  upsertSection(prev, {
-                    ...section,
-                    data: {
-                      ...section.data,
-                      images: { ...((section.data.images as Record<string, unknown>) ?? {}), front: e.target.value },
-                    },
-                  }),
-                )
-              }
-            />
-          </div>
+          {!showSimplifiedUi ? (
+            <div className="wf-grid2">
+              <input
+                className="wf-input"
+                disabled={editingLocked}
+                value={audienceBackImage}
+                placeholder="Imagen fondo"
+                onChange={(e) =>
+                  updateSettings((prev) =>
+                    upsertSection(prev, {
+                      ...section,
+                      data: {
+                        ...section.data,
+                        images: { ...((section.data.images as Record<string, unknown>) ?? {}), back: e.target.value },
+                      },
+                    }),
+                  )
+                }
+              />
+              <input
+                className="wf-input"
+                disabled={editingLocked}
+                value={audienceFrontImage}
+                placeholder="Imagen frontal"
+                onChange={(e) =>
+                  updateSettings((prev) =>
+                    upsertSection(prev, {
+                      ...section,
+                      data: {
+                        ...section.data,
+                        images: { ...((section.data.images as Record<string, unknown>) ?? {}), front: e.target.value },
+                      },
+                    }),
+                  )
+                }
+              />
+            </div>
+          ) : null}
           <div className="wf-grid2">
             <ImageUploadField
               value={audienceBackImage}
@@ -2267,6 +2345,7 @@ export default function StagingWorkflowPanel() {
               accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
               allowedMimeTypes={CONTENT_IMAGE_MIME_TYPES}
               maxSizeBytes={CONTENT_IMAGE_MAX_BYTES}
+              hideUrlInput={showSimplifiedUi}
               onValueChange={(nextValue) =>
                 updateSettings((prev) =>
                   upsertSection(prev, {
@@ -2313,6 +2392,7 @@ export default function StagingWorkflowPanel() {
               accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
               allowedMimeTypes={CONTENT_IMAGE_MIME_TYPES}
               maxSizeBytes={CONTENT_IMAGE_MAX_BYTES}
+              hideUrlInput={showSimplifiedUi}
               onValueChange={(nextValue) =>
                 updateSettings((prev) =>
                   upsertSection(prev, {
@@ -2346,6 +2426,33 @@ export default function StagingWorkflowPanel() {
             />
           </div>
           <div className="wf-grid2">
+            {showSimplifiedUi ? (
+              <>
+                <input
+                  className="wf-input"
+                  disabled={editingLocked}
+                  value={typeof section.data.badge_value === "string" ? section.data.badge_value : ""}
+                  placeholder="Valor del badge"
+                  onChange={(e) =>
+                    updateSettings((prev) =>
+                      upsertSection(prev, { ...section, data: { ...section.data, badge_value: e.target.value } }),
+                    )
+                  }
+                />
+                <input
+                  className="wf-input"
+                  disabled={editingLocked}
+                  value={typeof section.data.badge_text === "string" ? section.data.badge_text : ""}
+                  placeholder="Texto de apoyo del badge"
+                  onChange={(e) =>
+                    updateSettings((prev) =>
+                      upsertSection(prev, { ...section, data: { ...section.data, badge_text: e.target.value } }),
+                    )
+                  }
+                />
+              </>
+            ) : (
+              <>
             <input
               className="wf-input"
               disabled={editingLocked}
@@ -2369,28 +2476,6 @@ export default function StagingWorkflowPanel() {
             <input
               className="wf-input"
               disabled={editingLocked}
-              value={typeof (section.data.cta_primary as { url?: unknown } | undefined)?.url === "string" ? ((section.data.cta_primary as { url?: string }).url ?? "") : ""}
-              placeholder="URL CTA principal"
-              onChange={(e) =>
-                updateSettings((prev) =>
-                  upsertSection(prev, {
-                    ...section,
-                    data: {
-                      ...section.data,
-                      cta_primary: {
-                        ...((section.data.cta_primary as Record<string, unknown>) ?? {}),
-                        url: e.target.value,
-                      },
-                    },
-                  }),
-                )
-              }
-            />
-          </div>
-          <div className="wf-grid2">
-            <input
-              className="wf-input"
-              disabled={editingLocked}
               value={typeof (section.data.cta_secondary as { text?: unknown } | undefined)?.text === "string" ? ((section.data.cta_secondary as { text?: string }).text ?? "") : ""}
               placeholder="Texto CTA secundario"
               onChange={(e) =>
@@ -2408,27 +2493,53 @@ export default function StagingWorkflowPanel() {
                 )
               }
             />
-            <input
-              className="wf-input"
-              disabled={editingLocked}
-              value={typeof (section.data.cta_secondary as { url?: unknown } | undefined)?.url === "string" ? ((section.data.cta_secondary as { url?: string }).url ?? "") : ""}
-              placeholder="URL CTA secundario"
-              onChange={(e) =>
-                updateSettings((prev) =>
-                  upsertSection(prev, {
-                    ...section,
-                    data: {
-                      ...section.data,
-                      cta_secondary: {
-                        ...((section.data.cta_secondary as Record<string, unknown>) ?? {}),
-                        url: e.target.value,
-                      },
-                    },
-                  }),
-                )
-              }
-            />
+              </>
+            )}
           </div>
+          {!showSimplifiedUi ? (
+            <div className="wf-grid2">
+              <input
+                className="wf-input"
+                disabled={editingLocked}
+                value={typeof (section.data.cta_primary as { url?: unknown } | undefined)?.url === "string" ? ((section.data.cta_primary as { url?: string }).url ?? "") : ""}
+                placeholder="URL CTA principal"
+                onChange={(e) =>
+                  updateSettings((prev) =>
+                    upsertSection(prev, {
+                      ...section,
+                      data: {
+                        ...section.data,
+                        cta_primary: {
+                          ...((section.data.cta_primary as Record<string, unknown>) ?? {}),
+                          url: e.target.value,
+                        },
+                      },
+                    }),
+                  )
+                }
+              />
+              <input
+                className="wf-input"
+                disabled={editingLocked}
+                value={typeof (section.data.cta_secondary as { url?: unknown } | undefined)?.url === "string" ? ((section.data.cta_secondary as { url?: string }).url ?? "") : ""}
+                placeholder="URL CTA secundario"
+                onChange={(e) =>
+                  updateSettings((prev) =>
+                    upsertSection(prev, {
+                      ...section,
+                      data: {
+                        ...section.data,
+                        cta_secondary: {
+                          ...((section.data.cta_secondary as Record<string, unknown>) ?? {}),
+                          url: e.target.value,
+                        },
+                      },
+                    }),
+                  )
+                }
+              />
+            </div>
+          ) : null}
           {bullets.map((bullet, index) => (
             <div key={index} className="wf-row-item">
               <div style={{ flex: 1, display: "grid", gap: 6 }}>
@@ -2470,23 +2581,25 @@ export default function StagingWorkflowPanel() {
                     })
                   }
                 />
-                <input
-                  className="wf-input"
-                  disabled={editingLocked}
-                  value={typeof bullet.icon === "string" ? bullet.icon : ""}
-                  placeholder="Ícono (ej: fa-circle-check)"
-                  onChange={(e) =>
-                    updateSettings((prev) => {
-                      const sec = getSection(prev, section.id);
-                      if (!sec) return prev;
-                      const nextBullets = Array.isArray(sec.data.bullets)
-                        ? [...(sec.data.bullets as Array<Record<string, unknown>>)]
-                        : [];
-                      nextBullets[index] = { ...nextBullets[index], icon: e.target.value };
-                      return upsertSection(prev, { ...sec, data: { ...sec.data, bullets: nextBullets } });
-                    })
-                  }
-                />
+                {!showSimplifiedUi ? (
+                  <input
+                    className="wf-input"
+                    disabled={editingLocked}
+                    value={typeof bullet.icon === "string" ? bullet.icon : ""}
+                    placeholder="Ícono (ej: fa-circle-check)"
+                    onChange={(e) =>
+                      updateSettings((prev) => {
+                        const sec = getSection(prev, section.id);
+                        if (!sec) return prev;
+                        const nextBullets = Array.isArray(sec.data.bullets)
+                          ? [...(sec.data.bullets as Array<Record<string, unknown>>)]
+                          : [];
+                        nextBullets[index] = { ...nextBullets[index], icon: e.target.value };
+                        return upsertSection(prev, { ...sec, data: { ...sec.data, bullets: nextBullets } });
+                      })
+                    }
+                  />
+                ) : null}
               </div>
               <label className="wf-toggle">
                 <input
@@ -2562,35 +2675,38 @@ export default function StagingWorkflowPanel() {
               )
             }
           />
-          <ImageUploadField
-            value={trustImage}
-            placeholder="Imagen principal (URL/ruta)"
-            disabled={editingLocked}
-            removeDisabled={editingLocked || !trustImage.trim()}
-            uploading={uploadingContentAssetKey === "trust:section:image"}
-            uploadingText="Subiendo imagen..."
-            fallbackText="Sin imagen (usa fallback del layout)"
-            guidanceText="Formatos: png, jpg, webp, svg. Máximo 5MB."
-            previewAlt="trust section preview"
-            previewWidth={320}
-            previewHeight={92}
-            accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
-            allowedMimeTypes={CONTENT_IMAGE_MIME_TYPES}
-            maxSizeBytes={CONTENT_IMAGE_MAX_BYTES}
-            onValueChange={(nextValue) =>
-              updateSettings((prev) => upsertSection(prev, { ...section, data: { ...section.data, image: nextValue } }))
-            }
-            onReplace={(file) => {
-              void uploadContentAsset({ sectionId: "trust", field: "image", file });
-            }}
-            onRemove={() =>
-              updateSettings(
-                (prev) => upsertSection(prev, { ...section, data: { ...section.data, image: "" } }),
-                { persistNow: true, note: "Autosave: trust image removed" },
-              )
-            }
-          />
-          <div className="wf-grid2">
+          <div className={showSimplifiedUi ? "wf-style-assets-grid" : "wf-grid2"}>
+            <ImageUploadField
+              value={trustImage}
+              placeholder="Imagen principal (URL/ruta)"
+              disabled={editingLocked}
+              removeDisabled={editingLocked || !trustImage.trim()}
+              uploading={uploadingContentAssetKey === "trust:section:image"}
+              uploadingText="Subiendo imagen..."
+              fallbackText="Sin imagen"
+              guidanceText="Formatos: png, jpg, webp, svg. Máximo 5MB."
+              previewAlt="trust section preview"
+              previewWidth={showSimplifiedUi ? 180 : 320}
+              previewHeight={showSimplifiedUi ? 92 : 92}
+              previewStyle={showSimplifiedUi ? { maxHeight: 92, width: "auto", objectFit: "contain" } : undefined}
+              accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
+              allowedMimeTypes={CONTENT_IMAGE_MIME_TYPES}
+              maxSizeBytes={CONTENT_IMAGE_MAX_BYTES}
+              hideUrlInput={showSimplifiedUi}
+              previewShellClassName={showSimplifiedUi ? "compact" : undefined}
+              onValueChange={(nextValue) =>
+                updateSettings((prev) => upsertSection(prev, { ...section, data: { ...section.data, image: nextValue } }))
+              }
+              onReplace={(file) => {
+                void uploadContentAsset({ sectionId: "trust", field: "image", file });
+              }}
+              onRemove={() =>
+                updateSettings(
+                  (prev) => upsertSection(prev, { ...section, data: { ...section.data, image: "" } }),
+                  { persistNow: true, note: "Autosave: trust image removed" },
+                )
+              }
+            />
             <ImageUploadField
               value={trustLogoPrimary}
               placeholder="Logo principal (URL/ruta)"
@@ -2603,9 +2719,12 @@ export default function StagingWorkflowPanel() {
               previewAlt="trust primary logo preview"
               previewWidth={220}
               previewHeight={84}
+              previewStyle={showSimplifiedUi ? { maxHeight: 84, width: "auto", objectFit: "contain" } : undefined}
               accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
               allowedMimeTypes={CONTENT_IMAGE_MIME_TYPES}
               maxSizeBytes={CONTENT_IMAGE_MAX_BYTES}
+              hideUrlInput={showSimplifiedUi}
+              previewShellClassName={showSimplifiedUi ? "compact" : undefined}
               onValueChange={(nextValue) =>
                 updateSettings((prev) =>
                   upsertSection(prev, {
@@ -2640,9 +2759,12 @@ export default function StagingWorkflowPanel() {
               previewAlt="trust secondary logo preview"
               previewWidth={220}
               previewHeight={84}
+              previewStyle={showSimplifiedUi ? { maxHeight: 84, width: "auto", objectFit: "contain" } : undefined}
               accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
               allowedMimeTypes={CONTENT_IMAGE_MIME_TYPES}
               maxSizeBytes={CONTENT_IMAGE_MAX_BYTES}
+              hideUrlInput={showSimplifiedUi}
+              previewShellClassName={showSimplifiedUi ? "compact" : undefined}
               onValueChange={(nextValue) =>
                 updateSettings((prev) =>
                   upsertSection(prev, {
@@ -2686,23 +2808,25 @@ export default function StagingWorkflowPanel() {
                     })
                   }
                 />
-                <input
-                  className="wf-input"
-                  disabled={editingLocked}
-                  value={typeof bullet.icon === "string" ? bullet.icon : ""}
-                  placeholder="Ícono (ej: fa-check)"
-                  onChange={(e) =>
-                    updateSettings((prev) => {
-                      const sec = getSection(prev, section.id);
-                      if (!sec) return prev;
-                      const nextBullets = Array.isArray(sec.data.bullets)
-                        ? [...(sec.data.bullets as Array<Record<string, unknown>>)]
-                        : [];
-                      nextBullets[index] = { ...nextBullets[index], icon: e.target.value };
-                      return upsertSection(prev, { ...sec, data: { ...sec.data, bullets: nextBullets } });
-                    })
-                  }
-                />
+                {!showSimplifiedUi ? (
+                  <input
+                    className="wf-input"
+                    disabled={editingLocked}
+                    value={typeof bullet.icon === "string" ? bullet.icon : ""}
+                    placeholder="Ícono (ej: fa-check)"
+                    onChange={(e) =>
+                      updateSettings((prev) => {
+                        const sec = getSection(prev, section.id);
+                        if (!sec) return prev;
+                        const nextBullets = Array.isArray(sec.data.bullets)
+                          ? [...(sec.data.bullets as Array<Record<string, unknown>>)]
+                          : [];
+                        nextBullets[index] = { ...nextBullets[index], icon: e.target.value };
+                        return upsertSection(prev, { ...sec, data: { ...sec.data, bullets: nextBullets } });
+                      })
+                    }
+                  />
+                ) : null}
               </div>
               <label className="wf-toggle">
                 <input
@@ -2725,24 +2849,26 @@ export default function StagingWorkflowPanel() {
               </label>
             </div>
           ))}
-          <div className="wf-row">
-            <button
-              className="wf-btn wf-btn-soft"
-              disabled={editingLocked}
-              onClick={() =>
-                updateSettings((prev) => {
-                  const sec = getSection(prev, section.id) ?? section;
-                  const nextBullets = Array.isArray(sec.data.bullets)
-                    ? [...(sec.data.bullets as Array<Record<string, unknown>>)]
-                    : [];
-                  nextBullets.push({ text: "Nuevo respaldo", icon: "fa-check", enabled: true, order: nextBullets.length + 1 });
-                  return upsertSection(prev, { ...sec, data: { ...sec.data, bullets: nextBullets } });
-                })
-              }
-            >
-              + Agregar bullet
-            </button>
-          </div>
+          {!showSimplifiedUi ? (
+            <div className="wf-row">
+              <button
+                className="wf-btn wf-btn-soft"
+                disabled={editingLocked}
+                onClick={() =>
+                  updateSettings((prev) => {
+                    const sec = getSection(prev, section.id) ?? section;
+                    const nextBullets = Array.isArray(sec.data.bullets)
+                      ? [...(sec.data.bullets as Array<Record<string, unknown>>)]
+                      : [];
+                    nextBullets.push({ text: "Nuevo respaldo", icon: "fa-check", enabled: true, order: nextBullets.length + 1 });
+                    return upsertSection(prev, { ...sec, data: { ...sec.data, bullets: nextBullets } });
+                  })
+                }
+              >
+                + Agregar bullet
+              </button>
+            </div>
+          ) : null}
         </div>
       );
     }
@@ -2808,6 +2934,7 @@ export default function StagingWorkflowPanel() {
             accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
             allowedMimeTypes={CONTENT_IMAGE_MIME_TYPES}
             maxSizeBytes={CONTENT_IMAGE_MAX_BYTES}
+            hideUrlInput={showSimplifiedUi}
             onValueChange={(nextValue) =>
               updateSettings((prev) => upsertSection(prev, { ...section, data: { ...section.data, image: nextValue } }))
             }
@@ -2878,6 +3005,23 @@ export default function StagingWorkflowPanel() {
                 />
                 habilitado
               </label>
+              <button
+                className="wf-btn wf-btn-warn"
+                disabled={editingLocked || steps.length <= 1}
+                onClick={() =>
+                  updateSettings((prev) => {
+                    const sec = getSection(prev, section.id);
+                    if (!sec) return prev;
+                    const nextSteps = Array.isArray(sec.data.steps)
+                      ? [...(sec.data.steps as Array<Record<string, unknown>>)]
+                      : [];
+                    nextSteps.splice(index, 1);
+                    return upsertSection(prev, { ...sec, data: { ...sec.data, steps: nextSteps } });
+                  })
+                }
+              >
+                Eliminar
+              </button>
             </div>
           ))}
           <div className="wf-row">
@@ -2931,17 +3075,19 @@ export default function StagingWorkflowPanel() {
               updateSettings((prev) => upsertSection(prev, { ...section, data: { ...section.data, title: e.target.value } }))
             }
           />
-          <textarea
-            className="wf-textarea"
-            disabled={editingLocked}
-            value={typeof section.data.description === "string" ? section.data.description : ""}
-            placeholder="Descripción proyectos"
-            onChange={(e) =>
-              updateSettings((prev) =>
-                upsertSection(prev, { ...section, data: { ...section.data, description: e.target.value } }),
-              )
-            }
-          />
+          {!showSimplifiedUi ? (
+            <textarea
+              className="wf-textarea"
+              disabled={editingLocked}
+              value={typeof section.data.description === "string" ? section.data.description : ""}
+              placeholder="Descripción proyectos"
+              onChange={(e) =>
+                updateSettings((prev) =>
+                  upsertSection(prev, { ...section, data: { ...section.data, description: e.target.value } }),
+                )
+              }
+            />
+          ) : null}
           <div className="wf-row">
             <button
               className="wf-btn wf-btn-soft"
@@ -2951,16 +3097,16 @@ export default function StagingWorkflowPanel() {
                   const sec = getSection(prev, section.id);
                   if (!sec) return prev;
                   const nextItems = [
-                    ...toSectionItems(sec),
                     {
                       id: createPanelItemId(),
                       enabled: true,
-                      order: 999,
+                      order: 0,
                       title: "Nuevo proyecto",
                       location: "",
                       image: "",
                       size: "square",
                     },
+                    ...toSectionItems(sec),
                   ];
                   return setSectionItems(prev, section.id, nextItems);
                 })
@@ -2969,17 +3115,22 @@ export default function StagingWorkflowPanel() {
               + Agregar proyecto
             </button>
           </div>
+          <div className={showSimplifiedUi ? "wf-projects-grid" : "wf-items"}>
           {items.map((item) => {
             const itemId = String(item.id);
+            const compactProjectUi = showSimplifiedUi;
             return (
               <div
                 key={itemId}
-                className={`wf-row-item ${draggingItemId === itemId ? "dragging" : ""}`}
-                draggable={!editingLocked}
-                onDragStart={() => setDraggingItemId(itemId)}
+                className={compactProjectUi ? `wf-project-card ${draggingItemId === itemId ? "dragging" : ""}` : `wf-row-item ${draggingItemId === itemId ? "dragging" : ""}`}
+                draggable={!editingLocked && !compactProjectUi}
+                onDragStart={() => {
+                  if (compactProjectUi) return;
+                  setDraggingItemId(itemId);
+                }}
                 onDragOver={(event) => event.preventDefault()}
                 onDrop={() => {
-                  if (!editingLocked && draggingItemId !== null) {
+                  if (!compactProjectUi && !editingLocked && draggingItemId !== null) {
                     updateSettings((prev) => reorderItemsInSection(prev, section.id, draggingItemId, itemId), {
                       persistNow: true,
                       note: "Autosave: item order updated (projects)",
@@ -2989,7 +3140,7 @@ export default function StagingWorkflowPanel() {
                 }}
                 onDragEnd={() => setDraggingItemId(null)}
               >
-                <span className="wf-drag">⋮⋮</span>
+                {!compactProjectUi ? <span className="wf-drag">⋮⋮</span> : null}
                 <div style={{ flex: 1, display: "grid", gap: 6 }}>
                   <input
                     className="wf-input"
@@ -3038,6 +3189,7 @@ export default function StagingWorkflowPanel() {
                     accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
                     allowedMimeTypes={CONTENT_IMAGE_MIME_TYPES}
                     maxSizeBytes={CONTENT_IMAGE_MAX_BYTES}
+                    hideUrlInput={showSimplifiedUi}
                     onValueChange={(nextValue) =>
                       updateSettings((prev) => {
                         const sec = getSection(prev, section.id);
@@ -3146,12 +3298,21 @@ export default function StagingWorkflowPanel() {
               </div>
             );
           })}
+          </div>
         </div>
       );
     }
 
     if (editableSection === "urgency_banner") {
       const section = urgencyBannerSection ?? { id: "urgency_banner", enabled: true, order: 50, data: {} };
+      const points = Array.isArray(section.data.points)
+        ? section.data.points
+        : [
+            { title: "Atención 24/7", description: "Disponibilidad para urgencias reales y visitas programadas según comuna." },
+            { title: "Técnicos verificados", description: "Servicio profesional, ordenado y enfocado en soluciones duraderas." },
+            { title: "Presupuesto claro", description: "Se informa el trabajo y el costo antes de comenzar la intervención." },
+            { title: "Medios de pago", description: "Transferencia, Webpay, débito, crédito y comprobante cuando corresponde." },
+          ];
       return (
         <div className="wf-sections">
           <div className="wf-toggle">
@@ -3166,66 +3327,89 @@ export default function StagingWorkflowPanel() {
           <input
             className="wf-input"
             disabled={editingLocked}
+            value={typeof section.data.kicker === "string" ? section.data.kicker : ""}
+            placeholder="Etiqueta superior"
+            onChange={(e) =>
+              updateSettings((prev) => upsertSection(prev, { ...section, data: { ...section.data, kicker: e.target.value } }))
+            }
+          />
+          <input
+            className="wf-input"
+            disabled={editingLocked}
             value={typeof section.data.title === "string" ? section.data.title : ""}
-            placeholder="Título banner"
+            placeholder="Título"
             onChange={(e) => updateSettings((prev) => upsertSection(prev, { ...section, data: { ...section.data, title: e.target.value } }))}
           />
           <textarea
             className="wf-textarea"
             disabled={editingLocked}
             value={typeof section.data.description === "string" ? section.data.description : ""}
-            placeholder="Descripción banner"
+            placeholder="Texto de apoyo"
             onChange={(e) => updateSettings((prev) => upsertSection(prev, { ...section, data: { ...section.data, description: e.target.value } }))}
           />
+          <textarea
+            className="wf-textarea"
+            disabled={editingLocked}
+            value={
+              Array.isArray(section.data.areas)
+                ? section.data.areas.map((area) => (typeof area === "string" ? area : "")).join("\n")
+                : ""
+            }
+            placeholder="Comunas o zonas de cobertura (una por línea)"
+            onChange={(e) =>
+              updateSettings((prev) =>
+                upsertSection(prev, {
+                  ...section,
+                  data: {
+                    ...section.data,
+                    areas: e.target.value
+                      .split("\n")
+                      .map((value) => value.trim())
+                      .filter(Boolean),
+                  },
+                }),
+              )
+            }
+          />
           <div className="wf-grid2">
-            <input
-              className="wf-input"
-              disabled={editingLocked}
-              value={
-                typeof (section.data.cta_primary as { text?: unknown } | undefined)?.text === "string"
-                  ? ((section.data.cta_primary as { text: string }).text ?? "")
-                  : ""
-              }
-              placeholder="Texto CTA"
-              onChange={(e) =>
-                updateSettings((prev) =>
-                  upsertSection(prev, {
-                    ...section,
-                    data: {
-                      ...section.data,
-                      cta_primary: {
-                        ...((section.data.cta_primary as Record<string, unknown>) ?? {}),
-                        text: e.target.value,
-                      },
-                    },
-                  }),
-                )
-              }
-            />
-            <input
-              className="wf-input"
-              disabled={editingLocked}
-              value={
-                typeof (section.data.cta_primary as { url?: unknown } | undefined)?.url === "string"
-                  ? ((section.data.cta_primary as { url: string }).url ?? "")
-                  : ""
-              }
-              placeholder="URL CTA"
-              onChange={(e) =>
-                updateSettings((prev) =>
-                  upsertSection(prev, {
-                    ...section,
-                    data: {
-                      ...section.data,
-                      cta_primary: {
-                        ...((section.data.cta_primary as Record<string, unknown>) ?? {}),
-                        url: e.target.value,
-                      },
-                    },
-                  }),
-                )
-              }
-            />
+            {points.slice(0, 4).map((point, index) => (
+              <div key={`urgency-point-${index}`} className="wf-row-item" style={{ alignItems: "flex-start" }}>
+                <div style={{ flex: 1, display: "grid", gap: 6 }}>
+                  <input
+                    className="wf-input"
+                    disabled={editingLocked}
+                    value={typeof point?.title === "string" ? point.title : ""}
+                    placeholder={`Título bloque ${index + 1}`}
+                    onChange={(e) =>
+                      updateSettings((prev) => {
+                        const current = Array.isArray(section.data.points) ? [...section.data.points] : [...points];
+                        current[index] = { ...(current[index] ?? {}), title: e.target.value };
+                        return upsertSection(prev, {
+                          ...section,
+                          data: { ...section.data, points: current },
+                        });
+                      })
+                    }
+                  />
+                  <textarea
+                    className="wf-textarea"
+                    disabled={editingLocked}
+                    value={typeof point?.description === "string" ? point.description : ""}
+                    placeholder={`Texto bloque ${index + 1}`}
+                    onChange={(e) =>
+                      updateSettings((prev) => {
+                        const current = Array.isArray(section.data.points) ? [...section.data.points] : [...points];
+                        current[index] = { ...(current[index] ?? {}), description: e.target.value };
+                        return upsertSection(prev, {
+                          ...section,
+                          data: { ...section.data, points: current },
+                        });
+                      })
+                    }
+                  />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       );
@@ -3273,6 +3457,7 @@ export default function StagingWorkflowPanel() {
             accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
             allowedMimeTypes={CONTENT_IMAGE_MIME_TYPES}
             maxSizeBytes={CONTENT_IMAGE_MAX_BYTES}
+            hideUrlInput={showSimplifiedUi}
             onValueChange={(nextValue) =>
               updateSettings((prev) =>
                 upsertSection(prev, { ...section, data: { ...section.data, background_image: nextValue } }),
@@ -3353,16 +3538,16 @@ export default function StagingWorkflowPanel() {
                   const sec = getSection(prev, section.id);
                   if (!sec) return prev;
                   const nextItems = [
-                    ...toSectionItems(sec),
                     {
                       id: createPanelItemId(),
                       enabled: true,
-                      order: 999,
+                      order: 0,
                       name: "Nuevo testimonio",
                       location: "",
                       quote: "",
                       avatar: "",
                     },
+                    ...toSectionItems(sec),
                   ];
                   return setSectionItems(prev, section.id, nextItems);
                 })
@@ -3457,6 +3642,7 @@ export default function StagingWorkflowPanel() {
                     accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
                     allowedMimeTypes={CONTENT_IMAGE_MIME_TYPES}
                     maxSizeBytes={CONTENT_IMAGE_MAX_BYTES}
+                    hideUrlInput={showSimplifiedUi}
                     onValueChange={(nextValue) =>
                       updateSettings((prev) => {
                         const sec = getSection(prev, section.id);
@@ -3623,12 +3809,11 @@ export default function StagingWorkflowPanel() {
                 const sec = getSection(prev, section.id);
                 if (!sec) return prev;
                 const nextItems = [
-                  ...toSectionItems(sec),
                   section.id === "services"
                     ? {
                         id: createPanelItemId(),
                         enabled: true,
-                        order: 999,
+                        order: 0,
                         title: "Nuevo servicio",
                         description: "",
                         features: ["Punto clave 1", "Punto clave 2"],
@@ -3643,10 +3828,11 @@ export default function StagingWorkflowPanel() {
                     : {
                         id: createPanelItemId(),
                         enabled: true,
-                        order: 999,
+                        order: 0,
                         question: "Nueva pregunta",
                         answer: "",
                       },
+                  ...toSectionItems(sec),
                 ];
                 return setSectionItems(prev, section.id, nextItems);
               })
@@ -3659,15 +3845,19 @@ export default function StagingWorkflowPanel() {
           const itemId = String(item.id);
           const labelA = section.id === "services" ? "title" : "question";
           const labelB = section.id === "services" ? "description" : "answer";
+          const simplifyServiceItem = showSimplifiedUi && section.id === "services";
           return (
             <div
               key={itemId}
               className={`wf-row-item ${draggingItemId === itemId ? "dragging" : ""}`}
-              draggable={!editingLocked}
-              onDragStart={() => setDraggingItemId(itemId)}
+              draggable={!editingLocked && !simplifyServiceItem}
+              onDragStart={() => {
+                if (simplifyServiceItem) return;
+                setDraggingItemId(itemId);
+              }}
               onDragOver={(event) => event.preventDefault()}
               onDrop={() => {
-                if (!editingLocked && draggingItemId !== null) {
+                if (!simplifyServiceItem && !editingLocked && draggingItemId !== null) {
                   updateSettings(
                     (prev) => reorderItemsInSection(prev, section.id, draggingItemId, itemId),
                     { persistNow: true, note: `Autosave: item order updated (${section.id})` },
@@ -3677,7 +3867,7 @@ export default function StagingWorkflowPanel() {
               }}
               onDragEnd={() => setDraggingItemId(null)}
             >
-              <span className="wf-drag">⋮⋮</span>
+              {!simplifyServiceItem ? <span className="wf-drag">⋮⋮</span> : null}
               <div style={{ flex: 1, display: "grid", gap: 6 }}>
                 <input
                   className="wf-input"
@@ -3713,32 +3903,34 @@ export default function StagingWorkflowPanel() {
                 />
                 {section.id === "services" ? (
                   <>
-                  <textarea
-                    className="wf-textarea"
-                    disabled={editingLocked}
-                    value={
-                      Array.isArray(item.features)
-                        ? item.features
-                            .map((feature) => (typeof feature === "string" ? feature : ""))
-                            .join("\n")
-                        : ""
-                    }
-                    placeholder={"Features (uno por línea)"}
-                    onChange={(e) =>
-                      updateSettings((prev) => {
-                        const sec = getSection(prev, section.id);
-                        if (!sec) return prev;
-                        const parsedFeatures = e.target.value
-                          .split("\n")
-                          .map((value) => value.trim())
-                          .filter(Boolean);
-                        const nextItems = toSectionItems(sec).map((nextItem) =>
-                          String(nextItem.id) === itemId ? { ...nextItem, features: parsedFeatures } : nextItem,
-                        );
-                        return setSectionItems(prev, section.id, nextItems);
-                      })
-                    }
-                  />
+                    <textarea
+                      className="wf-textarea"
+                      disabled={editingLocked}
+                      value={
+                        Array.isArray(item.features)
+                          ? item.features
+                              .map((feature) => (typeof feature === "string" ? feature : ""))
+                              .join("\n")
+                          : ""
+                      }
+                      placeholder={showSimplifiedUi ? "Subservicios (uno por línea)" : "Features (uno por línea)"}
+                      onChange={(e) =>
+                        updateSettings((prev) => {
+                          const sec = getSection(prev, section.id);
+                          if (!sec) return prev;
+                          const parsedFeatures = e.target.value
+                            .split("\n")
+                            .map((value) => value.trim())
+                            .filter(Boolean);
+                          const nextItems = toSectionItems(sec).map((nextItem) =>
+                            String(nextItem.id) === itemId ? { ...nextItem, features: parsedFeatures } : nextItem,
+                          );
+                          return setSectionItems(prev, section.id, nextItems);
+                        })
+                      }
+                    />
+                    {!simplifyServiceItem ? (
+                      <>
                   <div className="wf-grid2">
                     <input
                       className="wf-input"
@@ -4013,6 +4205,8 @@ export default function StagingWorkflowPanel() {
                       ))}
                     </div>
                   </div>
+                      </>
+                    ) : null}
                   </>
                 ) : null}
               </div>
@@ -4124,411 +4318,424 @@ export default function StagingWorkflowPanel() {
       return (
         <div className="wf-style-stack">
           <h3 className="wf-h3" style={{ marginBottom: 0 }}>Marca y pie de página</h3>
-          <div className="wf-style-layout">
+          <div className="wf-style-compact-grid">
             <section className="wf-style-card">
               <div className="wf-style-head">
-                <h3 className="wf-style-title">Logos</h3>
-                <p className="wf-style-help">Sube logo para la barra superior y el footer.</p>
+                <h3 className="wf-style-title">Marca del sitio</h3>
+                <p className="wf-style-help">Todo lo que define la identidad visual visible del sitio.</p>
               </div>
               <div className="wf-style-body">
-                <div className="wf-grid2">
-                  <ImageUploadField
-                    value={branding.logoNavUrl ?? branding.logoUrl ?? ""}
-                    placeholder="Logo barra superior"
-                    disabled={editingLocked || uploadingAsset === "logoNav"}
-                    removeDisabled={editingLocked || !(branding.logoNavUrl ?? branding.logoUrl ?? "").trim()}
-                    uploading={uploadingAsset === "logoNav"}
-                    uploadingText="Subiendo logo..."
-                    fallbackText="Sin logo"
-                    guidanceText="Formatos: png, jpg, webp o svg. Máximo 2MB."
-                    previewAlt="logo navbar preview"
-                    previewWidth={240}
-                    previewHeight={42}
-                    previewStyle={{ maxHeight: 42, width: "auto", objectFit: "contain" }}
-                    accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
-                    allowedMimeTypes={LOGO_MIME_TYPES}
-                    maxSizeBytes={LOGO_MAX_BYTES}
-                    hideUrlInput
-                    controlsInline
-                    onValueChange={(nextValue) =>
-                      updateSettings((prev) => ({
-                        ...prev,
-                        branding: { ...(prev.branding ?? {}), logoNavUrl: nextValue },
-                      }))
-                    }
-                    onReplace={(file) => {
-                      void uploadBrandingAsset("logo", file, "logoNavUrl");
-                    }}
-                    onRemove={() =>
-                      updateSettings(
-                        (prev) => {
-                          const nextBranding = { ...(prev.branding ?? {}) };
-                          delete nextBranding.logoNavUrl;
-                          delete nextBranding.logoUrl;
-                          return { ...prev, branding: nextBranding };
-                        },
-                        { persistNow: true, note: "Autosave: logo navbar removed" },
-                      )
-                    }
-                  />
-                  <ImageUploadField
-                    value={branding.logoFooterUrl ?? ""}
-                    placeholder="Logo footer"
-                    disabled={editingLocked || uploadingAsset === "logoFooter"}
-                    removeDisabled={editingLocked || !(branding.logoFooterUrl ?? "").trim()}
-                    uploading={uploadingAsset === "logoFooter"}
-                    uploadingText="Subiendo logo..."
-                    fallbackText="Sin logo footer"
-                    guidanceText="Formatos: png, jpg, webp o svg. Máximo 2MB."
-                    previewAlt="logo footer preview"
-                    previewWidth={220}
-                    previewHeight={34}
-                    previewStyle={{ maxHeight: 34, width: "auto", objectFit: "contain" }}
-                    accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
-                    allowedMimeTypes={LOGO_MIME_TYPES}
-                    maxSizeBytes={LOGO_MAX_BYTES}
-                    hideUrlInput
-                    controlsInline
-                    onValueChange={(nextValue) =>
-                      updateSettings((prev) => ({
-                        ...prev,
-                        branding: { ...(prev.branding ?? {}), logoFooterUrl: nextValue },
-                      }))
-                    }
-                    onReplace={(file) => {
-                      void uploadBrandingAsset("logo", file, "logoFooterUrl");
-                    }}
-                    onRemove={() =>
-                      updateSettings(
-                        (prev) => {
-                          const nextBranding = { ...(prev.branding ?? {}) };
-                          delete nextBranding.logoFooterUrl;
-                          return { ...prev, branding: nextBranding };
-                        },
-                        { persistNow: true, note: "Autosave: logo footer removed" },
-                      )
-                    }
-                  />
+                <div className="wf-style-assets-grid">
+                  <div className="wf-style-asset">
+                    <span className="wf-style-label">Logo principal</span>
+                    <ImageUploadField
+                      value={branding.logoNavUrl ?? branding.logoUrl ?? ""}
+                      placeholder="Logo principal"
+                      disabled={editingLocked || uploadingAsset === "logoNav"}
+                      removeDisabled={editingLocked || !(branding.logoNavUrl ?? branding.logoUrl ?? "").trim()}
+                      uploading={uploadingAsset === "logoNav"}
+                      uploadingText="Subiendo logo..."
+                      fallbackText="Sin logo"
+                      guidanceText="Webp o svg. Máximo 2MB."
+                      previewAlt="logo navbar preview"
+                      previewWidth={160}
+                      previewHeight={40}
+                      previewStyle={{ maxHeight: 40, width: "auto", objectFit: "contain" }}
+                      accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
+                      allowedMimeTypes={LOGO_MIME_TYPES}
+                      maxSizeBytes={LOGO_MAX_BYTES}
+                      hideUrlInput
+                      controlsInline
+                      previewShellClassName="compact"
+                      onValueChange={(nextValue) =>
+                        updateSettings((prev) => ({
+                          ...prev,
+                          branding: { ...(prev.branding ?? {}), logoNavUrl: nextValue },
+                        }))
+                      }
+                      onReplace={(file) => {
+                        void uploadBrandingAsset("logo", file, "logoNavUrl");
+                      }}
+                      onRemove={() =>
+                        updateSettings(
+                          (prev) => {
+                            const nextBranding = { ...(prev.branding ?? {}) };
+                            delete nextBranding.logoNavUrl;
+                            delete nextBranding.logoUrl;
+                            return { ...prev, branding: nextBranding };
+                          },
+                          { persistNow: true, note: "Autosave: logo navbar removed" },
+                        )
+                      }
+                    />
+                  </div>
+                  <div className="wf-style-asset">
+                    <span className="wf-style-label">Logo alternativo (opcional)</span>
+                    <ImageUploadField
+                      value={branding.logoFooterUrl ?? ""}
+                      placeholder="Logo alternativo"
+                      disabled={editingLocked || uploadingAsset === "logoFooter"}
+                      removeDisabled={editingLocked || !(branding.logoFooterUrl ?? "").trim()}
+                      uploading={uploadingAsset === "logoFooter"}
+                      uploadingText="Subiendo logo..."
+                      fallbackText="Sin logo alternativo"
+                      guidanceText="Webp o svg. Máximo 2MB."
+                      previewAlt="logo footer preview"
+                      previewWidth={160}
+                      previewHeight={34}
+                      previewStyle={{ maxHeight: 34, width: "auto", objectFit: "contain" }}
+                      accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
+                      allowedMimeTypes={LOGO_MIME_TYPES}
+                      maxSizeBytes={LOGO_MAX_BYTES}
+                      hideUrlInput
+                      controlsInline
+                      previewShellClassName="compact"
+                      onValueChange={(nextValue) =>
+                        updateSettings((prev) => ({
+                          ...prev,
+                          branding: { ...(prev.branding ?? {}), logoFooterUrl: nextValue },
+                        }))
+                      }
+                      onReplace={(file) => {
+                        void uploadBrandingAsset("logo", file, "logoFooterUrl");
+                      }}
+                      onRemove={() =>
+                        updateSettings(
+                          (prev) => {
+                            const nextBranding = { ...(prev.branding ?? {}) };
+                            delete nextBranding.logoFooterUrl;
+                            return { ...prev, branding: nextBranding };
+                          },
+                          { persistNow: true, note: "Autosave: logo footer removed" },
+                        )
+                      }
+                    />
+                  </div>
+                  <div className="wf-style-asset">
+                    <span className="wf-style-label">Favicon</span>
+                    <ImageUploadField
+                      value={branding.faviconUrl ?? ""}
+                      placeholder="Favicon"
+                      disabled={editingLocked || uploadingAsset === "favicon"}
+                      removeDisabled={editingLocked || !(branding.faviconUrl ?? "").trim()}
+                      uploading={uploadingAsset === "favicon"}
+                      uploadingText="Subiendo favicon..."
+                      fallbackText="Sin favicon"
+                      guidanceText="Png o ico. Máximo 1MB."
+                      previewAlt="favicon preview"
+                      previewWidth={24}
+                      previewHeight={24}
+                      previewStyle={{ width: 24, height: 24, objectFit: "contain" }}
+                      accept="image/png,image/x-icon,image/vnd.microsoft.icon"
+                      allowedMimeTypes={FAVICON_MIME_TYPES}
+                      allowedExtensions={FAVICON_EXTENSIONS}
+                      maxSizeBytes={FAVICON_MAX_BYTES}
+                      hideUrlInput
+                      controlsInline
+                      previewShellClassName="compact"
+                      onValueChange={(nextValue) =>
+                        updateSettings((prev) => ({
+                          ...prev,
+                          branding: { ...(prev.branding ?? {}), faviconUrl: nextValue },
+                        }))
+                      }
+                      onReplace={(file) => {
+                        void uploadBrandingAsset("favicon", file);
+                      }}
+                      onRemove={() =>
+                        updateSettings(
+                          (prev) => {
+                            const nextBranding = { ...(prev.branding ?? {}) };
+                            delete nextBranding.faviconUrl;
+                            return { ...prev, branding: nextBranding };
+                          },
+                          { persistNow: true, note: "Autosave: favicon removed" },
+                        )
+                      }
+                    />
+                  </div>
                 </div>
               </div>
             </section>
 
             <section className="wf-style-card">
               <div className="wf-style-head">
-                <h3 className="wf-style-title">Favicon, contacto y pie de página</h3>
-                <p className="wf-style-help">Datos visibles del sitio, contacto y textos del footer.</p>
+                <h3 className="wf-style-title">Información de contacto</h3>
+                <p className="wf-style-help">Todo lo que permite que el cliente te encuentre.</p>
               </div>
               <div className="wf-style-body">
-                <ImageUploadField
-                  value={branding.faviconUrl ?? ""}
-                  placeholder="Favicon"
-                  disabled={editingLocked || uploadingAsset === "favicon"}
-                  removeDisabled={editingLocked || !(branding.faviconUrl ?? "").trim()}
-                  uploading={uploadingAsset === "favicon"}
-                  uploadingText="Subiendo favicon..."
-                  fallbackText="Sin favicon"
-                  guidanceText="Formato png o ico. Máximo 1MB."
-                  previewAlt="favicon preview"
-                  previewWidth={24}
-                  previewHeight={24}
-                  previewStyle={{ width: 24, height: 24, objectFit: "contain" }}
-                  accept="image/png,image/x-icon,image/vnd.microsoft.icon"
-                  allowedMimeTypes={FAVICON_MIME_TYPES}
-                  allowedExtensions={FAVICON_EXTENSIONS}
-                  maxSizeBytes={FAVICON_MAX_BYTES}
-                  hideUrlInput
-                  controlsInline
-                  onValueChange={(nextValue) =>
-                    updateSettings((prev) => ({
-                      ...prev,
-                      branding: { ...(prev.branding ?? {}), faviconUrl: nextValue },
-                    }))
-                  }
-                  onReplace={(file) => {
-                    void uploadBrandingAsset("favicon", file);
-                  }}
-                  onRemove={() =>
-                    updateSettings(
-                      (prev) => {
-                        const nextBranding = { ...(prev.branding ?? {}) };
-                        delete nextBranding.faviconUrl;
-                        return { ...prev, branding: nextBranding };
-                      },
-                      { persistNow: true, note: "Autosave: favicon removed" },
-                    )
-                  }
-                />
+                <div className="wf-style-section-grid">
+                  <label className="wf-style-field">
+                    <span className="wf-style-label">Teléfono</span>
+                    <input
+                      className="wf-input"
+                      disabled={editingLocked}
+                      placeholder="+56 9 ..."
+                      value={contact.phone ?? ""}
+                      onChange={(e) =>
+                        updateSettings((prev) => ({
+                          ...prev,
+                          branding: {
+                            ...(prev.branding ?? {}),
+                            contact: { ...(prev.branding?.contact ?? {}), phone: e.target.value },
+                          },
+                        }))
+                      }
+                    />
+                  </label>
+                  <label className="wf-style-field">
+                    <span className="wf-style-label">WhatsApp</span>
+                    <input
+                      className="wf-input"
+                      disabled={editingLocked}
+                      placeholder="https://wa.me/..."
+                      value={contact.whatsapp ?? ""}
+                      onChange={(e) =>
+                        updateSettings((prev) => ({
+                          ...prev,
+                          branding: {
+                            ...(prev.branding ?? {}),
+                            contact: { ...(prev.branding?.contact ?? {}), whatsapp: e.target.value },
+                          },
+                        }))
+                      }
+                    />
+                  </label>
+                  <label className="wf-style-field">
+                    <span className="wf-style-label">Email</span>
+                    <input
+                      className="wf-input"
+                      disabled={editingLocked}
+                      placeholder="Email"
+                      value={contact.email ?? ""}
+                      onChange={(e) =>
+                        updateSettings((prev) => ({
+                          ...prev,
+                          branding: {
+                            ...(prev.branding ?? {}),
+                            contact: { ...(prev.branding?.contact ?? {}), email: e.target.value },
+                          },
+                        }))
+                      }
+                    />
+                  </label>
+                  <label className="wf-style-field">
+                    <span className="wf-style-label">Dirección</span>
+                    <input
+                      className="wf-input"
+                      disabled={editingLocked}
+                      placeholder="Dirección"
+                      value={contact.address ?? ""}
+                      onChange={(e) =>
+                        updateSettings((prev) => ({
+                          ...prev,
+                          branding: {
+                            ...(prev.branding ?? {}),
+                            contact: { ...(prev.branding?.contact ?? {}), address: e.target.value },
+                          },
+                        }))
+                      }
+                    />
+                  </label>
+                </div>
+              </div>
+            </section>
 
-                <div className="wf-style-subsection">
-                  <h4 className="wf-style-title">Contacto básico</h4>
-                  <div className="wf-grid2">
-                    <label className="wf-style-field">
-                      <span className="wf-style-label">Teléfono visible</span>
-                      <input
-                        className="wf-input"
-                        disabled={editingLocked}
-                        placeholder="+56 9 ..."
-                        value={contact.phone ?? ""}
-                        onChange={(e) =>
-                          updateSettings((prev) => ({
-                            ...prev,
-                            branding: {
-                              ...(prev.branding ?? {}),
-                              contact: { ...(prev.branding?.contact ?? {}), phone: e.target.value },
-                            },
-                          }))
-                        }
-                      />
-                    </label>
-                    <label className="wf-style-field">
-                      <span className="wf-style-label">WhatsApp</span>
-                      <input
-                        className="wf-input"
-                        disabled={editingLocked}
-                        placeholder="https://wa.me/..."
-                        value={contact.whatsapp ?? ""}
-                        onChange={(e) =>
-                          updateSettings((prev) => ({
-                            ...prev,
-                            branding: {
-                              ...(prev.branding ?? {}),
-                              contact: { ...(prev.branding?.contact ?? {}), whatsapp: e.target.value },
-                            },
-                          }))
-                        }
-                      />
-                    </label>
-                    <label className="wf-style-field">
-                      <span className="wf-style-label">Email</span>
-                      <input
-                        className="wf-input"
-                        disabled={editingLocked}
-                        placeholder="Email"
-                        value={contact.email ?? ""}
-                        onChange={(e) =>
-                          updateSettings((prev) => ({
-                            ...prev,
-                            branding: {
-                              ...(prev.branding ?? {}),
-                              contact: { ...(prev.branding?.contact ?? {}), email: e.target.value },
-                            },
-                          }))
-                        }
-                      />
-                    </label>
-                    <label className="wf-style-field">
-                      <span className="wf-style-label">Dirección</span>
-                      <input
-                        className="wf-input"
-                        disabled={editingLocked}
-                        placeholder="Dirección"
-                        value={contact.address ?? ""}
-                        onChange={(e) =>
-                          updateSettings((prev) => ({
-                            ...prev,
-                            branding: {
-                              ...(prev.branding ?? {}),
-                              contact: { ...(prev.branding?.contact ?? {}), address: e.target.value },
-                            },
-                          }))
-                        }
-                      />
-                    </label>
-                  </div>
+            <section className="wf-style-card">
+              <div className="wf-style-head">
+                <h3 className="wf-style-title">Atención y cobertura</h3>
+                <p className="wf-style-help">Horario visible y comunas o zonas donde se atiende.</p>
+              </div>
+              <div className="wf-style-body">
+                <div className="wf-style-section-grid">
+                  <label className="wf-style-field">
+                    <span className="wf-style-label">Horario de atención</span>
+                    <input
+                      className="wf-input"
+                      disabled={editingLocked}
+                      placeholder="Lunes a sábado, 08:00 a 18:00"
+                      value={footer.hoursPrimary ?? ""}
+                      onChange={(e) =>
+                        updateSettings((prev) => ({
+                          ...prev,
+                          branding: {
+                            ...(prev.branding ?? {}),
+                            footer: { ...(prev.branding?.footer ?? {}), hoursPrimary: e.target.value },
+                          },
+                        }))
+                      }
+                    />
+                  </label>
+                  <label className="wf-style-field">
+                    <span className="wf-style-label">Cobertura</span>
+                    <input
+                      className="wf-input"
+                      disabled={editingLocked}
+                      placeholder="Comunas o zonas cubiertas"
+                      value={footer.coverage ?? ""}
+                      onChange={(e) =>
+                        updateSettings((prev) => ({
+                          ...prev,
+                          branding: {
+                            ...(prev.branding ?? {}),
+                            footer: { ...(prev.branding?.footer ?? {}), coverage: e.target.value },
+                          },
+                        }))
+                      }
+                    />
+                  </label>
+                </div>
+              </div>
+            </section>
+
+            <section className="wf-style-card">
+              <div className="wf-style-head">
+                <h3 className="wf-style-title">Footer del sitio</h3>
+                <p className="wf-style-help">Solo el contenido visible en la parte inferior del sitio.</p>
+              </div>
+              <div className="wf-style-body">
+                <div className="wf-style-section-grid">
+                  <label className="wf-style-field">
+                    <span className="wf-style-label">Título</span>
+                    <input
+                      className="wf-input"
+                      disabled={editingLocked}
+                      placeholder="Título del footer"
+                      value={footer.title ?? ""}
+                      onChange={(e) =>
+                        updateSettings((prev) => ({
+                          ...prev,
+                          branding: {
+                            ...(prev.branding ?? {}),
+                            footer: { ...(prev.branding?.footer ?? {}), title: e.target.value },
+                          },
+                        }))
+                      }
+                    />
+                  </label>
+                  <label className="wf-style-field">
+                    <span className="wf-style-label">Texto de apoyo</span>
+                    <input
+                      className="wf-input"
+                      disabled={editingLocked}
+                      placeholder="Texto de apoyo"
+                      value={footer.subtitle ?? ""}
+                      onChange={(e) =>
+                        updateSettings((prev) => ({
+                          ...prev,
+                          branding: {
+                            ...(prev.branding ?? {}),
+                            footer: { ...(prev.branding?.footer ?? {}), subtitle: e.target.value },
+                          },
+                        }))
+                      }
+                    />
+                  </label>
+                  <label className="wf-style-field">
+                    <span className="wf-style-label">Texto botón mapa</span>
+                    <input
+                      className="wf-input"
+                      disabled={editingLocked}
+                      placeholder="Ver mapa / ubicación"
+                      value={footer.mapLabel ?? ""}
+                      onChange={(e) =>
+                        updateSettings((prev) => ({
+                          ...prev,
+                          branding: {
+                            ...(prev.branding ?? {}),
+                            footer: { ...(prev.branding?.footer ?? {}), mapLabel: e.target.value },
+                          },
+                        }))
+                      }
+                    />
+                  </label>
                 </div>
 
-                <div className="wf-style-subsection">
-                  <h4 className="wf-style-title">Pie de página</h4>
-                  <div className="wf-grid2">
-                    <label className="wf-style-field">
-                      <span className="wf-style-label">Título del footer</span>
-                      <input
-                        className="wf-input"
-                        disabled={editingLocked}
-                        placeholder="Título principal"
-                        value={footer.title ?? ""}
-                        onChange={(e) =>
-                          updateSettings((prev) => ({
-                            ...prev,
-                            branding: {
-                              ...(prev.branding ?? {}),
-                              footer: { ...(prev.branding?.footer ?? {}), title: e.target.value },
-                            },
-                          }))
+                <div className="wf-style-switch">
+                  <div className="wf-style-switch-copy">
+                    <strong>Mostrar dirección</strong>
+                    <span>Activa o esconde la dirección dentro del footer.</span>
+                  </div>
+                  <label className="wf-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={footer.showAddress !== false}
+                      disabled={editingLocked}
+                      onChange={(e) =>
+                        updateSettings((prev) => ({
+                          ...prev,
+                          branding: {
+                            ...(prev.branding ?? {}),
+                            footer: { ...(prev.branding?.footer ?? {}), showAddress: e.target.checked },
+                          },
+                        }))
+                      }
+                    />
+                  </label>
+                </div>
+
+                <div className="wf-style-field" style={{ display: "grid", gap: 10 }}>
+                  <span className="wf-style-label">Logos de pago</span>
+                  <div className="wf-grid3">
+                    {[0, 1, 2].map((slot) => (
+                      <ImageUploadField
+                        key={slot}
+                        value={paymentLogos[slot] ?? ""}
+                        placeholder={`Logo pago ${slot + 1}`}
+                        disabled={editingLocked || uploadingAsset === (`payment${slot + 1}` as "payment1" | "payment2" | "payment3")}
+                        removeDisabled={editingLocked || !(paymentLogos[slot] ?? "").trim()}
+                        uploading={uploadingAsset === (`payment${slot + 1}` as "payment1" | "payment2" | "payment3")}
+                        uploadingText="Subiendo logo..."
+                        fallbackText={`Sin logo ${slot + 1}`}
+                        guidanceText="Png, jpg, webp o svg. Máximo 2MB."
+                        previewAlt={`payment logo ${slot + 1}`}
+                        previewWidth={140}
+                        previewHeight={48}
+                        previewStyle={{ maxHeight: 38, width: "auto", objectFit: "contain" }}
+                        accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
+                        allowedMimeTypes={LOGO_MIME_TYPES}
+                        maxSizeBytes={LOGO_MAX_BYTES}
+                        hideUrlInput
+                        controlsInline
+                        previewShellClassName="compact"
+                        onValueChange={(nextValue) =>
+                          updateSettings((prev) => {
+                            const current = Array.isArray(prev.branding?.footer?.paymentLogos)
+                              ? [...(prev.branding?.footer?.paymentLogos ?? [])]
+                              : [];
+                            current[slot] = nextValue;
+                            return {
+                              ...prev,
+                              branding: {
+                                ...(prev.branding ?? {}),
+                                footer: { ...(prev.branding?.footer ?? {}), paymentLogos: current },
+                              },
+                            };
+                          })
                         }
-                      />
-                    </label>
-                    <label className="wf-style-field">
-                      <span className="wf-style-label">Texto de apoyo</span>
-                      <input
-                        className="wf-input"
-                        disabled={editingLocked}
-                        placeholder="Subtítulo del footer"
-                        value={footer.subtitle ?? ""}
-                        onChange={(e) =>
-                          updateSettings((prev) => ({
-                            ...prev,
-                            branding: {
-                              ...(prev.branding ?? {}),
-                              footer: { ...(prev.branding?.footer ?? {}), subtitle: e.target.value },
-                            },
-                          }))
-                        }
-                      />
-                    </label>
-                    <label className="wf-style-field">
-                      <span className="wf-style-label">Cobertura</span>
-                      <input
-                        className="wf-input"
-                        disabled={editingLocked}
-                        placeholder="Comunas o zonas cubiertas"
-                        value={footer.coverage ?? ""}
-                        onChange={(e) =>
-                          updateSettings((prev) => ({
-                            ...prev,
-                            branding: {
-                              ...(prev.branding ?? {}),
-                              footer: { ...(prev.branding?.footer ?? {}), coverage: e.target.value },
-                            },
-                          }))
-                        }
-                      />
-                    </label>
-                    <label className="wf-style-field">
-                      <span className="wf-style-label">Horario principal</span>
-                      <input
-                        className="wf-input"
-                        disabled={editingLocked}
-                        placeholder="Lunes a viernes..."
-                        value={footer.hoursPrimary ?? ""}
-                        onChange={(e) =>
-                          updateSettings((prev) => ({
-                            ...prev,
-                            branding: {
-                              ...(prev.branding ?? {}),
-                              footer: { ...(prev.branding?.footer ?? {}), hoursPrimary: e.target.value },
-                            },
-                          }))
-                        }
-                      />
-                    </label>
-                    <label className="wf-style-field">
-                      <span className="wf-style-label">Horario secundario</span>
-                      <input
-                        className="wf-input"
-                        disabled={editingLocked}
-                        placeholder="Texto adicional de disponibilidad"
-                        value={footer.hoursSecondary ?? ""}
-                        onChange={(e) =>
-                          updateSettings((prev) => ({
-                            ...prev,
-                            branding: {
-                              ...(prev.branding ?? {}),
-                              footer: { ...(prev.branding?.footer ?? {}), hoursSecondary: e.target.value },
-                            },
-                          }))
-                        }
-                      />
-                    </label>
-                    <label className="wf-style-field">
-                      <span className="wf-style-label">Etiqueta WhatsApp</span>
-                      <input
-                        className="wf-input"
-                        disabled={editingLocked}
-                        placeholder="WhatsApp directo"
-                        value={footer.whatsappLabel ?? ""}
-                        onChange={(e) =>
-                          updateSettings((prev) => ({
-                            ...prev,
-                            branding: {
-                              ...(prev.branding ?? {}),
-                              footer: { ...(prev.branding?.footer ?? {}), whatsappLabel: e.target.value },
-                            },
-                          }))
-                        }
-                      />
-                    </label>
-                    <label className="wf-style-field">
-                      <span className="wf-style-label">Texto enlace mapa</span>
-                      <input
-                        className="wf-input"
-                        disabled={editingLocked}
-                        placeholder="Ver mapa / ubicación"
-                        value={footer.mapLabel ?? ""}
-                        onChange={(e) =>
-                          updateSettings((prev) => ({
-                            ...prev,
-                            branding: {
-                              ...(prev.branding ?? {}),
-                              footer: { ...(prev.branding?.footer ?? {}), mapLabel: e.target.value },
-                            },
-                          }))
-                        }
-                      />
-                    </label>
-                    <div className="wf-style-field" style={{ gridColumn: "1 / -1", display: "grid", gap: 10 }}>
-                      <span className="wf-style-label">Logos de pago</span>
-                      <div className="wf-grid3">
-                        {[0, 1, 2].map((slot) => (
-                          <ImageUploadField
-                            key={slot}
-                            value={paymentLogos[slot] ?? ""}
-                            placeholder={`Logo pago ${slot + 1}`}
-                            disabled={editingLocked || uploadingAsset === (`payment${slot + 1}` as "payment1" | "payment2" | "payment3")}
-                            removeDisabled={editingLocked || !(paymentLogos[slot] ?? "").trim()}
-                            uploading={uploadingAsset === (`payment${slot + 1}` as "payment1" | "payment2" | "payment3")}
-                            uploadingText="Subiendo logo..."
-                            fallbackText={`Sin logo ${slot + 1}`}
-                            guidanceText="Formatos: png, jpg, webp o svg. Máximo 2MB."
-                            previewAlt={`payment logo ${slot + 1}`}
-                            previewWidth={140}
-                            previewHeight={48}
-                            previewStyle={{ maxHeight: 38, width: "auto", objectFit: "contain" }}
-                            accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml"
-                            allowedMimeTypes={LOGO_MIME_TYPES}
-                            maxSizeBytes={LOGO_MAX_BYTES}
-                            hideUrlInput
-                            controlsInline
-                            onValueChange={(nextValue) =>
-                              updateSettings((prev) => {
-                                const current = Array.isArray(prev.branding?.footer?.paymentLogos)
-                                  ? [...(prev.branding?.footer?.paymentLogos ?? [])]
-                                  : [];
-                                current[slot] = nextValue;
-                                return {
-                                  ...prev,
-                                  branding: {
-                                    ...(prev.branding ?? {}),
-                                    footer: { ...(prev.branding?.footer ?? {}), paymentLogos: current },
-                                  },
-                                };
-                              })
-                            }
-                            onReplace={(file) => {
-                              void uploadFooterPaymentLogo(slot as 0 | 1 | 2, file);
-                            }}
-                            onRemove={() =>
-                              updateSettings(
-                                (prev) => {
-                                  const current = Array.isArray(prev.branding?.footer?.paymentLogos)
-                                    ? [...(prev.branding?.footer?.paymentLogos ?? [])]
-                                    : [];
-                                  current[slot] = "";
-                                  return {
-                                    ...prev,
-                                    branding: {
-                                      ...(prev.branding ?? {}),
-                                      footer: { ...(prev.branding?.footer ?? {}), paymentLogos: current },
-                                    },
-                                  };
+                        onReplace={(file) => {
+                          void uploadFooterPaymentLogo(slot as 0 | 1 | 2, file);
+                        }}
+                        onRemove={() =>
+                          updateSettings(
+                            (prev) => {
+                              const current = Array.isArray(prev.branding?.footer?.paymentLogos)
+                                ? [...(prev.branding?.footer?.paymentLogos ?? [])]
+                                : [];
+                              current[slot] = "";
+                              return {
+                                ...prev,
+                                branding: {
+                                  ...(prev.branding ?? {}),
+                                  footer: { ...(prev.branding?.footer ?? {}), paymentLogos: current },
                                 },
-                                { persistNow: true, note: `Autosave: footer payment logo ${slot + 1} removed` },
-                              )
-                            }
-                          />
-                        ))}
-                      </div>
-                    </div>
+                              };
+                            },
+                            { persistNow: true, note: `Autosave: footer payment logo ${slot + 1} removed` },
+                          )
+                        }
+                      />
+                    ))}
                   </div>
                 </div>
               </div>
@@ -5408,6 +5615,42 @@ export default function StagingWorkflowPanel() {
   ]);
 
   const actionHelpIsError = Boolean(draftConflict.active);
+  const simplifiedEditorStatus = useMemo(() => {
+    if (!panelReady) {
+      return {
+        title: "Panel del sitio",
+        detail: "Aquí puedes cambiar textos, imágenes y publicar cambios.",
+      };
+    }
+    if (autosaving || flushingPublish) {
+      return {
+        title: "Guardando cambios",
+        detail: "Espera un momento mientras se actualiza el contenido.",
+      };
+    }
+    if (draftConflict.active) {
+      return {
+        title: "Necesitas recargar cambios",
+        detail: "Se detectó un cambio reciente. Recarga el contenido antes de continuar.",
+      };
+    }
+    if (publishedReadOnly) {
+      return {
+        title: "Versión visible",
+        detail: "Estás viendo la versión publicada. Usa Editar contenido para hacer cambios.",
+      };
+    }
+    if (dirty) {
+      return {
+        title: "Cambios sin publicar",
+        detail: "Guarda o publica cuando termines de editar.",
+      };
+    }
+    return {
+      title: "Todo publicado",
+      detail: "El sitio está al día. Puedes seguir editando cuando quieras.",
+    };
+  }, [autosaving, dirty, draftConflict.active, flushingPublish, panelReady, publishedReadOnly]);
   const sidebarGroups = (
     showAdvancedUi
       ? [
@@ -5421,7 +5664,7 @@ export default function StagingWorkflowPanel() {
           {
             title: "Configuración",
             items: [
-              ["style", "Estilo y branding"],
+              ["style", "Marca y pie de página"],
               ["versions", "Versiones"],
               ["members", "Miembros"],
             ],
@@ -5437,7 +5680,7 @@ export default function StagingWorkflowPanel() {
           },
           {
             title: "Configuración",
-            items: [["style", "Estilo y branding"]],
+            items: [["style", "Marca y pie de página"]],
           },
         ]
   ) as Array<{ title: string; items: Array<[SidebarView, string]> }>;
@@ -5456,7 +5699,7 @@ export default function StagingWorkflowPanel() {
           </p>
         </div>
         <div className="wf-badges">
-          {membership?.role ? (
+          {membership?.role && !showSimplifiedUi ? (
             <span className="wf-badge wf-badge-role wf-badge-role-main">Rol: {getRoleDisplayLabel(membership.role)}</span>
           ) : null}
         </div>
@@ -5471,7 +5714,10 @@ export default function StagingWorkflowPanel() {
                 <button
                   key={key}
                   className={`wf-nav-btn ${view === key ? "active" : ""}`}
-                  onClick={() => setView(key)}
+                  onClick={() => {
+                    setView(key);
+                    if (key === "items") setEditableSection("services");
+                  }}
                   aria-label={`Ir a ${label}`}
                   aria-pressed={view === key}
                 >
@@ -5484,17 +5730,19 @@ export default function StagingWorkflowPanel() {
         </aside>
 
         <section className="wf-card wf-workspace">
-          <div className="wf-flowbar">
-            <div className="wf-flowbar-head">
-              <span className="wf-flowbar-title">Flujo: Completar → Publicar</span>
-              <span className="wf-muted">
-                Paso {workflowProgress.currentStep} de {workflowProgress.steps.length}
-              </span>
+          {!showSimplifiedUi ? (
+            <div className="wf-flowbar">
+              <div className="wf-flowbar-head">
+                <span className="wf-flowbar-title">Flujo: Completar → Publicar</span>
+                <span className="wf-muted">
+                  Paso {workflowProgress.currentStep} de {workflowProgress.steps.length}
+                </span>
+              </div>
+              <div className="wf-flowbar-track" aria-hidden="true">
+                <div className="wf-flowbar-fill" style={{ width: `${workflowCompletionPercent}%` }} />
+              </div>
             </div>
-            <div className="wf-flowbar-track" aria-hidden="true">
-              <div className="wf-flowbar-fill" style={{ width: `${workflowCompletionPercent}%` }} />
-            </div>
-          </div>
+          ) : null}
 
           {showTechnicalIdentity ? (
             <div className="wf-row wf-toolbar wf-toolbar-main" style={{ marginBottom: 10 }}>
@@ -5506,6 +5754,13 @@ export default function StagingWorkflowPanel() {
                 placeholder={authEnabled ? "userId del CMS o sesión Supabase" : "userId del CMS"}
                 disabled={Boolean(authUserEmail) || busy}
               />
+            </div>
+          ) : showSimplifiedUi ? (
+            <div className="wf-preview-box" style={{ marginBottom: 12 }}>
+              <div className="wf-kv">
+                <div><strong>{simplifiedEditorStatus.title}</strong></div>
+                <div className="wf-muted">{simplifiedEditorStatus.detail}</div>
+              </div>
             </div>
           ) : (
             <div className="wf-row wf-toolbar wf-toolbar-main" style={{ marginBottom: 10 }}>
@@ -5570,72 +5825,76 @@ export default function StagingWorkflowPanel() {
             </>
           ) : null}
 
-          <div className="wf-editorial-status">
-            <div className="wf-editorial-status-title">
-              <strong>Estado del contenido: {editorialStatus.title}</strong>
-              <span className="wf-pill wf-pill-neutral">
-                Paso {workflowProgress.currentStep} de 3 · {workflowCompletionPercent}% completado
-              </span>
-            </div>
-            <div className="wf-editorial-status-desc">{editorialStatus.detail}</div>
-            <div className="wf-editorial-status-meta">
-              <span className="wf-pill wf-pill-neutral">
-                {showSimplifiedUi ? `Perfil: ${getRoleDisplayLabel(membership?.role)}` : `Permiso actual: ${getRoleDisplayLabel(membership?.role)}`}
-              </span>
-              <span className="wf-pill wf-pill-primary">{actionAvailableLabel}</span>
-              {showAdvancedUi ? (
-                <>
+          {!showSimplifiedUi ? (
+            <>
+              <div className="wf-editorial-status">
+                <div className="wf-editorial-status-title">
+                  <strong>Estado del contenido: {editorialStatus.title}</strong>
                   <span className="wf-pill wf-pill-neutral">
-                    {latestDraftVersion ? `Borrador v${latestDraftVersion.version_number}` : "Sin borrador activo"}
+                    Paso {workflowProgress.currentStep} de 3 · {workflowCompletionPercent}% completado
                   </span>
+                </div>
+                <div className="wf-editorial-status-desc">{editorialStatus.detail}</div>
+                <div className="wf-editorial-status-meta">
                   <span className="wf-pill wf-pill-neutral">
-                    {latestPublishedVersion ? `Publicado v${latestPublishedVersion.version_number}` : "Sin versión publicada"}
+                    {showSimplifiedUi ? `Perfil: ${getRoleDisplayLabel(membership?.role)}` : `Permiso actual: ${getRoleDisplayLabel(membership?.role)}`}
                   </span>
-                </>
-              ) : null}
+                  <span className="wf-pill wf-pill-primary">{actionAvailableLabel}</span>
+                  {showAdvancedUi ? (
+                    <>
+                      <span className="wf-pill wf-pill-neutral">
+                        {latestDraftVersion ? `Borrador v${latestDraftVersion.version_number}` : "Sin borrador activo"}
+                      </span>
+                      <span className="wf-pill wf-pill-neutral">
+                        {latestPublishedVersion ? `Publicado v${latestPublishedVersion.version_number}` : "Sin versión publicada"}
+                      </span>
+                    </>
+                  ) : null}
 
-              {autosaving || flushingPublish ? (
-                <span className="wf-pill wf-pill-neutral">{flushingPublish ? "Preparando publicación..." : "Guardando..."}</span>
-              ) : null}
-              {editorialStatus.action === "load_panel" ? (
-                <button className="wf-btn wf-btn-primary wf-btn-sm wf-btn-compact" onClick={loadPanel} disabled={busy}>
-                  Cargar panel
-                </button>
-              ) : null}
-              {editorialStatus.action === "reload_draft" ? (
-                <button
-                  className="wf-btn wf-btn-soft wf-btn-sm wf-btn-compact"
-                  onClick={reloadDraftAfterConflict}
-                  disabled={busy}
-                >
-                  Recargar borrador
-                </button>
-              ) : null}
-            </div>
-          </div>
-
-          <div className="wf-steps">
-            {workflowProgress.steps.map((step) => (
-              <div
-                key={step.id}
-                className={`wf-step ${step.id === 2 ? "wf-step-subtle" : ""} ${step.active ? "active" : ""} ${step.completed ? "completed" : ""} ${
-                  step.id === 3 && step.state === "ready"
-                    ? "state-ready"
-                    : step.id === 3 && step.state === "warn"
-                      ? "state-warn"
-                      : step.id === 3 && step.state === "error"
-                        ? "state-error"
-                        : ""
-                }`}
-              >
-                <span className="wf-step-num">{step.completed ? "✓" : step.id}</span>
-                <div>
-                  <strong>{step.title}</strong>
-                  <div className="wf-muted">{step.detail}</div>
+                  {autosaving || flushingPublish ? (
+                    <span className="wf-pill wf-pill-neutral">{flushingPublish ? "Preparando publicación..." : "Guardando..."}</span>
+                  ) : null}
+                  {editorialStatus.action === "load_panel" ? (
+                    <button className="wf-btn wf-btn-primary wf-btn-sm wf-btn-compact" onClick={loadPanel} disabled={busy}>
+                      Cargar panel
+                    </button>
+                  ) : null}
+                  {editorialStatus.action === "reload_draft" ? (
+                    <button
+                      className="wf-btn wf-btn-soft wf-btn-sm wf-btn-compact"
+                      onClick={reloadDraftAfterConflict}
+                      disabled={busy}
+                    >
+                      Recargar borrador
+                    </button>
+                  ) : null}
                 </div>
               </div>
-            ))}
-          </div>
+
+              <div className="wf-steps">
+                {workflowProgress.steps.map((step) => (
+                  <div
+                    key={step.id}
+                    className={`wf-step ${step.id === 2 ? "wf-step-subtle" : ""} ${step.active ? "active" : ""} ${step.completed ? "completed" : ""} ${
+                      step.id === 3 && step.state === "ready"
+                        ? "state-ready"
+                        : step.id === 3 && step.state === "warn"
+                          ? "state-warn"
+                          : step.id === 3 && step.state === "error"
+                            ? "state-error"
+                            : ""
+                    }`}
+                  >
+                    <span className="wf-step-num">{step.completed ? "✓" : step.id}</span>
+                    <div>
+                      <strong>{step.title}</strong>
+                      <div className="wf-muted">{step.detail}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : null}
 
           <div className="wf-actions-row">
             <span id="panel-action-help" className="wf-sr-only">
@@ -5643,7 +5902,7 @@ export default function StagingWorkflowPanel() {
             </span>
             {actionContext.showSave ? (
               <button
-                className="wf-btn wf-btn-primary"
+                className={`wf-btn ${showSimplifiedUi ? "wf-btn-soft" : "wf-btn-primary"}`}
                 onClick={saveDraft}
                 disabled={actionContext.saveDisabled}
                 title={actionContext.saveDisabled ? actionContext.saveDisabledReason : "Guardar cambios en borrador"}
@@ -5681,16 +5940,18 @@ export default function StagingWorkflowPanel() {
                 {loadingDiff ? "Comparando..." : "Ver diferencias"}
               </button>
             ) : null}
-            {actionContext.showEditDraft && !publishedReadOnly ? (
+            {actionContext.showEditDraft ? (
               <button className="wf-btn wf-btn-soft" onClick={startDraftEditing} disabled={actionContext.editDraftDisabled}>
-                Editar borrador
+                {showSimplifiedUi ? "Editar contenido" : "Editar borrador"}
               </button>
             ) : null}
-            <span className="wf-muted">{actionContext.message}</span>
+            {!showSimplifiedUi ? <span className="wf-muted">{actionContext.message}</span> : null}
           </div>
-          <div className={`wf-action-help ${actionHelpIsError ? "err" : ""}`} aria-live="polite">
-            {actionHelpText}
-          </div>
+          {(!showSimplifiedUi || actionHelpIsError) ? (
+            <div className={`wf-action-help ${actionHelpIsError ? "err" : ""}`} aria-live="polite">
+              {actionHelpText}
+            </div>
+          ) : null}
           {publishChecklist.length > 0 ? (
             <div className="wf-checklist">
               <div className="wf-checklist-head">
@@ -5701,7 +5962,7 @@ export default function StagingWorkflowPanel() {
                     : "Completa mínimos antes de publicar"}
                 </span>
               </div>
-              <div className="wf-checklist-list">
+              <div className={`wf-checklist-list ${showSimplifiedUi ? "wf-checklist-list-inline" : ""}`}>
                 {publishChecklist.map((item) => (
                   <div key={item.key} className={`wf-checklist-item ${item.completed ? "ok" : "warn"}`}>
                     <div className="wf-checklist-left">
@@ -5711,9 +5972,9 @@ export default function StagingWorkflowPanel() {
                         </span>{" "}
                         {item.label}
                       </strong>
-                      <span>{item.description}</span>
+                      {!showSimplifiedUi ? <span>{item.description}</span> : null}
                     </div>
-                    {!item.completed && item.section && item.view ? (
+                    {!showSimplifiedUi && !item.completed && item.section && item.view ? (
                       <button
                         className="wf-btn wf-btn-soft wf-btn-sm wf-btn-compact"
                         onClick={() => {
@@ -5785,7 +6046,7 @@ export default function StagingWorkflowPanel() {
               ) : null}
             </div>
           ) : null}
-          {publishedReadOnly && panelReady ? (
+          {publishedReadOnly && panelReady && !showSimplifiedUi ? (
             <div className="wf-readonly" style={{ marginBottom: 12 }}>
               <div>
                 <strong>Modo publicado: solo lectura</strong>
@@ -5806,17 +6067,8 @@ export default function StagingWorkflowPanel() {
                 {visibleSectionsForSectionsView.map((section) => (
                   <div
                     key={section.id}
-                    className={`wf-row-item ${draggingSectionId === section.id ? "dragging" : ""} ${editableSection === section.id ? "active" : ""}`}
-                      draggable={!editingLocked}
-                      onDragStart={() => setDraggingSectionId(section.id)}
-                      onDragOver={(event) => event.preventDefault()}
-                      onDrop={() => {
-                      if (!editingLocked && draggingSectionId) reorderSections(draggingSectionId, section.id);
-                      setDraggingSectionId(null);
-                    }}
-                    onDragEnd={() => setDraggingSectionId(null)}
+                    className={`wf-row-item ${editableSection === section.id ? "active" : ""}`}
                   >
-                    <span className="wf-drag">⋮⋮</span>
                     <button className="wf-nav-btn" style={{ flex: 1, padding: "8px 10px" }} onClick={() => setEditableSection(toEditableSection(section.id))}>
                       <span>{getSectionDisplayName(section.id)}</span>
                       <span className="wf-muted">orden {section.order}</span>
@@ -5838,6 +6090,7 @@ export default function StagingWorkflowPanel() {
               <h2 className="wf-h3">{showSimplifiedUi ? "Listas y tarjetas" : "Elementos"}</h2>
               <div className="wf-row" style={{ marginBottom: 10 }}>
                 <button className="wf-btn wf-btn-soft" onClick={() => setEditableSection("services")}>Servicios</button>
+                <button className="wf-btn wf-btn-soft" onClick={() => setEditableSection("process")}>Proceso de trabajo</button>
                 <button className="wf-btn wf-btn-soft" onClick={() => setEditableSection("projects")}>Proyectos</button>
                 {!hideFaqAndTestimonialsInItems ? (
                   <button className="wf-btn wf-btn-soft" onClick={() => setEditableSection("faq")}>FAQ</button>
@@ -5850,7 +6103,7 @@ export default function StagingWorkflowPanel() {
             </>
           ) : null}
 
-          {view === "style" ? <><h2 className="wf-h3">{showSimplifiedUi ? "Marca e información" : "Estilo"}</h2>{renderStyleEditor()}</> : null}
+          {view === "style" ? <>{showSimplifiedUi ? null : <h2 className="wf-h3">Estilo</h2>}{renderStyleEditor()}</> : null}
 
           {view === "versions" ? (
             <>

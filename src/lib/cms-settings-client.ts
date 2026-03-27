@@ -27,6 +27,7 @@ export type CmsSettings = {
     footer?: {
       title?: string;
       subtitle?: string;
+      showAddress?: boolean;
       whatsappLabel?: string;
       contactHeading?: string;
       region?: string;
@@ -91,6 +92,8 @@ export type AudienceDefaults = {
   title: string;
   description: string;
   bullets: ReadonlyArray<{ text: string; description: string; icon: string }>;
+  badgeValue: string;
+  badgeText: string;
   ctaPrimaryText: string;
   ctaPrimaryUrl: string;
   ctaSecondaryText: string;
@@ -102,6 +105,7 @@ export type ResolvedAudience = {
   title: string;
   description: string;
   bullets: Array<{ text: string; description: string; icon: string }>;
+  badge: { value: string; text: string };
   ctaPrimary: { text: string; url: string };
   ctaSecondary: { text: string; url: string };
   images: { back: string; front: string };
@@ -188,19 +192,19 @@ export type ResolvedProjects = {
 };
 
 export type UrgencyDefaults = {
+  kicker: string;
   title: string;
   description: string;
-  ctaText: string;
-  ctaUrl: string;
+  areas: readonly string[];
+  points: ReadonlyArray<{ title: string; description: string }>;
 };
 
 export type ResolvedUrgency = {
+  kicker: string;
   title: string;
   description: string;
-  ctaPrimary: {
-    text: string;
-    url: string;
-  };
+  areas: string[];
+  points: Array<{ title: string; description: string }>;
 };
 
 export type ContactDefaults = {
@@ -504,6 +508,14 @@ export const resolveAudienceFromSettings = ({
       getTrimmedString((legacyAudience as { description?: unknown }).description) ||
       defaults.description,
     bullets,
+    badge: {
+      value:
+        getTrimmedString((sectionData as { badge_value?: unknown }).badge_value) ||
+        defaults.badgeValue,
+      text:
+        getTrimmedString((sectionData as { badge_text?: unknown }).badge_text) ||
+        defaults.badgeText,
+    },
     ctaPrimary: {
       text:
         getTrimmedString(sectionPrimary?.text) ||
@@ -718,11 +730,9 @@ export const resolveProcessFromSettings = ({
 export const resolveUrgencyFromSettings = ({
   settings,
   defaults,
-  heroPrimaryUrl,
 }: {
   settings: CmsSettings | null;
   defaults: UrgencyDefaults;
-  heroPrimaryUrl?: string;
 }): ResolvedUrgency => {
   const content = settings?.content && typeof settings.content === "object" ? settings.content : {};
   const sections = Array.isArray(content.sections) ? content.sections : [];
@@ -737,15 +747,36 @@ export const resolveUrgencyFromSettings = ({
   );
   const sectionData = sectionUrgency?.data && typeof sectionUrgency.data === "object" ? sectionUrgency.data : {};
 
-  const ctaPrimary = (sectionData as { cta_primary?: { text?: unknown; url?: unknown } }).cta_primary;
+  const rawAreas = Array.isArray((sectionData as { areas?: unknown[] }).areas)
+    ? ((sectionData as { areas?: unknown[] }).areas ?? [])
+    : [];
+  const areas = rawAreas
+    .map((value) => getTrimmedString(value))
+    .filter((value): value is string => Boolean(value));
+
+  const rawPoints = Array.isArray((sectionData as { points?: unknown[] }).points)
+    ? ((sectionData as { points?: unknown[] }).points ?? [])
+    : [];
+  const points = rawPoints
+    .map((point) => {
+      if (!point || typeof point !== "object") return null;
+      const title = getTrimmedString((point as { title?: unknown }).title);
+      const description = getTrimmedString((point as { description?: unknown }).description);
+      if (!title && !description) return null;
+      return {
+        title: title || "",
+        description: description || "",
+      };
+    })
+    .filter((point): point is { title: string; description: string } => Boolean(point));
+
   return {
+    kicker: getTrimmedString((sectionData as { kicker?: unknown }).kicker) || defaults.kicker,
     title: getTrimmedString((sectionData as { title?: unknown }).title) || defaults.title,
     description:
       getTrimmedString((sectionData as { description?: unknown }).description) || defaults.description,
-    ctaPrimary: {
-      text: getTrimmedString(ctaPrimary?.text) || defaults.ctaText,
-      url: getTrimmedString(ctaPrimary?.url) || getTrimmedString(heroPrimaryUrl) || defaults.ctaUrl,
-    },
+    areas: areas.length ? areas : [...defaults.areas],
+    points: points.length ? points : defaults.points.map((point) => ({ ...point })),
   };
 };
 

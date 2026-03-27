@@ -72,6 +72,7 @@ export const settingsSchema = z
           .object({
             title: z.string().trim().optional(),
             subtitle: z.string().trim().optional(),
+            showAddress: z.boolean().optional(),
             whatsappLabel: z.string().trim().optional(),
             contactHeading: z.string().trim().optional(),
             region: z.string().trim().optional(),
