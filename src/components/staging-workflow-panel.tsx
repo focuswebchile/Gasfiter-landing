@@ -408,6 +408,21 @@ const panelStyles = String.raw`
     --wf-lh-base:1.45;
   }
   .wf-shell{max-width:1480px;margin:0 auto;padding:28px 22px 24px;font-family:Inter,sans-serif;color:var(--wf-text);background:var(--wf-bg)}
+  .wf-shell-center{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:28px 22px}
+  .wf-access-wrap{width:min(520px,100%);display:grid;gap:18px}
+  .wf-access-head{display:grid;gap:8px;text-align:center}
+  .wf-access-kicker{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--wf-muted)}
+  .wf-access-card{border:1px solid var(--wf-border);border-radius:18px;background:var(--wf-surface);padding:22px;display:grid;gap:16px;box-shadow:0 18px 48px rgba(15,23,42,.06)}
+  .wf-access-copy{display:grid;gap:4px}
+  .wf-access-title{margin:0;font-size:20px;line-height:1.2;font-weight:800;letter-spacing:-.02em}
+  .wf-access-sub{margin:0;color:var(--wf-muted);font-size:14px;line-height:1.5}
+  .wf-access-form{display:grid;gap:12px}
+  .wf-access-actions{display:flex;gap:10px;align-items:center}
+  .wf-access-note{border:1px solid var(--wf-border);border-radius:12px;background:var(--wf-surface-soft);padding:12px;display:grid;gap:4px}
+  .wf-access-loading{width:min(520px,100%);display:grid;gap:18px}
+  .wf-access-loading-card{border:1px solid var(--wf-border);border-radius:18px;background:var(--wf-surface);padding:24px;display:grid;gap:14px;justify-items:center;box-shadow:0 18px 48px rgba(15,23,42,.06);text-align:center}
+  .wf-access-spinner{width:36px;height:36px;border-radius:999px;border:3px solid #dbe3f0;border-top-color:var(--wf-primary);animation:wf-spin .9s linear infinite}
+  @keyframes wf-spin{to{transform:rotate(360deg)}}
   .wf-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:14px;align-items:flex-end;margin-bottom:18px}
   .wf-title{margin:0;font-size:var(--wf-fs-title);line-height:var(--wf-lh-tight);font-weight:800;letter-spacing:-.02em}
   .wf-sub{margin:6px 0 0;color:var(--wf-muted);font-size:var(--wf-fs-body);line-height:var(--wf-lh-base)}
@@ -623,6 +638,9 @@ const panelStyles = String.raw`
     .wf-head{align-items:flex-start}
     :root{--wf-fs-title:30px;--wf-fs-h2:20px;--wf-fs-h3:16px}
     .wf-title{font-size:var(--wf-fs-title)}
+    .wf-shell-center{align-items:flex-start;padding-top:48px}
+    .wf-access-card{padding:18px}
+    .wf-access-actions{flex-direction:column;align-items:stretch}
     .wf-row{align-items:stretch}
     .wf-toolbar{padding:10px}
     .wf-input,.wf-select{min-width:0;width:100%}
@@ -975,8 +993,10 @@ export default function StagingWorkflowPanel() {
   const [authUserEmail, setAuthUserEmail] = useState("");
   const [authBootstrapped, setAuthBootstrapped] = useState(false);
   const [sendingMagicLink, setSendingMagicLink] = useState(false);
+  const [accessUnlocked, setAccessUnlocked] = useState(false);
   const querySlugRef = useRef<string | null>(null);
   const queryUserIdRef = useRef<string | null>(null);
+  const autoLoadTriggeredRef = useRef(false);
   const normalizedSiteSlug = siteSlug.trim().toLowerCase();
   const hideFaqAndTestimonialsInItems = false;
 
@@ -1041,13 +1061,14 @@ export default function StagingWorkflowPanel() {
     const stored = window.localStorage.getItem(STORAGE_KEY);
     if (!stored) return;
     try {
-      const parsed = JSON.parse(stored) as { siteSlug?: string; userId?: string; mode?: Mode };
+      const parsed = JSON.parse(stored) as { siteSlug?: string; userId?: string; mode?: Mode; accessUnlocked?: boolean };
       if (parsed.siteSlug && !querySlugRef.current) setSiteSlug(parsed.siteSlug);
       if (allowLegacyIdentityFallback) {
         if (parsed.userId && !queryUserIdRef.current) setUserId(parsed.userId);
         else if (defaultUserId) setUserId(defaultUserId);
       }
       if (parsed.mode === "draft" || parsed.mode === "published") setMode(parsed.mode);
+      if (parsed.accessUnlocked) setAccessUnlocked(true);
     } catch {
       // ignore invalid storage
     }
@@ -1091,8 +1112,8 @@ export default function StagingWorkflowPanel() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ siteSlug, userId, mode }));
-  }, [siteSlug, userId, mode]);
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ siteSlug, userId, mode, accessUnlocked }));
+  }, [siteSlug, userId, mode, accessUnlocked]);
 
   const showToast = useCallback((nextToast: ToastState | null) => {
     setToast(nextToast);
@@ -1140,6 +1161,21 @@ export default function StagingWorkflowPanel() {
     setOk("Sesión cerrada.");
   }, [setOk, supabaseClient]);
 
+  const resetAccess = useCallback(() => {
+    setAccessUnlocked(false);
+    setPanelReady(false);
+    setSettings(null);
+    setVersions([]);
+    setMembership(null);
+    setDraftConflict({ active: false, message: "", serverUpdatedAt: null });
+    setPublishValidationMissing([]);
+    setDirty(false);
+    setHeroDiff(null);
+    autoLoadTriggeredRef.current = false;
+    if (!authUserEmail) setUserId(defaultUserId);
+    setToast(null);
+  }, [authUserEmail, defaultUserId]);
+
   const canSaveDraft = membership?.permissions.canSaveDraft ?? false;
   const canPublish = membership?.permissions.canPublish ?? false;
   const canRollback = membership?.permissions.canRollback ?? false;
@@ -1151,7 +1187,7 @@ export default function StagingWorkflowPanel() {
     if (!showSimplifiedUi) return null;
     return new Set<EditableSectionId>(["process"]);
   }, [showSimplifiedUi]);
-  const showTechnicalIdentity = showAdvancedUi || !panelReady;
+  const showTechnicalIdentity = showAdvancedUi || (!panelReady && !accessUnlocked);
   const publishedReadOnly = mode === "published";
   const editingLocked = !panelReady || publishedReadOnly || busy || autosaving || flushingPublish || draftConflict.active;
   const latestPublishedVersion = versions.find((version) => version.status === "published") ?? null;
@@ -1371,6 +1407,26 @@ export default function StagingWorkflowPanel() {
       setBusy(false);
     }
   }, [siteSlug, userId, mode, fetchSettings, fetchVersions, setError, setOk]);
+
+  const unlockAccess = useCallback(async () => {
+    if (!siteSlug.trim()) return setError("Ingresa el sitio.");
+    if (!userId.trim()) return setError("Ingresa el UUID de acceso.");
+    setAccessUnlocked(true);
+    autoLoadTriggeredRef.current = true;
+    await loadPanel();
+  }, [loadPanel, setError, siteSlug, userId]);
+
+  useEffect(() => {
+    if (!accessUnlocked) {
+      autoLoadTriggeredRef.current = false;
+      return;
+    }
+    if (panelReady || busy) return;
+    if (!siteSlug.trim() || !userId.trim()) return;
+    if (autoLoadTriggeredRef.current) return;
+    autoLoadTriggeredRef.current = true;
+    void loadPanel();
+  }, [accessUnlocked, busy, loadPanel, panelReady, siteSlug, userId]);
 
   const fetchHeroDiff = useCallback(async () => {
     if (!siteSlug.trim()) return setError("Ingresa slug del sitio");
@@ -5685,6 +5741,85 @@ export default function StagingWorkflowPanel() {
         ]
   ) as Array<{ title: string; items: Array<[SidebarView, string]> }>;
 
+  if (!accessUnlocked) {
+    return (
+      <main className="wf-shell wf-shell-center">
+        <style dangerouslySetInnerHTML={{ __html: panelStyles }} />
+        <div className="wf-access-wrap">
+          <div className="wf-access-head">
+            <span className="wf-access-kicker">CMS</span>
+            <h1 className="wf-title" style={{ marginBottom: 0 }}>Gasfiter CMS</h1>
+            <p className="wf-sub">Entra para editar textos, imágenes y publicar cambios del sitio.</p>
+          </div>
+          <div className="wf-access-card">
+            <div className="wf-access-copy">
+              <h2 className="wf-access-title">Acceso al panel</h2>
+              <p className="wf-access-sub">Ingresa el sitio y tu UUID de acceso para cargar el contenido.</p>
+            </div>
+            <div className="wf-access-form">
+              <div className="wf-style-field">
+                <label className="wf-style-label">Sitio</label>
+                <input
+                  className="wf-input"
+                  value={siteSlug}
+                  onChange={(e) => setSiteSlug(e.target.value)}
+                  placeholder="gasfiter-staging"
+                  disabled={busy}
+                />
+              </div>
+              <div className="wf-style-field">
+                <label className="wf-style-label">UUID de acceso</label>
+                <input
+                  className="wf-input"
+                  value={userId}
+                  onChange={(e) => setUserId(e.target.value)}
+                  placeholder="Pega aquí tu UUID"
+                  disabled={busy}
+                />
+              </div>
+              <div className="wf-access-actions">
+                <button className="wf-btn wf-btn-primary" onClick={() => void unlockAccess()} disabled={busy}>
+                  {busy ? "Entrando..." : "Entrar al panel"}
+                </button>
+              </div>
+            </div>
+            <div className="wf-access-note">
+              <strong>Acceso simple</strong>
+              <span className="wf-muted">Por ahora el ingreso funciona con UUID. Más adelante aquí mismo se puede activar magic link.</span>
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (!panelReady || membership === null) {
+    return (
+      <main className="wf-shell wf-shell-center">
+        <style dangerouslySetInnerHTML={{ __html: panelStyles }} />
+        <div className="wf-access-loading">
+          <div className="wf-access-head">
+            <span className="wf-access-kicker">CMS</span>
+            <h1 className="wf-title" style={{ marginBottom: 0 }}>Gasfiter CMS</h1>
+            <p className="wf-sub">Estamos cargando tu contenido y preparando el panel.</p>
+          </div>
+          <div className="wf-access-loading-card">
+            <div className="wf-access-spinner" aria-hidden="true" />
+            <h2 className="wf-access-title">{busy ? "Entrando al panel" : "Cargando contenido"}</h2>
+            <p className="wf-access-sub">
+              Esto toma solo unos segundos. Luego entrarás directo al editor del sitio.
+            </p>
+            <div className="wf-access-actions">
+              <button className="wf-btn wf-btn-soft" onClick={resetAccess} disabled={busy}>
+                Cambiar acceso
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="wf-shell">
       <style dangerouslySetInnerHTML={{ __html: panelStyles }} />
@@ -5701,6 +5836,11 @@ export default function StagingWorkflowPanel() {
         <div className="wf-badges">
           {membership?.role && !showSimplifiedUi ? (
             <span className="wf-badge wf-badge-role wf-badge-role-main">Rol: {getRoleDisplayLabel(membership.role)}</span>
+          ) : null}
+          {accessUnlocked && showSimplifiedUi ? (
+            <button className="wf-btn wf-btn-soft" onClick={resetAccess} disabled={busy}>
+              Cambiar acceso
+            </button>
           ) : null}
         </div>
       </header>
@@ -5760,6 +5900,13 @@ export default function StagingWorkflowPanel() {
               <div className="wf-kv">
                 <div><strong>{simplifiedEditorStatus.title}</strong></div>
                 <div className="wf-muted">{simplifiedEditorStatus.detail}</div>
+                {!panelReady ? (
+                  <div className="wf-row" style={{ marginTop: 6 }}>
+                    <button className="wf-btn wf-btn-primary" onClick={() => void loadPanel()} disabled={busy}>
+                      {busy ? "Cargando..." : "Cargar contenido"}
+                    </button>
+                  </div>
+                ) : null}
               </div>
             </div>
           ) : (
