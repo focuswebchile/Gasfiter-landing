@@ -4645,7 +4645,7 @@ export default function DynamicLanding({ initialSettings = null }: DynamicLandin
       data-landing-shell
     >
       <style dangerouslySetInnerHTML={{ __html: landingStyles }} />
-      <div dangerouslySetInnerHTML={{ __html: landingMarkup }} />
+      <div suppressHydrationWarning dangerouslySetInnerHTML={{ __html: landingMarkup }} />
     </div>
   );
 }

@@ -17,6 +17,11 @@ const oswald = Oswald({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://gasfiter-landing-lilac.vercel.app"),
+  formatDetection: {
+    telephone: false,
+    email: false,
+    address: false,
+  },
   title: "Gasfiter urgente en Santiago | Reparaciones, destapes e instalaciones",
   description:
     "Gasfitería profesional 24/7 en Santiago. Atendemos fugas, destapes, calefont e instalaciones con respuesta rápida y diagnóstico claro.",
