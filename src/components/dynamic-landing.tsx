@@ -2307,8 +2307,8 @@ const landingStyles = String.raw`
           position: absolute;
           top: 0;
           left: auto;
-          right: 0;
-          width: 50vw;
+          right: clamp(18px, 3vw, 42px);
+          width: min(46vw, 760px);
           opacity: 1;
           transform: none;
           pointer-events: auto;
@@ -2322,8 +2322,8 @@ const landingStyles = String.raw`
 
         .top-nav.nav--desktop-integrated {
           left: auto;
-          right: 0;
-          width: 50vw;
+          right: clamp(18px, 3vw, 42px);
+          width: min(46vw, 760px);
           background: transparent;
           backdrop-filter: none;
           border-bottom: 0;
@@ -2481,11 +2481,13 @@ const landingStyles = String.raw`
           }
 
           .top-nav {
-            width: 59vw;
+            right: 22px;
+            width: min(55vw, 680px);
           }
 
           .top-nav.nav--desktop-integrated {
-            width: 59vw;
+            right: 22px;
+            width: min(55vw, 680px);
           }
 
           .top-nav-inner {
